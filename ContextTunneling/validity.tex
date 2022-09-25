@@ -1,0 +1,17 @@
+
+\subsection{Threats to Validity}
+\begin{itemize}
+  \item The DaCapo suite we used for training may not be representative. We presented the results for other benchmarks beyond DaCapo as well, but it still may not be inclusive. % comprises with compilers and interpreters, which represent only a part of real-world applications.
+
+  \item Using different sets of features may produce different results. Although we have evaluated our approach with a number of combinations of atomic features, the results might be different if a totally different set of atomic features is used. In particular, our learning algorithm would be unable to work if atomic features do not have any potentials as described in Section~\ref{sec:learning-algorithm}. %seed features that reveal the potential context tunneling over the conventional analysis. % potential, and b) when the potent features are refined, their performance should exceed conventional analysis at least once. Although the feature set we used comfortably satisfies the requirements, different feature set likely to result differently.
+
+  \item Using a different type of queries, may produce different results as we have learned heuristics with may-fail-casts in mind. %likely require changes to our approach, e.g., adding new features tailored to the queries. % We trained $\onesobjHT$ for different client (i.e., polymorphic virtual calls) and observed that, without tailored features, the resulting parameters' performance was comparable to $\twosobjH$ at most.
+
+%  \item JDK version: We used Java version 6 for experiments which is not the latest version available.
+
+  % \item Deeper context tunnel: Our approach is generally applicable to context tunneling with any context depth, but we didn't show its performance experimentally.
+\end{itemize}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

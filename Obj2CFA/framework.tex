@@ -1,0 +1,50 @@
+% !TEX root = ./paper.tex
+
+%\input{analysis}
+
+
+\section{\ourtechnique: Transforming Object Sensitivity to Call-Site Sensitivity}\label{sec:technique}
+We now present our technique, \ourtechnique. 
+Given an object-sensitive analysis specified by an arbitrary
+tunneling policy $\objheuristic$, our technique transforms it to another
+tunneling policy $\callheuristic$
+%\[
+%\objheuristic \to \mbox{\ourtechnique} \to \callheuristic
+%\]
+such that the
+call-site-sensitive analysis with $\callheuristic$ becomes more precise
+than the baseline object-sensitive analysis with $\objheuristic$. 
+
+To achieve this, \ourtechnique~works in the two steps: simulation and learning. 
+It first converts $\objheuristic$ into
+a {\em simulated policy} $\simheuristic$. 
+%\[
+%    \objheuristic \to \mbox{Simulation} \to \simheuristic
+%\]
+With $\simheuristic$, call-site sensitivity becomes
+more precise than object sensitivity with $\objheuristic$
+but running the analysis with $\simheuristic$
+is expensive as it uses the baseline
+object-sensitive analysis as a pre-analysis. 
+The purpose of the second step is to  remove this overhead
+ by learning the behavior of $\simheuristic$ from training data.  
+%\[
+%  \begin{array}{r}
+%%    \simheuristic \to\\[0.1em]
+%   \simheuristic +  \mbox{training data} \to
+%  \end{array}
+%  \mbox{Learning} \to \callheuristic \qquad\qquad
+%\]
+The learned policy $\callheuristic$ is as precise as
+$\simheuristic$ but more efficient as it does not rely on the
+simulation procedure. 
+
+
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

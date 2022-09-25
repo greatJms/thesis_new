@@ -1,0 +1,22 @@
+% !TEX root = ./paper.tex
+
+\section{Conclusion}
+In this paper, we presented a technique, \OurCtx, that automatically learns graph-based analysis heuristics. 
+Recently, designing heuristics on the graph representations of programs has been arisen as a promising approach in pointer analysis.
+\OurCtx~aims to automate the designing process using a feature language and a learning algorithm. 
+%We believe that our feature language is not only limited to learn analysis heuristics, 
+%but it can also be applied in other works that requires designing features of nodes over graphs.
+%We also designed an algorithm that learns analysis heuristics by generating suitable features with this language.
+To demonstrate the performance of our approach, we implemented it on top of the \Doop~pointer analysis framework for Java.
+The experimental results show that \OurCtx~successfully produces high-quality analysis heuristics that are as competitive as the existing state-of-the-art heuristics designed manually by analysis experts.
+%It also shows that our technique is general as it could learn both context-sensitivity and heap abstraction heuristics from  two different graphs.
+%Further, our work sheds light on designing graph-based analysis heuristics by showing that it can provide an insight on design process.
+We hope our work facilitates the recent development of graph-based heuristics for pointer analysis. 
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:
+

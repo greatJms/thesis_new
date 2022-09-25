@@ -1,0 +1,36 @@
+\section{Formalization}
+\begin{figure}
+\begin{center}
+Class$\,::=\,$class $C$ extends $C'$ \{$\overrightarrow{C''\, f;} \, K \, \overrightarrow{M}$\}\,\\
+$K \in$ Konst$\,::=\,C\,(\overrightarrow{C\,f})\{$super$(\overrightarrow{f'})\, ; \, \overrightarrow{this.f'' = f''';}\}$\\
+$M \in $ Method$\,::=C \, m \, (\overrightarrow{C \, v})
+\{\overrightarrow{C \, v \, ;} \, \overrightarrow{s}\}$\\
+%\,\,\,\qquad\qquad\qquad\qquad$\\
+
+
+$s \in $ Stmt$\,::= v = {e;}^{\textit{l}}\,|\,$return ${v;}^{\textit{l}}$\\
+
+
+$e \in $ Exp$\,::= v \, | \, v.f \, | \, v.m(\overrightarrow{v}) \, |
+\, $new $C(\overrightarrow{v})|(C) \, v$\\~\\
+
+
+v $\in$ Var is a set of variable names\\
+f $\in$ FieldName is a set of field names\\
+C $\in$ ClassName is a set of class names\\
+m $\in$ MethodCall is a set of method invocation sites\\
+$\textit{l} \, \in$ Lab is a set of labels\\
+\end{center}
+\caption{Featerweight Java}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+
+$\zeta \in \Sigma =$ Stmt $\times$ Stack $\times$ Store $\times$
+CallStack $\times$ Context\\
+st $\in$ Stack = (Var $\rightharpoonup$ContSensAddr$)^*$\\
+$\sigma \in$ Store = ContSensAddr $\rightarrow$Obj\\
+\end{center}
+\caption{State-space for A-Normal Featherweight Java}
+\end{figure}

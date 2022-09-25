@@ -1,0 +1,76 @@
+% !TEX root = ./paper.tex
+
+\input{Obj2CFA/wrappedflow}
+
+\myparagraph{Effectiveness in the Real-World}\label{sec:simulation:real-world}
+To show the effectiveness of simulation more clearly, we provide a representative real-world example.
+%In this example, we aim to show that call-site sensitivity with tunneling can effectively analyze the representative example, and call-site sensitivity 
+Also, this example shows that call-site sensitivity can simulate object sensitivity with a nontrivial tunneling abstraction ($\Tobj \neq \emptyset$).
+
+
+
+%\textcolor{red}
+{
+Containers and iterators have been popular to exemplify the strength
+of object sensitivity (e.g.~\cite{Milanova2005,JeJeOh18,TanLX16}), as
+they are prevalent in object-oriented
+programs.
+Figure~\ref{fig:wrappedflow:example} shows a typical example.
+%, called {\em wrapped flow}~\cite{Li2018a}.
+In Figure~\ref{fig:wrappedflow:example}, the {\tt Container} class has
+its iterator of which the field wraps the container's
+data, and the data is obtained by the calling iterator's method.
+}
+
+%\textcolor{red}
+{
+In this case, 1-object sensitivity needs context tunneling to distinguish all the method calls.
+The conventional 1-object-sensitive analysis is not precise as
+the two iterators share the same heap allocation-site {\tt It}. 
+Consider a tunneling abstraction
+$\Tobj =\{7, 21, 26\}$.
+With this tunneling abstraction, 1-object sensitivity produces precise
+results with the
+call-graph shown in Figure~\ref{fig:wrappedflow:1objTGraph}.
+}
+\input{Obj2CFA/wrappedflow_callgraphs}
+
+%\textcolor{red}
+{
+With our technique, call-site-sensitivity can simulate the call-graph
+produced by the context-tunneled object-sensitive analysis. 
+From the call-graph in Figure~\ref{fig:wrappedflow:1objTGraph}, our
+technique finds out
+\[
+I_1 = \myset{7}, \quad  I_2 = \{7\},\quad I_3 =
+\{19,20,21,24,25,26\}.
+\]
+and produces a tunneling abstraction $\Tcall = \{7\}$.
+Figure~\ref{fig:wrappedflow:1callTGraph} shows the call-graph of
+1-call-site sensitivity with the tunneling abstraction, which is
+exactly the same as that of the baseline object-sensitive analysis
+in Figure~\ref{fig:wrappedflow:1objTGraph}.
+Note that 1-object sensitivity and 1-call-site sensitivity use
+different tunneling abstractions, i.e., $\Tcall = \{7\}$ vs.
+$\Tobj = \{7, 21, 26\}$. 
+}
+
+%\textcolor{red}
+{
+In the supplementary material, 
+we show that our technique can handle more real-world cases, namely {\em precision-critical} patterns~\cite{Li2018a}. %that our technique can handle
+%where the examples belong to {\em precision-critical} patterns in~\cite{Li2018a}.
+\cite{Li2018a} identified fairly representative and
+exhaustive patterns that require object sensitivity in real-world Java
+programs;
+applying 2-object sensitivity only to the methods with those patterns
+is sufficient to achieve 98.8\% of the full precision~\cite{Li2018a}. 
+Conventional call-site-sensitive analysis is
+ineffective to handle such patterns as they require the
+analysis to maintain deep calling contexts. With context tunneling,
+however, our technique enables call-site
+sensitivity to simulate object sensitivity in all cases. We provide
+detailed description of the patterns and how our technique works in
+Section 1 of the supplementary material. 
+}
+

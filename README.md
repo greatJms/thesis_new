@@ -1,1 +1,2 @@
-# thesis_new
+# thesis
+Thesis for the Degree of Doctor

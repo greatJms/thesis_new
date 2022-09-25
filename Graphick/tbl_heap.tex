@@ -1,0 +1,59 @@
+\begin{table}[]
+\setlength\extrarowheight{-1.5pt}
+\caption{Performance of the heap abstraction heuristics against benchmarks.
+The notions are the same with those in Table~\ref{tbl:contextAbstraction}.}
+\label{tbl:heapAbstraction}
+\centering
+\scriptsize
+\begin{tabular}{@{}c|clrrrr@{}}
+\toprule
+\multicolumn{1}{c}{}                                    &                             &                    & \multicolumn{1}{c}{\OurHeap} & \multicolumn{1}{c}{\Mahjong} & \multicolumn{1}{c}{\AllocBased} & \multicolumn{1}{c}{\TypeBased} \\ \midrule
+\multirow{16}{*}{\rotatebox[origin=c]{90}{Training programs}} & \multirow{4}{*}{luindex}    & analysis time(s)   & 23(+90)                       & 42(+21)                          & 5,475                           & 19                             \\
+                                   &                             & \#may-fail casts   & 358                      & 358                         & 358                             & 795                            \\
+                                   &                             & \#poly-call sites  & 928                      & 918                         & 915                             & 1,128                          \\
+                                   &                             & \#call-graph-edges & 33,450                   & 33,365                      & 33,356                          & 37,898                         \\ \cmidrule(l){2-7}
+                                   & \multirow{4}{*}{lusearch}   & analysis time(s)   & 21(+92)                       & 43(+19)                          & \textgreater{}10,800            & 19                             \\
+                                   &                             & \#may-fail casts   & 372                      & 372                         & -                               & 884                            \\
+                                   &                             & \#poly-call sites  & 1,127                    & 1,116                       & -                               & 1,331                          \\
+                                   &                             & \#call-graph-edges & 36,298                   & 36,237                      & -                               & 41,211                         \\ \cmidrule(l){2-7}
+                                   & \multirow{4}{*}{antlr}      & analysis time(s)   & 31(+101)                       & 48(+33)                          & 5,241                           & 26                             \\
+                                   &                             & \#may-fail casts   & 463                      & 463                         & 463                             & 1,002                           \\
+                                   &                             & \#poly-call sites  & 1,630                    & 1,626                       & 1,623                           & 1,836                          \\
+                                   &                             & \#call-graph-edges & 51,058                   & 51,043                      & 51,035                          & 55,745                         \\ \cmidrule(l){2-7}
+                                   & \multirow{4}{*}{pmd$_{m}$}        & analysis time(s)   & 44(+137)                       & 88(+34)                          & 9,146                           & 42                             \\
+                                   &                             & \#may-fail casts   & 871                      & 871                         & 871                             & 1,418                           \\
+                                   &                             & \#poly-call sites  & 1,142                    & 1,133                       & 1,130                           & 1,388                          \\
+                                   &                             & \#call graph edges & 44,094                   & 4,4016                      & 44,004                          & 50,365                         \\ \midrule \midrule
+\multirow{24}{*}{\rotatebox[origin=c]{90}{Test programs}} & \multirow{4}{*}{fop}        & analysis time(s)   & 30(+117)                       & 50(+26)                          & 5,475                            & 33                            \\
+                                   &                             & \#may-fail casts   & 376                      & 375                         & 375                             & 779                             \\
+                                   &                             & \#poly-call sites  & 830                      & 817                         & 814                             & 1,034                          \\
+                                   &                             & \#call graph edges & 34,259                   & 34,192                      & 34,184                          & 38,629                         \\ \cmidrule(l){2-7}
+                                   & \multirow{4}{*}{chart}      & analysis time(s)   & 436(+350)                      & \textgreater 10,800         & \textgreater 10,800             & 199                             \\
+                                   &                             & \#may-fail casts   & 1,331                     & -                           & -                               & 2,299                           \\
+                                   &                             & \#poly-call sites  & 2,078                    & -                           & -                               & 2,363                          \\
+                                   &                             & \#call graph edges & 72,746                   & -                           & -                               & 82,952                         \\ \cmidrule(l){2-7}
+                                   & \multirow{4}{*}{bloat}      & analysis time(s)   & 376(+121)                      & \textgreater 10,800         & \textgreater 10,800             & 26                             \\
+                                   &                             & \#may-fail casts   & 1,247                     & -                           & -                               & 1,926                           \\
+                                   &                             & \#poly-call sites  & 1,593                    & -                           & -                               & 1,793                          \\
+                                   &                             & \#call graph edges & 56,535                   & -                           & -                               & 64,220                         \\ \cmidrule(l){2-7}
+                                   & \multirow{4}{*}{xalan}      & analysis time(s)   & 489(+162)                      & 795(+29)                         & \textgreater 10,800             & 59                             \\
+                                   &                             & \#may-fail casts   & 539                      & 535                         & -                               & 1,093                           \\
+                                   &                             & \#poly-call sites  & 1,601                    & 1,591                       & -                               & 1,876                          \\
+                                   &                             & \#call graph edges & 46,026                   & 45,950                      & -                               & 51,761                         \\ \cmidrule(l){2-7}
+                                   & \multirow{4}{*}{JPC}        & analysis time(s)   & 1,730(+366)                    & 3,309(+47)                       & \textgreater 10,800             & 524                            \\
+                                   &                             & \#may-fail casts   & 1,300                    & 1,226                       & -                               & 2,007                          \\
+                                   &                             & \#poly-call sites  & 4,211                    & 4,139                       & -                               & 4,646                          \\
+                                   &                             & \#call graph edges & 79,864                   & 79,370                      & -                               & 91,248                         \\ \cmidrule(l){2-7}
+                                 & \multirow{4}{*}{checkstyle} & analysis time(s)   & 1,333(+563)                    & 2,346(+53)                       & \textgreater 10,800             & 48                             \\
+                                   &                             & \#may-fail casts   & 1,085                    & 1,022                       & -                               & 1,749                          \\
+                                   &                             & \#poly-call sites  & 2,202                    & 2,168                       & -                               & 2,489                          \\
+                                   &                             & \#call-graph-edges & 66,321                   & 65,943                      & -                               & 77,962                         \\
+\midrule\midrule
+\multirow{3}{*}{\rotatebox[origin=c]{90}{Valid}}
+& \multirow{3}{*}{findbugs}   & analysis time(s)   & 96(+363)                       & 273(+70)                         & \textgreater 10,800             & 92                             \\
+                                   &                             & \#may-fail casts   & 1,774                    & 1,671                       & -                               & 3,089                          \\
+                                   &                             & \#poly call sites  & 3,576                    & 3,534                       & -                               & 4,281                          \\
+%                                   &                             & \#call graph edges & 87,459                   & 86,985                      & -                               & 16,876                         \\
+ \bottomrule
+\end{tabular}
+\end{table}

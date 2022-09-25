@@ -1,0 +1,800 @@
+\section{Learning Context-Tunneling Heuristics}\label{tunneling:learning}
+
+Now, we present a machine-learning algorithm specialized for
+generating good context tunneling heuristics from a dataset
+of programs.
+
+
+ % Although the
+% idea of context tunneling is simple, realizing effective tunneling in
+% practice is challenging. The performance of context tunneling depends
+% on the choice of the tunneling relation $\TunnelingRelation$, but
+% manually designing a heuristic rule to generate $\TunnelingRelation$
+% for a given program is nontrivial and likely ends up with costly or
+% imprecise results.  Our goal is to address this challenge by
+% developing a machine-learning algorithm that learns
+% context-tunneling heuristics from data.
+
+
+\subsection{Parametric Program Analysis} \label{tunneling:setting}
+
+Let us first encapsulate our analysis in Section~\ref{sec:tunneling}
+as a parametric program analysis~\cite{Liang2011learning}.  Let
+$P \in \Program$ be a program to analyze. Let $\Methods_P$ be the set
+of methods in $P$.  Then, we can define the set $\tspace_P$ of all
+tunneling relations for $P$ as follows:
+\[
+ \TunnelingRelation \in \tspace_P = \power{\Methods_P \times \Methods_P}.
+\]
+The set $\tspace_P$ forms the parameter space of the analysis for $P$,
+where an element $\TunnelingRelation \in \tspace_P$ --- a set of
+method pairs --- represents a tunneling relation.  Abstractions are
+ordered by set inclusion.  For each pair $(m_1,m_2)$ of parent and
+child methods in $\TunnelingRelation$, we apply context-tunneling by
+reusing the calling context of the parent method ($m_1$) when analyzing the
+child method ($m_2$) without creating a new context for $m_2$.  The abstraction
+space covers the conventional context-insensitive and -sensitive
+analyses: with $\TunnelingRelation = \emptyset$, the analysis becomes
+an ordinary $k$-context-sensitive analysis, and with
+$\TunnelingRelation = \Methods_P \times \Methods_P$, the analysis
+equals to the context-insensitive analysis.
+
+We assume that a set $\Assertion_P$ of assertions is given together
+with the input program $P$.  For instance, $\Assertion_P$ may denote the set of all type casts in
+$P$ and the analysis attempts to prove that they do not fail at
+runtime (i.e. no down-casting failures).  Then,
+we can model pointer analysis for $P$ by the function $F_P$:
+\[
+  F_P \in \tspace_P \to \power{\Assertion_P} \times \mbn.
+\]
+Given a program $P$ and a tunneling relation
+$\TunnelingRelation \in \tspace_P$, $F_P(\TunnelingRelation)$ returns
+the set $Q \subseteq \Assertion_P$ of proved assertions and the
+analysis time $n \in \mbn$ represented by a natural number (e.g. time
+took to analyze the program).  We define two projection functions:
+$\proved(F_P(\TunnelingRelation))$ and
+$\cost(F_P(\TunnelingRelation))$ denote the set of proved assertions
+($Q$) and the analysis cost ($n$) of the analysis
+$F_P(\TunnelingRelation)$, respectively.
+
+% Once $\heuristic$ is generated, it can be used to analyze previously
+% unseen program $P$ with $F_P (\heuristic(P))$.  We aim to learn a
+% tunneling heuristic $\heuristic$ such that the analysis
+% $F_P(\heuristic(P))$ improves the precision as much as possible while
+% retaining the cost of the baseline analysis
+% $F_P(\emptyset)$ (i.e. the ordinary $k$-context-sensitive analysis).
+
+\myparagraph{Non-Monotonicity}
+
+One noticeable property of context tunneling is non-monotonicity.  Note
+that existing parametric program analyses are typically monotone with respect to
+their parameters; that is, the analysis precision is monotonically
+increasing (or decreasing) with respect to the parameters of the
+analysis
+(e.g.~\cite{Liang2011learning,JeJeChOh17,Zhang2014,Liang2011}).  That
+is, if $p \sqsubseteq p'$ then
+$\proved(F_P(p)) \subseteq \proved(F_P(p'))$ (or
+$\proved(F_P(p)) \supseteq \proved(F_P(p'))$). For example, in a
+selective context-sensitive analysis~\cite{JeJeChOh17}, making more
+methods context-sensitive always increases precision.  In our case,
+however, the analysis is not monotone with respect to the parameters
+(i.e. context-tunneling relations). That is,
+$\TunnelingRelation \subseteq \TunnelingRelation'$ does not imply
+$F_P(\TunnelingRelation) \subseteq F_P(\TunnelingRelation')$ or
+$F_P(\TunnelingRelation) \supseteq F_P(\TunnelingRelation')$.  Consequently, neither $F_P(\emptyset)$ nor
+$F_P(\Methods_P\times\Methods_P)$ --- the conventional
+$k$-context-sensitive analysis and context-insensitive analysis --- is
+the most precise one in the parameter space of context tunneling.
+As we describe in
+Section~\ref{tunneling:learning-algorithm}, this unusual property makes
+learning challenging; in particular, we cannot use the existing
+learning algorithms (e.g.~\cite{JeJeChOh17,Liang2011learning}) that
+exploit the monotonicity of analysis.
+
+
+\subsection{Machine-Learning Model for Context Tunneling}
+
+
+%\myparagraph{Parameterized Heuristic}
+
+Our goal is to learn a {\em tunneling heuristic}, denoted
+$\heuristic$, from a dataset of programs, which takes a program $P$
+and returns a tunneling relation for $P$:
+\[
+  \heuristic(P) \in \power{\Methods_P \times \Methods_P}.
+\]
+To generate such a heuristic automatically, we need to define a space
+of possible tunneling heuristics, called model or inductive bias in
+the machine learning community.  A standard
+method is to define the space by a generic heuristic with free
+parameters, reducing the problem of generating a good heuristic to the
+problem of finding appropriate parameter values.  There is a number of
+different ways to define such a parameterized heuristic. For example,
+we can use a linear combination of input features~\cite{Oh2015} or a
+non-linear, disjunctive combination~\cite{JeJeChOh17}. We take the latter approach because the
+non-linear method is known to be more effective for pointer analysis
+than the simple linear approach~\cite{JeJeChOh17}.
+
+Following \cite{JeJeChOh17},
+we use a boolean formula over atomic features as a model parameter.
+Let us assume that a set of {\em atomic features} is given:
+$\afeatures = \myset{\afeat_1, \afeat_2, \dots, \afeat_n}$, where a feature $\afeat_i$ describes a property of
+methods. It is a function from programs to predicates on
+methods:
+\[
+\afeat_i(P) : \Methods_P \to \myset{\true,\false}.
+\]
+For example, a feature may express the set of methods that have
+heap allocation in their bodies. We shortly present our atomic features in
+detail.
+Given a set of atomic features, we can express more complex features
+of methods by combining the atomic features.
+We combine them with
+a boolean formula $f$ in disjunctive normal form, i.e., a disjunction of conjunctions
+of literals:
+\[
+f = \bigvee_i \bigwedge_j l_{i,j}
+\]
+where $l_{i,j}$ is a literal: $\true$, $\false$, atomic feature $a \in \afeatures$,
+or their negations.
+Note that the meaning of a boolean formula is a set of methods.
+Given a program $P$ and a formula $f =\bigvee_i \bigwedge_j l_{i,j}$, let $\sem{f}_P$ be the set of methods
+on which the formula $f$ evaluates to true: $\sem{f}_P = \bigcup_i
+\bigcap_j \sem{l_{i,j}}_P$ where $\sem{\true}_P = \Methods_P$,
+$\sem{\false}_P = \emptyset$, $\sem{\afeat_i}_P = \myset{m \in
+ \Methods_P \mid \afeat_i(P)(m) = \true}$, and $\sem{\neg a_i}_P =
+ \Methods_P \setminus \sem{a_i}_P$.
+In the rest of this paper, we often represent a formula in
+disjunctive normal form by a set of sets of literals. For example, the formula
+$f = (a_1 \land a_2) \vee (\neg a_3 \land a_4)$ can be
+represented by $\myset{\myset{a_1,a_2}, \myset{\neg a_3,a_4}}$.
+
+
+
+Our model uses two boolean formulas $\params = \langle f_1,f_2
+\rangle$ and generates the tunneling relation for a given program $P$ as follows:
+\begin{equation}\label{eq:heuristic}
+\heuristic_{\params} (P) = \myset{(m_1,m_2) \in \Methods_P \times
+  \Methods_P \mid
+  m_1 \in \sem{f_1}_P \vee m_2 \in \sem{f_2}_P}.
+\end{equation}
+The generated relation includes a pair $(m_1, m_2)$ of methods if
+$m_1 \in \sem{f_1}_P$ or $m_2 \in \sem{f_2}_P$.
+This conditions says that we apply context tunneling when
+$m_1$ is implied by $f_1$ or $m_2$ by $f_2$. Intuitively, $f_1$ denotes the set of methods that improve the
+analysis performance by passing their contexts to child methods, and
+$f_2$ describes the methods that benefit by reusing the contexts of
+their parent methods. The goal of our learning algorithm is to
+discover the characteristics of such methods, represented by boolean
+combinations ($f_1$ and $f_2$) of features, that maximize the performance of
+the heuristic.
+
+\begin{table}[t]
+     \centering	\scriptsize
+    \caption{Atomic features used in evaluation}
+    \label{tbl:features}
+\begin{tabular}{c}
+    \begin{tabular}{clcclcclcclccl}
+        \toprule
+        \multicolumn{14}{c}{Class A (Signature features)} \\
+        \midrule
+        A1 & ``java'' &\quad& A2 & ``lang'' &\quad& A3 & ``sun'' &\quad& A4 & ``()'' &\quad& A5 & ``void'' \\
+        A6 & ``security'' &\quad& A7 & ``int''  &\quad&  A8 & ``util'' &\quad& A9 & ``String'' &\quad&  A10 & ``init'' \\
+        \bottomrule
+    \end{tabular}
+%\quad
+%	\begin{tabular}{clclcl}
+%		\toprule
+%		\multicolumn{6}{c}{Class B (Statement features)} \\
+%		\cmidrule(lr){1-6}
+%		 B1 & Assign & B6 &
+%		Breakpoint & B11 & Lookup \\
+%		 B2 & Identity & B7 &
+%		EnterMonitor & B12 & Nop \\
+%		 B3 & Invoke & B8 &
+%		ExitMonitor & B13 & Ret \\
+%		 B4 & Return & B9 &
+%		Goto & B14 & ReturnVoid \\
+%		 B5 & Throw & B10 &
+%		If & B15 & TableSwitch \\
+%		\bottomrule
+%	\end{tabular}
+\\
+\\
+    \begin{tabular}{clcl}
+        \toprule
+        \multicolumn{4}{c}{Class B (Additional features)} \\
+        \midrule
+%          B1 & Methods contained in nested class  			& B8 & Methods containing virtual method invocation\\
+% B2 & Methods taking multiple arguments 			& B9 & Static method \\
+% B3 & Methods containing array load 				& B10 & Methods containing a single heap allocation \\
+% B4 & Methods containing local assignments 			& B11 & Methods taking an argument of Object type \\
+% B5 & Methods containing local variables 			& B12 & Methods containing multiple heap allocations \\
+% B6 & Methods containing field store 				& B13 & Methods contained in a large class\\
+% B7 & Methods containing static method invocation\\
+
+ B1 & Methods contained in nested class  			& B7 & Methods containing static method invocation\\
+ B2 & Methods taking multiple arguments 			& B8 & Methods containing virtual method invocation\\
+ B3 & Methods containing array load 				& B9 & Static method \\
+ B4 & Methods containing local assignments 			& B10 & Methods containing a single heap allocation \\
+ B5 & Methods containing local variables 			& B11 & Methods taking an argument of Object type \\
+ B6 & Methods containing field store 				& B12 & Methods containing multiple heap allocations \\
+ & & B13 & Methods contained in a large class\\
+
+      %    \#11 & Methods contained in inner class\\
+      %    \#12 & Methods taking multiple arguments\\
+      %   \#13 & Methods containing array load \\ % \textsc{LoadArrayIndex}
+      %   % instruction\\
+      %    \#14 & Methods containing local assignments \hakjoo{what is
+      %           ``local assignment''?}\\
+      %    \#15 & Methods containing local variables \\
+      %    \#16 & Methods containing field store\\ % \textsc{StoreInstanceField} instruction\\
+      %    \#17 & Methods containing static method invocation\\
+      %    \#18 & Methods containing virtual method invocation\\
+      %    \#19 & Methods containing a single heap allocation%  \hakjoo{single heap
+      %           % alloc?} \\ &\minseok{yes only one heap allocation}
+      % \\
+      %    \#20 & Methods taking an argument of the ``Object'' type \\
+      %    \#21 & Methods containing multiple heap allocations%  \hakjoo{diff with
+      %           % \#19?}\\ &\minseok{Yes, 19 $\subset$ 21}
+      % \\
+      %    \#22 & Methods contained in a large class (\#Methods~$>$~20) \\
+      %    \#23 & Static methods \\
+        \bottomrule
+    \end{tabular}
+\end{tabular}
+\end{table}
+
+
+\myparagraph{Atomic Features}\label{sec:features}
+
+Table~\ref{tbl:features} shows 23 atomic features we have used in learning.
+Each feature in Table~\ref{tbl:features} describes a syntactic
+property of Java method definitions.  The features are classified into
+two types: signature features (Class A) and additional
+features (Class B).  Signature features (A1 -- A10) came from the existing work~\cite{JeJeChOh17} and
+additional features (B1 -- B13) have been newly designed in this work.
+Signature features consist of strings that most frequently appear in
+method signatures from the DaCapo suite~\cite{Blackburn2006}. For example, the feature A5
+(``void'') denotes the set of methods whose signature strings include
+``void'' as a substring.  On the
+other hand, features B1 -- B13 describe slightly higher-level
+properties.  For example, the feature B1 denotes the set of methods
+that belong to inner classes.
+When choosing atomic features, we focused on collecting as many simple
+features as possible and let the learning algorithm to discover
+meaningful combinations of them automatically. In Section~\ref{sec:eval:algorithm}, we discuss impact of
+using different atomic features.
+%
+%C3 Methods containing array load:\\
+%Load value from array to a local variable\\
+%
+%C4 Methods containing local assignment:\\
+%Local variable to local variable assignment\\
+%
+%C6 Methods containing field store:\\
+%Store value from a local variable to instance's field
+
+% Simply
+% combining the signature and statement features is not able to describe
+% such a property.
+
+\subsection{Optimization Problem}\label{sec:opt}
+Formally, the learning problem is expressed as an optimization
+problem.
+Given program analysis $F$, parameterized heuristic
+$\heuristic_{\params}$ defined in (\ref{eq:heuristic}), and  training programs
+$\vec{P} = \myset{P_1,\dots,P_m}$,
+our goal is to find the parameters $f_1$ and $f_2$ that maximize the
+precision of the analysis over the codebase:
+\[
+  \mbox{Find $\params = \langle f_1, f_2 \rangle$ that maximizes} \sum_{P \in \vec{P}}
+  |\proved(F_{P}( \heuristic_{\params}(P)))|
+\]
+such that $\params = \langle f_1,f_2 \rangle$ satisfies the following constraint on
+the analysis cost:
+\[
+\sum_{P \in \vec{P}} \cost(F_P(\heuristic_{\params}(P) )) \le \sum_{P \in \vec{P}} \cost(F_P(\emptyset)).
+\]
+The constraint says that the analysis with context tunneling ($F_P(\heuristic_\params(P))$) is at
+least as scalable as the baseline analysis
+without tunneling ($F_P(\emptyset)$).
+
+
+
+\subsection{Learning Algorithm}\label{tunneling:learning-algorithm}
+Now, we present an algorithm that effectively solves the
+optimization problem.  The key challenge, which makes our algorithm
+substantially differ from the existing learning
+algorithms~\cite{Liang2011learning,JeJeChOh17}, is that the analysis
+$F$ is not monotone with respect to the tunneling relations.  In
+existing learning algorithms~\cite{Liang2011learning,JeJeChOh17},
+monotonicity plays a central role in finding analysis parameters
+efficiently. They start from the most precise abstraction, and
+iteratively refine the abstraction until a smallest abstraction that
+satisfies a given constraint is found; here monotonicity allows the
+algorithms to safely rule out a large set of abstractions smaller than any
+previously failed (constraint-unsatisfying)
+abstractions. Consequently, these algorithms follow a (decreasing)
+chain of parameters and monotonicity ensures that this strategy
+is optimal. However,
+when the analysis is not monotone, simply following a chain of
+parameters no longer provides such a guarantee.
+Our algorithm is able to find a
+good parameter over the non-monotonic space of tunneling relations by
+exploring the search space in a non-greedy way that seeks to
+maximize the final benefit, instead of the immediate benefit.
+
+% however, we do not know the most precise abstraction from which the
+% refinement process should start.  This unusual property makes
+% learning challenging; in particular, we cannot use the existing
+% algorithm~\cite{JeJeChOh17} that gradually refines parameters in a
+% ``greedy'' fashion by exploiting the monotonicity of the analysis.
+
+% Our algorithm is able to find a
+% good parameter over the non-monotonic space of tunneling relations.
+% The most important distinguishing feature, compared to the existing
+% learning algorithms~\cite{JeJeChOh17,Liang2011learning}, is that our
+% algorithm explores the search space in a non-greedy way that seeks to
+% maximize the final benefit, instead of the immediate benefit.  % Our
+% algorithm keeps refining parameters as long as they have potential in
+% the long run even though doing so immediately decreases the analysis
+% precision.
+%\hakjoo{Clarify the challenge and the key idea.}
+
+\myparagraph{Overall Algorithm}
+
+The overall algorithm consists of two phases.  It first learns the
+formula $f_2$, aiming at characterizing the methods that increase the
+analysis precision by inheriting contexts from their parent methods
+instead of creating their own ones.  With the learned $f_2$, the
+algorithm continues to learn $f_1$, the set of methods that improves
+the precision by passing their contexts to child methods. Those two
+formulas $f_1$ and $f_2$ become the parameter
+$\params = \langle f_1, f_2 \rangle$ of the heuristic
+$\heuristic_\params$.  Procedure \textsc{Learn} in
+Algorithm~\ref{alg:overall} describes the overall procedure. It
+takes three inputs: a static analyzer $F$ parameterized by tunneling
+relations, a set $\vec{P}$ of training programs, and a set
+$\afeatures$ of atomic features. The algorithm calls the same
+subroutine, \LearnBooleanFormula, twice with different
+parameters. Note that the formula $f_2$ learned in the first phase is
+used in the second phase at line 3.
+In the rest of this section, we write $\params(i)$ when $\params =
+\langle f_1, f_2\rangle$ for $f_1$ (when $i = 1$) or $f_2$ (when $i=2$), and write
+$\params[f_i \mapsto g]$ for $\langle g, f_2\rangle$ (when $i=1$) or $\langle
+f_1, g\rangle$ (when $i=2$).
+
+\begin{algorithm}[t]
+  \caption{Overall Algorithm}\label{alg:overall}\small
+  \begin{algorithmic}[1]
+
+    \Require Static analyzer $F$, codebase $\vec{P}$, atomic features
+    $\afeatures$ \Ensure Model parameters $f_1$ and $f_2$
+    \Procedure{Learn}{$F$, $\vec{P}$, $\afeatures$} \State
+    $f_2 \gets \LearnBooleanFormula(2, \false, F, \vec{P},
+    \afeatures)$ \Comment{learn methods for child contexts} \State
+    $f_1 \gets \LearnBooleanFormula(1, f_2, F, \vec{P}, \afeatures)$
+    \Comment{learn methods for parent contexts} \State \Return
+    $\langle f_1, f_2 \rangle$
+    \EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[t!]
+  \caption{Learning a Single Parameter}\label{alg:learning}\small
+  \begin{algorithmic}[1]
+		\Require Index $i$ of parameter to learn, parameter $f_2$, static analyzer $F$, codebase $\vec{P}$,
+		atomic features $\afeatures$
+		\Ensure $i^{\it th}$ parameter $f_i$
+		\Procedure{\LearnBooleanFormula}{$i, f_2, F, \vec{P},
+                  \afeatures$}
+\State $f_1 \gets \false$
+
+%\For{$i=2$ \textbf{to} $1$} \Comment{learn $f_2$ and then $f_1$}
+
+                % \State $f_1 \gets \false$
+		 \State $\params \gets \langle f_1, f_2 \rangle$
+%                \Comment{initial parameter}
+                \State $W \gets \myset{a \in (\afeatures \cup \neg \afeatures) \mid
+\SeedFeature (a, i, \params, F, \vec{P})}$ \Comment{collect seed features}
+
+ % \CollectSeedFeatures (i,\params,F,
+ %                \vec{P}, \afeatures) $
+
+		\While {$W \neq \emptyset$}
+		  \State $s \gets \ChooseSeed(i,\params,F,\vec{P},W)$
+                  \Comment{pick a seed feature from $W$ with highest potential}
+		  \State $W \gets W \setminus \myset{s}$
+		  \State $c \gets \RefineSeed(s, i,\params,
+                  \afeatures, F, \vec{P})$ \Comment{refine seed
+                    feature $s$}
+
+
+		  \State $\params' \gets \params[f_i \mapsto f_i \vee c]$ \Comment{new parameter to be evaluated}
+		  \If {$\GoodHeuristicFound(\params, \params',
+                    \vec{P})$}\Comment{check whether new parameter
+                    improves }
+%		    \State $f_i \gets f_i \ \vee {c}$ \Comment{update parameter}
+  		    \State $\params \gets \params'$ \Comment{update parameter}
+		  \EndIf
+		\EndWhile
+%\EndFor
+		\State \Return $\params(i)$ \Comment{return $f_i$}
+		\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[t!]
+  \caption{Refining a Seed Feature}\label{alg:refine}\small
+  \begin{algorithmic}[1]
+		\Require Seed feature $s$, parameter index $i$,
+                parameters $\params$, atomic features $\afeatures$, static analyzer $F$, codebase $\vec{P}$
+		\Ensure refined conjunction $c$
+
+    \Procedure{\RefineSeed}{$s$, $i$, $\params$, $\afeatures$, $F$, $\vec{P}$}
+    \State $c \gets s$\Comment{initial conjunction}
+          \State $\Failed \gets \emptyset$ \Comment{$\Failed$ will
+            maintain features that fail to refine $c$}
+
+		  \While {$(a \gets \ChooseAtom(\afeatures,f_i,
+                    c,\vec{P},\Failed)) \not= \false$}  \Comment{iteratively refine conjunction $c$}
+%                  \State $a \gets \ChooseAtom(\afeatures,f_i,
+%                    c,\vec{P},\Failed)$
+   	        \State $c' \gets c \land {a}$ \Comment{refine $c$ with $a$}
+
+  	        \State $\params' \gets \params[f_i \mapsto f_i\vee c]$ \Comment{old parameter}
+  	        \State $\params'' \gets \params[f_i \mapsto f_i\vee
+                c']$ \label{alg:if}\Comment{new (refined) parameter}
+  	        \If {$\PrecP(\params', \params'', \vec{P}) \wedge
+                  \HasSeed(\params'', \params, \vec{P})$}
+\Comment{precision improved}
+  	          \State $c \gets c'$
+  	        \ElsIf{$\PrecE(\params', \params'', \vec{P}) \wedge
+                  \CostM(\params', \params'', \vec{P})$}
+\Comment{cost reduced without precision loss}
+  	          \State $c \gets c'$
+            \Else
+              \State $\Failed \gets \Failed \cup \myset{a}$ \Comment{record failed attempt}
+  	        \EndIf
+		  \EndWhile
+\State \Return $c$
+\EndProcedure
+
+	\end{algorithmic}
+\end{algorithm}
+
+% \myparagraph{Learning a Boolean formula}
+
+% Informally, our
+% algorithm first evaluates each atomic feature's potential as a good
+% context tunneling heuristic. We say a atomic feature has a {\it
+%   potential} if using the feature as the sole context tunneling
+% heuristic proves at least one additional queries that ordinary context
+% sensitivity can't. Note that we don't measure an atomic feature's
+% potential with the respect to the number of proven queries. Using the
+% number of additionally provable queries instead of total provable
+% queries enables our algorithm to explore locally bad but globally good
+% solutions during a process. From the promising atomic features, our
+% algorithm gradually refines the features one by one by repeatedly
+% conjoining it with other atomic features. If the conjunction results a
+% better heuristic than before, our algorithm accepts the
+% change. Otherwise, the algorithm memorizes the failure and repeats the
+% conjoining process until the algorithm can't find an atomic feature to
+% conjoin with. When the algorithm fully refined an atomic feature, the
+% resulting conjunction is evaluated to see if having the conjunction to
+% the formula results better precision and performance than before. If
+% so, the algorithm updates the formula with the conjunction and repeats
+% the process until we have atomic features to refine.
+
+% Then, our learning algorithm outputs a context tunneling heuristic $f_i$ in a Boolean formula in disjunctive of conjunctions of literals that are atomic features and theirs negations. Through out the algorithm, we represent a conjunctive clause by a set of literals (i.e., atomic feature), and a disjunction by a set of clauses.
+
+%\[
+%\CollectSeedFeatures(i, \params, F, \afeatures, \vec{P})
+%= \myset{a \in \afeatures \mid
+%\bigcup_{P \in \vec{P}}\precision(F_P(\heuristic_{\params[f_i \mapsto \myset{\myset{a}}]}(P))) \setminus
+%                  \precision(F_P(\heuristic_{\params}(P)))  \neq \emptyset}
+%\]
+
+% When learning $f_2$, $\params$ is set to $\langle \false, \false \rangle$, which means a conventional analysis without context tunneling. And, after learning $f_2$, we use it to set an initial parameter for learning $f_1$ in next \textsc{LearnBooleanFormula} invocation. From the initial parameter, the goal of our algorithm is finding two Boolean formulas $f_1$ and $f_2$, one for each $\textsc{LearnBooleanFormula}$ invocation, that maximize precision of analysis while keeping analysis cost as low as the conventional analysis. One of key differences of our work with respect to the~\cite{JeJeChOh17} is a role of the initial parameter. In previous work, the initial parameter determines an upper bound of learned parameters' precision, and the goal of the algorithm is finding the parameter that minimizes the analysis cost while satisfying given precision constraint. In contrary, for the problem of context tunneling, the initial parameter $\params=(\false, \false)$ doesn't mean the most precise heuristic at all; in fact, for the problem of context tunneling, such heuristic is unknown. Therefore, our algorithm uses the initial parameter for two reasons: 1) it provides cost constraint our learned parameters should satisfy; 2) queries proven by the initial parameter become a yardstick to find first set of atomic features our learning algorithm refine to. We explain shortly details of the choice.
+
+
+%  $W$ of atomic features who
+% have tunneling potential with respect to the initial parameter. We say
+% an atomic feature has potential if we have at least one unseen proven
+% query (i.e., $q \notin \proved(F_P(\heuristic_{\params}(P)))$ where $q
+% \in Q_P$) when the atomic feature is used as a sole parameter for
+% $f_i$ (i.e., $f_i=\myset{\myset{a}}$) instead of the initial
+% parameter. Our intuition behind the concept of potential is that, by
+% focusing on the number of unseen proven queries instead of total
+% proven queries, we give our algorithm chance to explore locally bad
+% but globally good choices during the process. We discuss the effect of
+% exploration in Section~\ref{sec:eval:algorithm} in detail. We find
+% such atomic features using two functions \CollectSeedFeatures~and
+% \HasSeed~with following definitions:
+
+\myparagraph{Learning a Single Parameter}
+Procedure \LearnBooleanFormula~in Algorithm~\ref{alg:learning} takes four inputs: index $i$
+indicating the formula to learn (i.e. $i=1,2$ when learning $f_1,f_2$,
+respectively), learned formula $f_2$ (if any), static analyzer $F$,
+training programs $\vec{P}$, and atomic features $\afeatures$.
+At line 3, we initialize the parameter
+$\params = \langle f_1, f_2 \rangle$, where both $f_1$ and $f_2$ are
+$\false$ in the beginning (when we learn $f_2$).  Note that, at this point, the heuristic
+$\heuristic_{\params}$ indicates performing the conventional
+$k$-context-sensitive analysis without context tunneling.
+The goal of the algorithm is to discover a heuristic $\heuristic_{\params'}$
+that maximally increases the precision of the baseline analysis
+without sacrificing its scalability. Our strategy to do so is to identify what
+we call {\em seed features} and iteratively refine them to maximize
+their effectiveness.
+We say $a \in (\afeatures \cup \neg \afeatures)$ is a seed feature if it describes methods
+for which applying context tunneling has potential to improve the
+precision of the baseline analysis.
+We define the predicate $\SeedFeature$ as follows:
+\[
+\SeedFeature(a, i, \params, F, \vec{P}) =
+\big( \bigcup_{P \in \vec{P}}\precision(F_P(\heuristic_{\params[f_i
+  \mapsto a]}(P))) \setminus
+                  \precision(F_P(\heuristic_{\params}(P)))\big)
+                  \neq \emptyset
+\]
+In words, $\params$ denotes the current baseline heuristic (e.g. conventional
+analysis without tunneling in the beginning).
+Let $A = \precision(F_P(\heuristic_{\params}(P)))$ be the set of
+queries proved by the baseline analysis. Let $B = \precision(F_P(\heuristic_{\params[f_i
+  \mapsto a]}(P)))$ be the set of queries proved by the analysis that applies
+context tunneling to the methods implied by the feature
+$a$. We call $a$ seed if $B$ includes at least one query not in $A$, i.e., $B
+\setminus A \not= \emptyset$.  At line 4 of
+Algorithm~\ref{alg:learning}, we collect all such seed features
+and they constitute the initial workset $W$.
+
+% Seed features are collected with the function $\CollectSeedFeatures$:
+% \[
+% \CollectSeedFeatures(i, \params, F, \vec{P}, \afeatures)=\myset{a \in \afeatures \mid \HasSeed(\params[f_i \mapsto \myset{\myset{a}}], \params, F, \vec{P})}
+% \]
+% where the predicate $\HasSeed$ is defined as follows:
+% \[
+% \HasSeed(\params_1, \params_2, F, \vec{P}) =\big( \bigcup_{P \in \vec{P}}\precision(F_P(\heuristic_{\params_1}(P))) \setminus
+%                   \precision(F_P(\heuristic_{\params_2}(P)))\big)
+%                   \neq \emptyset
+% \]
+% Given two parameters $\params_1$ and $\params_2$,
+% $\HasSeed(\params_1, \params_2, F, \vec{P})$ returns $\true$ iff the
+% heuristic $\heuristic_{\params_1}$ proves some queries that are not
+% proved by the heuristic $\heuristic_{\params_2}$. All seed features
+% are gathered in the workset $W$ and the while-loop at line 5 repeats as long as
+% $W$ is not empty.
+
+
+% Thus,
+% $\CollectSeedFeatures(i, \params, F, \vec{P}, \afeatures)$ gathers
+% atomic features $a \in \afeatures$ such that using the single feature
+% $a$
+
+% Note that the workset $W$ is defined once at line 4 and never grows over learning process. Therefore, our algorithm always ends.
+
+% refining atomic feature in $W$ one by one in specific order. The order is also determined by the potential of each feature, not by total provable queries. We defined a function \ChooseSeed~to pick an atomic feature in $W$ with the largest previously unseen queries as follows:
+
+In the loop at lines 5--13, we iterate to refine each seed feature.
+At line 6, the $\ChooseSeed$ function chooses the seed feature that
+has the highest potential:
+\[
+  \ChooseSeed(i,\params, F, \vec{P}, W)=\argmax_{a\in W}\big\lvert
+  {\bigcup_{P\in \vec{P}}{ \precision(F_P(\heuristic_{\params{[f_i
+          \mapsto f_i \vee a]}}(P)))} \setminus
+    \precision(F_P(\heuristic_{\params}(P))) }\big\rvert
+\]
+Among the seed features in $W$, we pick a feature $a \in W$ that
+maximizes the number of queries provable with the feature
+(i.e. $\params[f_i \mapsto f_i \vee a]$) but unprovable withtout it
+($\params$).  Note that we evaluate the potential of a feature by the
+number of exclusively provable queries, not by the total number of
+provable queries.  That is, we do not choose the feature
+\begin{multline}\label{eq:greedy-choose-seed}
+\argmax_{a\in W'}\big\lvert \bigcup_{P\in \vec{P}}{
+    \precision(F_P(\heuristic_{\params{[f_i \mapsto f_i \vee
+        a]}}(P)))} \big\rvert\\\text{where}~W'=\myset{a\in W \mid \big\lvert \bigcup_{P\in \vec{P}}{\precision(F_P(\heuristic_{\params{[f_i \mapsto f_i \vee a]}}(P)))} \big\rvert > \big\lvert \bigcup_{P\in \vec{P}}{\precision(F_P(\heuristic_{\params}(P)))} \big\rvert}
+\end{multline}
+which maximizes the immediate precision benefit. Instead, we
+deliberately choose a feature that has a small (or even negative)
+immediate benefit but may lead to greater benefit after refinement.
+This is a key decision point that our algorithm makes in order to
+maximize the performance in the long run, when the
+analysis is not monotone with respect to its
+parameter space. Existing learning
+algorithms designed with monotonicity in mind~\cite{JeJeChOh17,Liang2011learning} do
+not explore the search space this way---they simply seek
+immediate benefit--- and not appropriate for learning
+context tunneling heuristics. We discuss the effect of
+our search strategy in Section~\ref{sec:eval:algorithm} in detail.
+
+
+Once we choose seed $s$, we refine it to maximize its potential benefit by conjoining other
+features (line 8). Procedure \RefineSeed~is responsible for refining
+$s$ and returns a conjunctive clause $s \land a_1 \land \cdots \land a_k$.
+When the refinement procedure finishes, we update the parameter with the
+refined clause and check whether the refined heuristic
+indeed produces improved performance (lines 9 and 11).
+Because we pick an atomic feature at the beginning of a clause
+refinement phase solely based on its potential, overall precision of
+intermediate clauses can be lower than the baseline. We accept the
+refined clause only if adding them to the formula
+improves the precision while satisfying the cost constraint, which is
+checked by the $\GoodHeuristicFound$ predicate:
+\begin{multline*}
+\GoodHeuristicFound(\params_1, \params_2, \vec{P})=\\ \sum_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params_1}(P)))\rvert < \sum_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params_2}(P)))\rvert \land \sum_{P \in \vec{P}}\cost(F_P(\heuristic_{\params_2}(P))) \\ \le \sum_{P \in \vec{P}}\cost(F_P(\emptyset))
+\end{multline*}
+If a better heuristic is found, we update the parameter
+and go back to line 5 where the next seed feature is selected and
+refined.
+Note that the loop always terminates as the
+workset $W$ never grows after line 4.
+
+
+\myparagraph{Refining a Seed Feature}
+
+Algorithm~\ref{alg:refine} presents the procedure for refining a seed
+feature ($s$).  The conjunction is initially $s$ (line 2) and
+iteratively refined in the loop at lines 4--15. At line 4, we choose a
+refiner (i.e. an atomic feature) $a$ from $\afeatures$ and conjunct
+$c$ with $a$, resulting in $c\land a$ (line 5).% , if the refinement
+% improves the analysis performance.
+ When refining the current clause
+$c$, the algorithm behaves conservatively by choosing the feature $a$
+that strengthens $c$ as little as possible. We define the
+\ChooseAtom~function as follows:
+\[
+\ChooseAtom(\afeatures, f, c, \vec{P}, \Failed)=
+\argmax\limits_{a \in (\afeatures \cup \neg \afeatures) \setminus
+	(c\cup \Failed)} \sum\limits_{P \in \vec{P}} \lvert
+\sem{f \vee (c \land a)}_P \rvert
+\]
+Note that we exclude the features in the current clause $c$ and those
+failed in the previous refinement steps (\Failed), which ensures that
+the refinement loop always terminates.
+At lines 5--7, $c$ and $c'$ denote the current and refined clauses,
+respectively, and $\params',\params''$ are the corresponding,
+current and refined parameters. At lines 8--12, the performance of
+the refined parameter is evaluated on the training programs. The
+refined parameter is accepted if it improves the analysis precision
+(lines 8--9) or it improves the scalability while retaining the
+precision (lines 10--11). Otherwise (lines 12--13), we do not refine
+the current clause $c$ and store the feature $a$ in
+$\Failed$.
+The predicates $\PrecP$, $\PrecE$, and $\CostM$ are defined as follows:
+\[
+\begin{array}{rcl}
+\PrecP(\params_1, \params_2, F, \vec{P}) &=& \sum_{P \in \vec{P}} \lvert\precision(F_P(\heuristic_{\params_1}(P)))\rvert < \sum_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params_2}(P)))\rvert\\
+\PrecE(\params_1, \params_2, F, \vec{P}) &=& \sum_{P \in \vec{P}} \lvert\precision(F_P(\heuristic_{\params_1}(P)))\rvert = \sum_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params_2}(P)))\rvert\\
+\CostM(\params_1, \params_2, F, \vec{P})&=&\sum_{P \in \vec{P}} \cost(F_P(\heuristic_{\params_1}(P)) > \sum_{P \in \vec{P}}\cost(F_P(\heuristic_{\params_2}(P)))
+\end{array}
+\]
+Because our goal is to find a conjunctive clause $c$ that helps
+increase precision of the baseline analysis (i.e. analysis with
+$\params$), we additionally check whether the refined heuristic has
+potential to improve the precision at line 15:
+\[
+\HasSeed(\params_1, \params_2, F, \vec{P}) =\big( \bigcup_{P \in \vec{P}}\precision(F_P(\heuristic_{\params_1}(P))) \setminus
+                  \precision(F_P(\heuristic_{\params_2}(P)))\big)
+                  \neq \emptyset
+\]
+$\HasSeed$ returns $\true$ iff the heuristic with ${\params_1}$ proves
+queries that cannot be proved by the heuristic with $\params_2$.
+
+
+
+
+
+% Next, our algorithm evaluates the refined clause $c'$ (line 12) to see if the refinement was successful. First, we construct two parameters $\params'$ and $\params''$ using the old and refined clauses (line 13 and 14). We say the refinement was successful if 1) the new parameter $\params''$ resulted better precision (i.e., more proven queries) for all training programs in $\vec{P}$ and $\params''$ still preserves the tunneling potential in some degree or 2) $\params''$ made analysis as precise as the case of old parameter $\params'$ for all training programs but with a cheaper overall analysis cost. More precisely, to determine successful refinements, we reuse previously defined $\HasSeed$ function to check tunneling potential of a parameter $\params$ and newly define $\PrecP$, $\PrecE$, and $\CostM$ functions as follows:
+% \[
+% \begin{array}{rcl}
+% \PrecP(\params_1, \params_2, F, \vec{P}) &=& \forall P \in \vec{P}.\; \lvert\precision(F_P(\heuristic_{\params_1}(P)))\rvert < \lvert\precision(F_P(\heuristic_{\params_2}(P)))\rvert\\
+% \PrecE(\params_1, \params_2, F, \vec{P}) &=& \forall {P \in \vec{P}}.\; \lvert\precision(F_P(\heuristic_{\params_1}(P)))\rvert = \lvert\precision(F_P(\heuristic_{\params_2}(P)))\rvert\\
+% \CostM(\params_1, \params_2, F, \vec{P})&=&\forall {P \in \vec{P}}.\; \cost(F_P(\heuristic_{\params_1}(P)) > \cost(F_P(\heuristic_{\params_2}(P)))
+% \end{array}
+% \]
+% For instance, we say a new parameter $\params_{new}$ is better than $\params_{old}$ if and only if $\PrecP(\params_{old}, \params_{new}, F, \vec{P})\land \HasSeed(\params_{new}, \params, \vec{P})$ is $\true$ or $\PrecE(\params_{old}, \params_{new}, F, \vec{P})\land \CostM(\params_{old}, \params_{new}, F, \vec{P})$ is $\true$.
+
+
+
+%
+%
+%At line 1, we set an initial parameter $\params$ to $(\false, f_2)$. Than, at line 2, we find a set of atomic features with tunneling potential with respect to the initial parameter using a function \HasSeed. It takes an atomic feature $a$ and a baseline parameter $\params$ and returns \true~if we have at least one unseen proven queries when the atomic feature is used as a sole parameter for $f_i$. More specifically, we defined \HasSeed~as below:
+%\[
+%\HasSeed(i, a, \params, \vec{P})=\bigcup_{P \in \vec{P}}\precision(F_P(\heuristic_{\params[f_i \mapsto \myset{\myset{a}}]}(P))) \setminus
+%                  \precision(F_P(\heuristic_{\params}(P)))  \neq \emptyset
+%\]
+%Atomic features satisfy the function comprise an initial worklist $W$. Our algorithm refines each atomic feature in $W$ with an order.
+%
+%
+%Next, our algorithm picks an atomic feature from $W$ which has the largest unseen proven queries. We defined \ChooseSeed~function as below for it.
+%\[
+%\ChooseSeed(i,\params, W, F, \vec{P})=\argmax_{a\in W}{\sum\limits_{P\in \vec{P}}{\lvert \precision(F_P(\heuristic_{\params_{[f_i \mapsto f_i \lor a]}}(P)))} \setminus \precision(F_P(\heuristic_{\params}(P))) \rvert}
+%\]
+%We remove the chosen atomic feature from the $W$ (line 7) and refine it using loop
+
+
+
+%\[
+%\ChooseSeed(i,\params, W, F, \vec{P})=\argmax_{a\in W}{\sum\limits_{P\in \vec{P}}{\lvert \precision(F_P(\heuristic_{\params_{[f_i \mapsto f_i \lor a]}}(P)))} \setminus \precision(F_P(\heuristic_{\params}(P))) \rvert}
+%\]
+%\[
+%\begin{split}
+%\ChooseAtom&(\afeatures, f, c, F, \vec{P})\\ & = \left\{
+%\begin{array}{l@{\quad}l}
+%\argmax\limits_{a \in (\afeatures \cup \neg \afeatures) \setminus
+%	c} \sum\limits_{P \in \vec{P}} \lvert \method(F_P (\heuristic_{\params_{f
+%	\lor (c \land a)}}(P)))\rvert  & \mbox{if}~(\afeatures \cup \neg \afeatures)
+%	\setminus c \not= \emptyset \\
+%\false & \mbox{otherwise}
+%\end{array}
+%\right.
+%\end{split}
+%\]
+%\begin{algorithm}[t]
+%	\caption{Our Learning Algorithm}\label{alg:learnig-outer}
+%	\begin{algorithmic}[1]
+%		\Require Static analyzer $F$, codebase $\vec{P}$, atomic features $\afeatures$
+%		\Ensure Model parameters $f_1$ and $f_2$
+%		\Procedure{Learn}{$F$, $\vec{P}$, $\afeatures$}
+%		\State $f_2 \gets \textsc{LearnBooleanFormula}(2,\langle \false, \false \rangle, F, \vec{P}, \afeatures)$ \Comment{learn methods for child contexts}
+%		\State $f_1 \gets \textsc{LearnBooleanFormula}(1,\langle \false, f_2 \rangle, F, \vec{P}, \afeatures)$ \Comment{learn methods for parent contexts}
+%		\State \Return $\langle f_1, f_2 \rangle$
+%		\EndProcedure
+%	\end{algorithmic}
+%\end{algorithm}
+%
+%\begin{algorithm}[t]
+%	\caption{Algorithm for Learning a Boolean Formula}\label{alg:learning-inner}
+%	\scriptsize
+%	\begin{algorithmic}[1]
+%		\Require Target formula index $i$, current formulas $\langle f_1, f_2 \rangle$, static analyzer $F$, codebase $\vec{P}$,
+%		atomic features $\afeatures$
+%		\Ensure a boolean formula $f_i$
+%		\Procedure{LearnBooleanFormula}{$i, \langle f_1, f_2 \rangle, F, \vec{P}, \afeatures$}
+%		\State $\params \gets \langle f_1, f_2 \rangle$
+%		\State $W \gets \myset{a \in \afeatures \mid
+%                  \bigcup_{P \in \vec{P}} \big( \precision(F_P(\heuristic_{\params[f_i\mapsto \myset{\myset{a}}]}(P))) \setminus \precision(F_P(\heuristic_{\params}(P)))\big) \neq \emptyset }$
+%		
+%		\While {$W \neq \emptyset$}
+%		  \State $s \gets \ChooseSeed(i,\params,W,F,\vec{P})$
+%		  \State $c \gets \myset{s}$	
+%		  \State $W \gets W \setminus s$
+%		  \While {$a \gets \ChooseAtom(\afeatures,f_i, c,\vec{P})$}
+%  	        \State $c' \gets c \cup \myset{a}$
+%  	        \If {$f_i \iff  f_i \cup c'$}
+%  	        \State \textbf{continue}
+%  	        \EndIf
+%  	        \State $\params' \gets \params[f_i \mapsto f_i\vee c]$ \Comment{Old heuristic}
+%  	        \State $\params'' \gets \params[f_i \mapsto f_i\vee c']$ \Comment{New heuristic}
+%  	        \If {$\forall_{P \in
+%                    \vec{P}}\lvert\precision(F_P(\heuristic_{\params'}(P)))\rvert
+%                  < \lvert\precision(F_P(\heuristic_{\params''}(P)))
+%                  \rvert  \wedge \bigcup_{P \in \vec{P}}\precision(F_P(\heuristic_{\params''}(P))) \setminus
+%                  \precision(F_P(\heuristic_{\params}(P)))  \neq \emptyset$}
+%  	          \State $c \gets c'$
+%  	        \ElsIf{$\forall_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params'}(P)))\rvert = \lvert\precision(F_P(\heuristic_{\params''}(P)))\rvert \wedge \bigcup_{P \in \vec{P}}\precision(F_P(\heuristic_{\params''}(P))) \setminus
+%  	        	\precision(F_P(\heuristic_{\params}(P)))  \neq \emptyset \wedge \sum_{P \in \vec{P}}(\cost(F_P(\heuristic_{\params'}(P))) > \sum_{P \in \vec{P}}\cost(F_P(\heuristic_{\params''}(P)))$}
+%  	          \State $c \gets c'$
+%  	        \EndIf
+%		  \EndWhile
+%		  \State $\params' \gets \params[f_i \mapsto f_i \vee c]$
+%		  \If {$\sum_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_\params(P)))\rvert < \sum_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params'}(P)))\rvert \wedge \sum_{P \in \vec{P}}\cost(F_P(\heuristic_{\params'}(P))) \le \sum_{P \in \vec{P}}\cost(F_P(\heuristic_{\params = \langle \false, \false \rangle}(P)))$}
+%		    \State $f_i \gets f_i \cup \myset{c}$
+%		  \EndIf
+%		\EndWhile
+%		\State \Return $f_i$
+%		\EndProcedure
+%	\end{algorithmic}
+%\end{algorithm}
+%\minseok{Why not f1-f2 but f2->f1?}
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

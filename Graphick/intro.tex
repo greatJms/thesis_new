@@ -1,0 +1,183 @@
+% !TEX root = ./paper.tex
+
+\section{Introduction}
+\iffalse
+Pointer analysis is a fundamental program analysis technique that serves as a
+key component of various software engineering tools.  The goal of
+pointer analysis is to statically and conservatively estimate heap objects that
+pointer variables may refer to at runtime.  The pointer
+information is essential for virtually all kinds of program analysis tools, including bug
+detectors~\cite{Naik2006,NaikPSG09,Blackshear2015,Sui2014,Livshits2003},
+security analyzers~\cite{Avots2005,Arzt2014,Tripp2009,Yan2017,Grech17},
+program verifiers~\cite{Fink2008}, symbolic executors~\cite{Kapus2019}, and program
+repair tools~\cite{memfix,Gao2015,vfix2019,saver2020}. The success of these tools depends eventually on the precision and scalability of the underlying pointer analysis algorithm.
+\fi
+
+Developing a fast and precise pointer analysis requires coming up with good analysis heuristics.
+For example, context sensitivity is critical for accurately analyzing object-oriented programs as it distinguishes method's local variables and objects in different calling contexts~\cite{Smaragdakis2015}. In reality, however, it is too expensive to apply deep context sensitivity (e.g. 2-object-sensitivity) to all methods in a nontrivial program.
+Therefore practical pointer analysis applies context sensitivity selectively using a context abstraction heuristic that determines the  amount of context sensitivity that each method should receive~\cite{Smaragdakis2014,JeJeChOh17,Li2018a,Lu2019}.
+Similarly, the performance of pointer analysis depends heavily on how heap objects are represented~\cite{DBLP:journals/csur/KanvarK16}.
+Pointer analysis usually employs allocation-site-based heap abstraction, which models heap objects with their allocation sites.
+However, because uniformly applying it to all heap objects is costly, a heap abstraction heuristic can be used to apply it selectively and otherwise use a less precise scheme such as type-based abstraction~\cite{Tan2017}.
+
+
+\myparagraph{Trend: Graph-based Heuristics}
+
+A recent trend in state-of-the-art pointer analyses is use of graph-based analysis heuristics~\cite{Li2018a,Li2018b,Tan2017,TanLX16,Lu2019,JeOh22}.
+These graph-based heuristics commonly work in the following two steps:
+(1) they first use a cheap pre-analysis to construct a graph representation of the input program and
+(2) they reason about the graph structure to produce a program-specific policy for the main analysis.
+
+For example,
+\cite{TanLX16} presented \Bean, which first runs a context-insensitive
+pre-analysis to generate the object allocation graph (OAG)
+and infers from it a policy  for improving the precision of $k$-object-sensitive analysis.
+\cite{Li2018b} proposed \Scaler, which also uses a context-insensitive pre-analysis to derive the object allocation graph and analyzes its structure to identify method calls that are likely to blow up the analysis cost during the 2-object-sensitive analysis.
+%With this information, \Scaler~applies 2-object sensitivity selectively in the main analysis.
+\cite{Li2018a} presented \Zipper, another graph-based heuristic for context-sensitive analysis.
+\Zipper~uses a pre-analysis to generate a so-called precision flow graph (PFG)
+and identifies precision-critical method calls that may lose precision significantly if context insensitivity is used.
+ \cite{Lu2019} presented
+a graph-based heuristic, called \Eagle,~that uses a CFL-reachability-based pre-analysis to find out variables and objects that need
+context sensitivity in the main analysis.
+\cite{Tan2017} developed \Mahjong, a graph-based heap
+abstraction heuristic that first runs a cheap pre-analysis to derive a field points-to graph (FPG) and decides when to merge and differentiate heap objects based on the structure of the points-to graph.
+
+%All of the
+%graph-based heuristics above are manually designed with a variety of
+%insights by pointer analysis experts.
+%
+%
+%, which reveals the
+%contexts to be produced in
+%$k$-object-sensitivity~\cite{Milanova2002,Milanova2005,Smaragdakis2011}.
+%Using the derived graph, it produces analysis strategies that
+%determine the appropriate heap contexts for each object, which
+%improves the precision of the main analysis (e.g.,
+%2-object-sensitivity).  In like manner, \cite{Li2018b} proposes a
+%context-sensitivity heuristic \Scaler~which employs the same
+%pre-analysis and the type of graph as mentioned above.  From an
+%object-allocation-graph, it figures out the method calls which would
+%likely blow up the analysis costs when applying
+%$2$-object-sensitivity; with this information, it applies cheap
+%alternative contexts for them in the main analysis.  \cite{Li2018a}
+%introduces another graph-based context-sensitivity heuristic \Zipper.
+%It uses a precision-flow-graph, an extended version of an
+%object-flow-graph~\cite{Tonella05}, which can predict the precision
+%loss occurred when we apply coarse context-sensitivity.  To obtain
+%this graph,~\cite{Li2018a} performs context insensitive analysis as a
+%pre-analysis and then figures out precision-critical method calls
+%based on the information in the graph.  \cite{Tan2017} designs heap
+%abstraction heuristic \Mahjong~from field-points-to-graphs, where the
+%nodes are the heap objects.  Field-points-to-graphs represent each
+%object's field as a graph of which nodes are connected when a field of
+%an object points-to the other objects.  \Mahjong~runs a cheap
+%pre-analysis to obtain this graph and merges objects when their
+%successor objects have the same type.  \cite{Lu2019} presents
+%lightweight pre-analysis corresponding to CFL-reachability formulation
+%of $k$-object-sensitivity to find out variables and objects that need
+%to be analyzed context-sensitively in the main analysis.  All of the
+%graph-based heuristics above are manually designed with a variety of
+%insights by pointer analysis experts.
+
+\myparagraph{This Work}
+
+we aim to advance this line of research by automating the process of creating graph-based analysis heuristics for pointer analysis.
+While all of the existing graph-based heuristics have been designed manually by analysis experts,
+our technique generates such heuristics automatically from a given graph without any human effort, significantly increasing  applicability and accessibility of the emerging and promising approach in pointer analysis.
+
+We achieve this goal by developing (1) a feature language for describing graph structures and (2) an algorithm for learning analysis heuristics in terms of the sentences of the language.
+We first present a language for describing structural features of nodes in a graph.
+This feature description language is simple and general, allowing it to be reused for various analysis instances (e.g. object sensitivity and heap abstraction).
+Second, we present a learning
+algorithm that takes training programs (and their graph representations) and produces graph-based heuristics by
+automatically discovering features appropriate for the given analysis task.
+Compared to prior data-driven static analysis techniques~\cite{JeJeChOh17,JeJeOh18,Singh2018cav,He20pldi},
+a salient characteristic of our technique is that it does not require pre-designed, application-specific features; instead, it uses a feature language to generate a proper set of features during the learning process. By contrast, existing learning-based techniques for static analysis need a different set of hand-tuned features for each analysis task.
+
+% The algorithm first figures out
+%performance-critical nodes in the graph
+%produced by the pre-analysis of the training programs, and it
+%formulates the nodes as features using the feature language.  The
+%generated features describe the performance-critical nodes of graph,
+%which constitute analysis heuristics for the main analysis.
+
+
+The evaluation results show that our technique is effective and general;
+it can automatically produce competitive heuristics for two different analysis instances.
+We implemented our approach on top of the \Doop~pointer
+analysis framework for Java~\cite{BravenboerS09}.
+We used our approach to produce
+a object-sensitivity heuristic from the object allocation graph on
+which the state-of-the-art object-sensitivity heuristic
+\Scaler~\cite{Li2018b} was developed.
+Additionally, we learned a heap
+abstraction heuristic from the field points-to graph, which is
+ used in the state-of-the-art heap abstraction heuristic
+\Mahjong~\cite{Tan2017}.  For both instances, our approach
+successfully generated high-quality heuristics that are as competitive as
+\Scaler~and \Mahjong~in terms of the precision and scalability of the main analysis.
+In particular, the generated heuristic by our framework successfully
+analyzes large programs which the state-of-the-art heap abstraction
+heuristic, \Mahjong, cannot handle within a time budget.
+
+%perform as cost-effectively as the state-of-the-art techniques do.
+
+
+
+\myparagraph{Contributions}
+In summary, this paper makes the following contributions:
+\begin{itemize}
+\item We present~\ourtool, a new technique for automatically learning graph-based heuristics for pointer analysis.
+Key technical contributions include a feature description language and a learning algorithm, which allow our approach to be generally used for different analysis instances without manually designing application-specific features.
+%design a new feature language for describing properties of
+%  nodes in graphs. The feature language is simple and general; it can
+%  be applied to any graphs.
+%\item We develop a learning algorithm that automatically generates
+%  features as analysis heuristics. It includes an effective algorithm
+%  to find out performance-critical program components that the
+%  algorithm is an advance one from~\cite{Liang2011learning}.
+\item We demonstrate the effectiveness and generality of our technique in comparison with state-of-the-art heuristics for object sensitivity and heap abstraction.
+
+%
+%evaluate our approach for two important analysis tasks, namely context sensitivity and heap abstraction, using real-world pointer analysis algorithms and benchmarks.
+%heuristic instances and graphs.
+%We show that the learned heuristics are cost-effective.
+\end{itemize}
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

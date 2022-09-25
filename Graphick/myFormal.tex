@@ -1,0 +1,31 @@
+\section{Formalization}
+\myparagraph{Inputs}
+% \[
+% \begin{align*}
+% Alloc \subseteq \power{(\mbv,\mbh,\mbm)}, \, Move \subseteq
+% \power{(\mbv,\mbv)}, \, Load \subseteq \power{(\mbv,\mbv,\mbf)}
+% , \, Store \subseteq \power{(\mbv,\mbf,\mbv)} ,\\ 
+% \, Call \subseteq \power{(\mbv,\mbv,\mbs,\mbv)}
+% \end{align}
+% \]
+\begin{itemize}
+  \item{$Alloc \subseteq \power{(\mbv,\mbh,\mbm)}$}
+  \item{$Move \subseteq \power{(\mbv,\mbv)}$}
+  \item{$Load \subseteq \power{(\mbv,\mbv,\mbf)}$}
+  \item{$Store \subseteq \power{(\mbv,\mbf,\mbv)}$}
+  \item{$Call \subseteq \power{(\mbv,\mbv,\mbs,\mbv)}$}
+\end{itemize}
+
+\myparagraph{Outputs}
+
+\begin{itemize}
+  \item{$VarPtsTo \subseteq \power{(\mbv,\mbc,\mbh,\mbh\mbc)}$}
+  \item{$FldPtsTo \subseteq \power{(\mbh,\mbh\mbc,\mbf,\mbh,\mbh\mbc)}$}
+  \item{$Reachable \subseteq \power{(\mbm,\mbc)}$}
+\end{itemize}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

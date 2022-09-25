@@ -1,0 +1,72 @@
+% !TEX root = ./paper.tex
+
+\section{Conclusion and Future Work}
+
+Unfortunately, the program analysis community for object-oriented programs has dismissed call-site sensitivity for a long time. 
+In this paper, 
+showed that 
+call-site sensitivity has vast untapped potential, even more than object sensitivity, when the notion of $k$-limiting is generalized. We provided an insight that call-site sensitivity with context tunneling can simulate object sensitivity and experimentally proved that the observation holds in practice by developing a technique to transform a baseline object-sensitive analysis into more precise, context-tunneled call-site sensitivity. 
+Based on our results, we hope that the community reconsiders call-site sensitivity from now on.  
+
+
+%We demonstrated that our technique enables call-site sensitivity to outperform modern object-sensitive analyses for real-world Java programs in both precision and cost.
+
+%when designing context-sensitive analyses.
+
+
+Many problems remain as future work. We already discussed a theoretical issue in Section~\ref{sec:counter_example}. 
+Other problems include the following. 
+
+
+\begin{itemize}
+
+\item {\em Can we learn better tunneling strategies than just simulating object sensitivity?} 
+Our goal in this paper was to show that call-site sensitivity can be superior to object sensitivity, and simulating object sensitivity was an effective means of achieving this goal. 
+However, simulating object sensitivity would be a suboptimal strategy for call-site sensitivity; 
+we believe an optimal tunneling strategy would enable call-site sensitivity to show far better precision than ours (\ours).
+Thus, an interesting direction for future work is to develop a powerful learning algorithm to find such strategies, where 
+the main challenge is how to efficiently explore the huge and non-monotone tunneling space~\cite{JeJeOh18}. Using reinforcement learning, for example, could be a promising approach to address this challenge. 
+
+%in the huge and non-monotone tunneling space~\cite{JeJeOh18}. 
+%For example, reinforcement learning could be a promising approach to address this challenge.
+
+\item {\em Can our approach be adapted for other flavors of context-sensitive analyses?}
+Our current simulation technique relies on properties specific to $k$-CFA (e.g., $I_2$ in Section~\ref{sec:simulation} leverages a unique property of context-tunneled $k$-CFA). However, the high-level idea (i.e., simulating object sensitivity) would be applicable to other analyses. 
+For example, it would be interesting if our idea could be adapted for $m$-CFA~\cite{Might10}. 
+% by leveraging properties of context-tunneled $m$-CFA. 
+
+
+
+% instead of k-CFA with your technique would produce better, similar, or worse results.
+
+
+% High-level idea of our approach (simulating object sensitivity) is applicable to other contexts. 
+%Directly applying our technique may not effective as
+%it relies on specific properties of k-CFA (e.g., $I_2$ leverages a unique property of context-tunneled k-CFA).
+%However, the high-level idea of our approach could be adapted.
+%For example, applying our approach could be adapted for m-CFA~\cite{Might10} by leveraging properties of context tunneled m-CFA.
+
+\end{itemize}
+
+
+
+
+
+
+% \myparagraph{Future Work}
+
+% \begin{itemize}
+
+% \item {\bf Better context tunneling for call-site-sensitivity}:
+
+% \item {\bf General technique for simulation}:  Our simulation technique was designed to work on the
+%   call-graph produced by an object-sensitive analysis. Therefore, the
+%   resulting call-site-sensitive analysis is likely to be effective for
+%   type-dependent clients (e.g. may-fail casts).
+
+%\end{itemize}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

@@ -1,0 +1,215 @@
+% 사용 가능한 옵션 리스트는 아래와 같습니다.
+% 'doctor - master': 박사인가 석사인가
+% 'final': 최종본일 경우 추가
+% 'twosides - oneside': 양면인가 단면인가
+% 'krabst': 국문초록
+% 'krack': 한글 감사의 글
+% 'asym': 홀수쪽과 짝수쪽에 제본 여백을 5mm 주고 반대쪽 여백을 5mm 줄임
+%         대부분의 제본소에서는 중앙에 있는것을 선호함 (제본소 문의 바람)
+%
+% 예제
+% \documentclass[master,final,oneside]{KUThesis}
+
+% 기본옵션은 [doctor,twosides,draft] 입니다.
+%\documentclass[final]{KUThesis}
+\documentclass[final, oneside]{KUThesis}
+%\documentclass[final, krack, oneside]{KUThesis}
+
+\usepackage[cjk]{kotex}
+\usepackage{booktabs}
+\usepackage[disable]{todonotes}
+\newcommand{\todoTBD}[2][]{\todo[#1]{TBD #2}}
+\newcommand{\todoP}[2][]{\todo[#1]{P3 #2}}
+\newcommand{\todoPP}[2][]{\todo[#1]{P2 #2}}
+\newcommand{\todoPPP}[2][]{\todo[#1]{P1 #2}}
+\usepackage{amsthm} %for theorem
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+%\usepackage{algpseudocode}% http://ctan.org/pkg/algorithmicx
+\usepackage{subcaption}
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage{color,soul}
+%ICSE18
+\usepackage{mathtools, amsfonts, mathrsfs}
+\usepackage{makecell, multirow, url}
+\let\labelindent\relax
+\usepackage[inline]{enumitem}
+%ASE18
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsmath,amssymb}
+\usepackage{balance}
+%FSE19
+\usepackage{pifont}
+\usepackage{xcolor}
+\theoremstyle{definition}
+\newtheorem{example}{example}[section]
+
+\usepackage{graphicx}
+\usepackage{textcomp}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{
+	language=java,
+    aboveskip=3mm,
+    belowskip=3mm,
+    showstringspaces=false,
+    columns=flexible,
+    basicstyle={\small\ttfamily},
+    numbers=left,
+    numbersep=5pt,
+    numberstyle=\scriptsize\color{gray},
+    keywordstyle=\color{blue},
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{mauve},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=3
+}
+
+\usepackage {tikz}
+\usetikzlibrary {shapes,positioning}
+\usetikzlibrary{calc,trees,positioning,arrows,chains,shapes.geometric,%
+    decorations.pathreplacing,decorations.pathmorphing,shapes,%
+    matrix,shapes.symbols}
+
+\tikzset{
+>=stealth',
+  punktchain/.style={
+    rectangle,
+    rounded corners,
+    % fill=black!10,
+    draw=black, very thick,
+    text width=10em,
+    minimum height=3em,
+    text centered,
+    on chain},
+  line/.style={draw, thick, <-},
+  element/.style={
+    tape,
+    top color=white,
+    bottom color=blue!50!black!60!,
+    minimum width=8em,
+    draw=blue!40!black!90, very thick,
+    text width=10em,
+    minimum height=3.5em,
+    text centered,
+    on chain},
+  every join/.style={->, thick,shorten >=1pt},
+  decoration={brace},
+  tuborg/.style={decorate},
+  tubnode/.style={midway, right=2pt},
+}
+
+\usepackage{rotating}
+\usepackage{colortbl}
+\newcommand{\gc}{\cellcolor{black!10}}
+
+\usepackage{proof}
+
+\usepackage[stable]{footmisc} %footnote in section titles
+
+\usepackage{multicol}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                   아래 정보를 꼭 바꾸세요!                   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 첫 번째 인수의 숫자
+% 0 : 제목이 10자 이하일 경우
+% 1 : 제목이 10자 이상 1줄일 경우
+% 2 : 제목이 2줄 이상일 경우
+% 3 : 제목이 2 셋팅에서도 너무 길 경우
+% 두 번째 인수는 영문 제목, 세 번째 인수는 한글 제목(국문초록 추가할 때 사용)
+\title{1}{
+Data-Driven Pointer Analysis
+}{
+데이터 기반 기호 실행
+}
+
+% 본인의 이름 성,이름 순으로 한글자씩. 한글 이름은 한칸에 모두 적음.
+\author[korean]{전민석}{}{}
+\author[chinese]{田}{旻}{錫}
+\author[english]{Jeon}{Minseok}{}
+
+% 지도교수님 성함 {한자이름}{영문이름}
+\advisor{오학주}{吳學柱}{Hakjoo Oh}
+
+% 전공
+\department{CSE}
+
+% 졸업년월
+\graduateDate{2022}{8}
+
+% 제출 연,월,일
+\submitDate{2020}{12}{30}
+
+% 본문 줄간격 (규정: 170 - 200)
+\captionLineSpacing{150}
+\abstractLineSpacing{200}
+\krAbstractLineSpacing{200}
+\TOCLineSpacing{200}
+\contentLineSpacing{200}
+\acknowledgementLineSpacing{200}
+
+% TOC, LOF, LIT에 헤더를 추가하고 싶은 경우에 주석 해제
+%\addTOCHeader
+
+% 본문에 헤더를 추가하고 싶은 경우에 주석 해제
+%\addContentHeader
+
+% 참고문헌에 헤더를 추가하고 싶은 경우에 주석 해제
+%\addBibHeader
+
+% 스캔한 승인서가 있을 경우 파일 이름 입력. 스캔 파일의 사이즈는 B5이어야 한다.
+%\approvalScan{}
+
+% 최종본(final)일 경우 심사위원 목록. 석사는 3명, 박사는 5명.
+\referee[1]{\hspace{20mm}오 학 주\hspace{20mm}}
+\referee[2]{\hspace{20mm}차 성 덕\hspace{20mm}}
+\referee[3]{\hspace{20mm}이 희 조\hspace{20mm}}
+\referee[4]{\hspace{20mm}허 준 범\hspace{20mm}}
+\referee[5]{\hspace{20mm}이 우 석\hspace{20mm}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                          여기까지!                           %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 단축 키를 모아놓은 파일
+\include{macros}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         본문 파일을 이 아래에 추가하세요!        %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 꼭 addContents함수를 이용해서 추가해야 양면출력이 제대로 됩니다!
+%\addContents
+%\input
+
+
+\input{introduction}
+\input{preliminaries}
+\input{tunneling}
+\input{obj2cfa}
+\input{graphick}
+\input{related}
+\input{conclusion}
+
+\appendix
+\input{analysis_simple}
+\input{Obj2cfa/counter_example}
+\input{Obj2cfa/discussion}
+\input{Graphick/appendix}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                  여기까지 추가                   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

@@ -1,0 +1,38 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+\begin{table}[]
+\setlength\extrarowheight{-1pt}
+\caption{Performance comparison among various context sensitivity heuristics against the left six benchmarks. All the notations are the same with Table~\ref{tbl:contextAbstraction}.}
+\label{appendix:ctx}
+\centering
+\footnotesize
+\begin{tabular}{@{}c|clrrrrrr@{}}
+\toprule
+\multicolumn{1}{c}{}&\multicolumn{1}{c}{}        & \multicolumn{1}{c}{} & \multicolumn{1}{c}{\OurCtx} & \multicolumn{1}{c}{\Scaler} & \multicolumn{1}{c}{\Zipper} & \multicolumn{1}{c}{\Data} & \multicolumn{1}{c}{\twoobjH} & \multicolumn{1}{c}{\Insens} \\ \midrule
+\multirow{28}{*}{\rotatebox[origin=c]{90}{Test programs}}&\multirow{4}{*}{pmd$_m$}       & analysis time (s)    & 43(+67)                      & 55(+44)                    & 57(+78)                    & 30                       & 67                       & 23                         \\
+&                            & \#may-fail casts     & 288                          & 287                        & 300                        & 327                      & 287                      & 679                        \\
+&                            & \#poly-call sites    & 643                          & 636                        & 638                        & 667                      & 636                      & 885                        \\%\cmidrule(){2-9}
+&                            & \#call-graph-edges   & 27,074                        & 27,052                      & 27,056                      & 27,147                    & 27,052                    & 30,328                      \\\cmidrule(){2-9}
+&\multirow{4}{*}{fop}        & analysis time (s)    & 212(+88)                     & 341(+54)                   & 533(+71)                   & 74                       & 949                      & 53                         \\
+&                            & \#may-fail casts     & 1,568                         & 1,732                       & 1,449                       & 1,600                     & 1,446                     & 2,458                       \\
+&                            & \#poly-call sites    & 2,876                         & 2,945                       & 2,848                       & 3,009                     & 2,844                     & 3,585                       \\%\cmidrule(){2-9}
+&                            & \#call-graph-edges   & 71,612                        & 72,556                      & 71,418                      & 72,113                    & 71,408                    & 84,330                      \\\cmidrule(){2-9}
+&\multirow{4}{*}{bloat}      & analysis time (s)    & 216(+30)                     & 290(+21)                   & 2402(+23)                  & 44                       & 2,422                     & 20                         \\
+&                            & \#may-fail casts     & 1,215                         & 1,222                       & 1,205                       & 1,288                     & 1,193                     & 1,924                       \\
+&                            & \#poly-call sites    & 1,458                         & 1,465                       & 1,429                       & 1,496                     & 1,427                     & 2,014                       \\%\cmidrule(){2-9}
+&                            & \#call-graph-edges   & 53,641                        & 53,867                      & 53,147                      & 54,059                    & 53,143                    & 61,150                      \\\cmidrule(){2-9}
+&\multirow{4}{*}{JPC}        & analysis time (s)    & 118(+69)                     & 274(+38)                   & 266(+55)                   & 45                       & 398                      & 37                         \\
+&                            & \#may-fail casts     & 1,427                         & 1,552                       & 1,343                       & 1,472                     & 1,345                     & 2,261                       \\
+&                            & \#poly-call sites    & 4,210                         & 4,228                       & 4,187                       & 4,322                     & 4,186                     & 4,924                       \\%\cmidrule(){2-9}
+&                            & \#call-graph-edges   & 79,912                        & 80,098                      & 79,787                      & 80,208                    & 79,783                    & 94,569                      \\\cmidrule(){2-9}
+&\multirow{4}{*}{checkstyle} & analysis time (s)    & 133(+70)                     & 264(+45)                   & 396(+52)                   & 69                       & 1,693                     & 44                         \\
+&                            & \#may-fail casts     & 600                          & 625                        & 590                        & 644                      & 581                      & 1,114                       \\
+&                            & \#poly-call sites    & 1,052                         & 1,038                       & 1,040                       & 1,089                     & 1,035                     & 1,444                       \\%\cmidrule(){2-9}
+&                            & \#call-graph-edges   & 9,516                         & 9,514                       & 48,830                      & 48,996                    & 48,809                    & 57,490                      \\\cmidrule(){2-9}
+&\multirow{4}{*}{xalan}      & analysis time (s)    & 226(+64)                     & 539(+38)                   & 119(+45)                   & 44                       & 881                      & 37                         \\
+&                            & \#may-fail casts     & 567                          & 579                        & 556                        & 604                      & 533                      & 1,182                       \\
+&                            & \#poly-call sites    & 1,533                         & 1,523                       & 1,533                       & 1,583                     & 1,522                     & 1,898                       \\%\bottomrule
+&                            & \#call-graph-edges   & 45,269                        & 44,887                      & 9,125                       & 45,549                    & 44,871                    & 5,1302                      \\ \bottomrule 
+\end{tabular}
+\end{table}

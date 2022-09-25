@@ -1,0 +1,270 @@
+%\documentclass[acmsmall,review]{acmart}
+\documentclass[acmsmall, screen]{acmart}
+%\settopmatter{printfolios=true,printccs=false,printacmref=false}
+
+\startPage{1}
+
+\bibliographystyle{ACM-Reference-Format}
+\citestyle{acmauthoryear}   %% For author/year citations
+
+\usepackage{booktabs}   %% For formal tables:
+                        %% http://ctan.org/pkg/booktabs
+\usepackage{subcaption} %% For complex figures with subfigures/subcaptions
+                        %% http://ctan.org/pkg/subcaption
+
+\usepackage{algorithm}% http://ctan.org/pkg/algorithms
+\usepackage{algpseudocode}% http://ctan.org/pkg/algorithmicx
+
+\usepackage{boldline,multirow}
+
+\usepackage{makecell, multirow}
+\usepackage[inline]{enumitem}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{color}
+
+\usepackage{tabulary} \usepackage{tabularx}
+
+\usepackage{tikz} \usetikzlibrary{shapes,arrows,positioning}
+\usepackage{multicol}
+
+\usepackage{proof}
+
+\usepackage{caption}
+% \usepackage{subcaption}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{ language=Java, aboveskip=3mm, belowskip=3mm,
+  showstringspaces=false, columns=flexible,
+  basicstyle={\small\ttfamily}, numbers=left, numbersep=5pt,
+  numberstyle=\small\color{gray}, keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen}, stringstyle=\color{mauve},
+  breaklines=true, breakatwhitespace=true, tabsize=3 }
+
+% \tikzstyle{block} = [rectangle, draw, fill=white, text width=5em,
+% text centered, rounded corners, minimum height=4em]
+\tikzstyle{block} = [rectangle, draw, fill=white, text width=3em, text
+centered, rounded corners, minimum height=3em] 
+\tikzstyle{block2} =
+[rectangle, draw, fill=white, text width=5em, text centered, rounded
+corners, minimum height=3em] \tikzstyle{line} = [draw, -latex']
+\setcopyright{rightsretained}
+
+
+
+
+
+\begin{document}
+
+% %% Title information
+% \title[Short Title]{Full Title} %% [Short Title] is optional;
+%                                         %% when present, will be
+%                                         %% used in
+%                                         %% header instead of Full
+%                                         %% Title.
+% \titlenote{with title note} %% \titlenote is optional;
+%                                         %% can be repeated if
+%                                         %% necessary;
+%                                         %% contents suppressed with
+%                                         %% 'anonymous'
+% \subtitle{Subtitle} %% \subtitle is optional
+% \subtitlenote{with subtitle note} %% \subtitlenote is optional;
+%                                         %% can be repeated if
+%                                         %% necessary;
+%                                         %% contents suppressed with
+%                                         %% 'anonymous'
+
+
+% \title{Context Tunneling for Points-to Analysis}
+% \subtitle{Maximizing the Potential of $k$-Context-Sensitivity with
+% Data-Driven Optimization}
+\title{Precise and Scalable Points-to Analysis via Data-Driven Context
+  Tunneling}
+
+\author{Minseok Jeon}
+\email{minseok_jeon@korea.ac.kr} %% \email is recommended
+\affiliation{
+	% \position{Student}
+	\department{Department of Computer Science and
+		Engineering} %% \department is recommended
+	\institution{Korea University} %% \institution is required
+	\streetaddress{145, Anam-ro} \city{Sungbuk-gu} \state{Seoul}
+	\postcode{02841} \country{Republic of Korea} }
+\author{Sehun Jeong} \email{gifaranga@korea.ac.kr}
+\affiliation{
+	% \position{Student}
+	\department{Department of Computer Science and
+		Engineering} %% \department is recommended
+	\institution{Korea University} %% \institution is required
+	\streetaddress{145, Anam-ro} \city{Sungbuk-gu} \state{Seoul}
+	\postcode{02841} \country{Republic of Korea} }
+\author{Hakjoo Oh}
+\authornote{Corresponding author}
+\email{hakjoo_oh@korea.ac.kr} %% \email is recommended
+\affiliation{
+  % \position{Student}
+  \department{Department of Computer Science and
+    Engineering} %% \department is recommended
+  \institution{Korea University} %% \institution is required
+  \streetaddress{145, Anam-ro} \city{Sungbuk-gu} \state{Seoul}
+  \postcode{02841} \country{Republic of Korea} }
+
+
+\begin{CCSXML}
+	<ccs2012>
+	<concept>
+	<concept_id>10003752.10010124.10010138.10010143</concept_id>
+	<concept_desc>Theory of computation~Program analysis</concept_desc>
+	<concept_significance>500</concept_significance>
+	</concept>
+	<concept>
+	<concept_id>10010147.10010257.10010293</concept_id>
+	<concept_desc>Computing methodologies~Machine learning approaches</concept_desc>
+	<concept_significance>500</concept_significance>
+	</concept>
+	</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Theory of computation~Program analysis}
+\ccsdesc[500]{Computing methodologies~Machine learning approaches}
+
+%%% The following is specific to OOPSLA '18 and the paper
+%%% 'Precise and Scalable Points-to Analysis via Data-Driven Context Tunneling'
+%%% by Minseok Jeon, Sehun Jeong, and Hakjoo Oh.
+%%%
+\acmPrice{}
+\acmDOI{10.1145/3276510}
+\acmYear{2018}
+\copyrightyear{2018}
+\acmJournal{PACMPL}
+\acmVolume{2}
+\acmNumber{OOPSLA}
+\acmArticle{140}
+\acmMonth{11}
+
+
+%% Keywords comma separated list
+\keywords{Points-to analysis, Context-sensitive analysis, Data-driven
+  program
+  analysis} %% \keywords are mandatory in final camera-ready submission
+
+\input{macros}
+
+
+\begin{abstract}
+  We present context tunneling, a new approach for making $k$-limited
+  context-sensitive points-to analysis precise and scalable.
+  As context-sensitivity holds the key to the development
+  of precise and scalable points-to analysis, a variety of techniques
+  for context-sensitivity have been proposed. However, existing
+  approaches such as $k$-call-site-sensitivity or $k$-object-sensitivity have a
+  significant weakness that they unconditionally update the context of a
+  method at every call-site, allowing important context elements to be
+  overwritten by more recent, but not necessarily more important,
+  context elements. In this paper, we show that this is a key limiting factor of
+  existing context-sensitive analyses, and demonstrate that remarkable increase in
+  both precision and scalability can be gained by
+  maintaining important context elements only.
+  Our approach, called context tunneling, updates contexts selectively
+  and decides when to propagate the same context without
+  modification.
+
+ % \minseok{Our approach
+    % augments a call-graph with \emph{context tunneling}; the tunneling
+    % allow the beneficial contexts to bypass context updating so that
+    % they can prevent losing key context elements.}
+
+  We attain context tunneling via a data-driven approach.  The
+  effectiveness of context tunneling is very sensitive to the choice
+  of important context elements. Even worse, precision is not
+  monotonically increasing with respect to the ordering of the
+  choices. As a result, manually coming up with a good heuristic rule
+  for context tunneling is extremely challenging and likely fails to
+  maximize its potential. We address this challenge by developing a
+  specialized data-driven algorithm, which is able to automatically
+  search for high-quality heuristics over the non-monotonic space of
+  context tunneling.
+
+  We implemented our approach in the Doop framework and applied it to
+  four major flavors of context-sensitivity: call-site-sensitivity,
+  object-sensitivity, type-sensitivity, and hybrid context-sensitivity. In
+  all cases, $1$-context-sensitive analysis with context
+  tunneling far outperformed deeper context-sensitivity with $k=2$ in
+  both precision and scalability.
+
+
+
+% improve precision and scalability of context-sensitive points-to analysis.
+% Remembering $k$-most-recent context elements is a universal choice for many
+% context abstraction techniques but it brings imprecision due to truncating old but
+% potentially important context elements to accommodate new but worthless one. Our
+% technique aims to recover those wasted potential. The idea is ignoring worthless
+% contexts while inheriting key contexts when methods are invoked.
+% It is simple and potentially powerful as it can replicate deeper context
+% sensitivity with limited $k$ and its application is not restricted to certain types
+% of context sensitivity, however we need classifiers to judge when to inherit
+% contexts. We propose data driven approach to obtain such classifiers automatically.
+% The context tunneling heuristic is now parameterized by a set of Boolean formulas
+% that describes high-level features of method invocations who need context tunneling.
+% Than, our learning algorithm searches good parameters in iterative refinement
+% fashion. We implemented context tunneling in the Doop framework and learned
+% tunneling heuristic for four representative flavors of context sensitivity:
+% selective hybrid object, object, type, and call-site sensitivity. Experimental
+% results show that our approach makes $1$-context-sensitivities to have more
+% precision than deeper counterparts and performance of baseline analyses.
+
+\end{abstract}
+
+\maketitle
+\input{introduction}
+\input{overview_new3}
+%\input{overview}%\input{contextSensitiveTunneling}
+\input{tunneling}
+\input{learning}
+\input{evaluation}
+\input{relatedwork}
+\input{conclusions}
+\appendix
+\input{appendix}
+\begin{table}[]
+	\begin{tabular}{|c|c|r|r|r|}
+		\hline
+		&        & \multicolumn{1}{c|}{Zipper 2obj} & \multicolumn{1}{c|}{CFA\_Sim} & \multicolumn{1}{c|}{CFA\_Sim\_Tune} \\ \hline
+		\multirow{2}{*}{luindex} & alarms & 327                              & 391                           & 300                                 \\ \cline{2-5} 
+		& costs  & 22                               & 876                           & 34                                  \\ \hline
+	\end{tabular}
+	\caption{Zipper lose some precision critical methods}
+\end{table}
+\begin{comment}
+
+{\sf \color{blue}{TODO}}:
+\begin{itemize}
+\item Definition of flavor for sobj
+\begin{align*}
+ & \parentsobj (\heap, \hctx, {\it invo}, \ctx) =
+\begin{cases}
+\parentcall (\heap, \hctx, {\it invo}, \ctx)&\text{$\cdots$} heap = \perp\\
+\parentobj (\heap, \hctx, {\it invo}, \ctx)&\text{$\cdots$} otherwise
+\end{cases}
+\end{align*}
+\item Application to $k\ge 2$ \\
+\end{itemize}
+\end{comment}
+
+%\newpage
+
+%% Acknowledgments
+\begin{acks}
+This work was supported by Samsung Research Funding \& Incubation Center of Samsung Electronics under Project Number SRFC-IT1701-09.
+\end{acks}
+
+
+\bibliography{refs}
+
+%\appendix
+%\section{Appendix}
+%\input{appendix}
+
+\end{document}

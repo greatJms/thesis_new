@@ -1,0 +1,67 @@
+\begin{table}[]
+\setlength\extrarowheight{-1pt}
+\caption{Performance of the context-sensitivity heuristics against benchmarks.
+%For all metrics, the lower is the better.
+%For precision metric, we use the number of may-fail casts(\#may-fail casts) and polymorphic call sites (\#poly-call sites) whose targets are not uniquely determined by each pointer analysis.
+%For scalability metric, we use analysis time, and the number in a parenthesis presents the sum of time spent during pre-analysis process.
+%\#call-graph-edges for the training and validation programs are omitted due
+%    to the lack of space.
+}
+\label{tbl:contextAbstraction}
+\scriptsize
+\begin{tabular}{@{}r|clrrrrrr@{}}
+\toprule
+\multicolumn{1}{c}{}               &                           & \multicolumn{1}{c}{} & \multicolumn{1}{c}{\OurCtx} & \multicolumn{1}{c}{\Scaler} & \multicolumn{1}{c}{\Zipper} & \multicolumn{1}{c}{\Data} & \multicolumn{1}{c}{\twoobjH} & \multicolumn{1}{c}{\Insens} \\ \midrule
+\multirow{9}{*}{\rotatebox[origin=c]{90}{Training programs}} & \multirow{3}{*}{luindex}  & analysis time (s)    & 22(+22)                       & 36(+17)                         & 33(+17)                         & 19                         & 36                       & 15                         \\
+                                   &                           & \#may-fail casts     & 297                      & 297                        & 310                        & 341                         & 297                      & 734                        \\
+                                   &                           & \#poly-call sites    & 682                      & 675                        & 677                        & 702                         & 675                         & 940                        \\
+                                   %&                           & \#call-graph-edges   & 29,045                   & 29,021                     & 29,025                     & 29,196                         & 29,021                         & 33,130                      \\
+\cmidrule(){2-9}
+                                   & \multirow{3}{*}{lusearch} & analysis time (s)    & 24(+21)                       & 63(+15)                         & 62(+17)                         & 19                         & 66                       & 15                         \\
+                                   &                           & \#may-fail casts     & 299                      & 299                        & 305                        &  347                        & 299                      & 844                        \\
+                                   &                           & \#poly-call sites    & 858                      & 850                        & 853                        & 883                         & 850                         & 1,133                      \\
+                                   %&                           & \#call-graph-edges   & 31,838                   & 31,811                     & 31,817                     & 31,995                         & 31,811                         & 36,343                      \\
+\cmidrule(){2-9}
+                                   & \multirow{3}{*}{antlr}    & analysis time (s)    & 50(+94)                       & 51(+24)                         & 84(+26)                           & 33                         & 109                      & 24                         \\
+                                   &                           & \#may-fail casts     & 409                      & 412                        & 420                           & 513                         & 409                      & 918                        \\
+                                   &                          & \#poly-call sites    & 1,495                    & 1,488                      & 1,488                           & 1,517                         & 1,487                         & 1,729                      \\
+                                   %&                           & \#call-graph-edges   & 47,273                   & 49,398                     & 47,233                           & 47,358                         & 47,232                         & 50,652                      \\
+\midrule \midrule
+\multirow{28}{*}{\rotatebox[origin=c]{90}{Test programs}} & \multirow{4}{*}{pmd$_{s}$}      & analysis time (s)    & 710(+92)                      & 494(+49)                        &  $>$10,800                          & 117                         & $>$10,800     & 48                         \\
+                                   &                           & \#may-fail casts     & 2,075                    & 2,176                      & -                           & 2,145                         & -                         & 2,948                      \\
+                                   &                           & \#poly-call sites    & 3,507                    & 3,536                      & -                           & 3,647                         & -                         & 4,183                      \\
+                                   &                           & \#call-graph-edges   & 92,589                   & 92,775                     & -                           & 94,328                         & -                         & 104,457                     \\\cmidrule(){2-9}
+
+                                   & \multirow{4}{*}{chart}    & analysis time (s)    & 63(+73)                       & 184(+48)                        & 113(+56)                        & 35                         & 196                      & 48                       \\
+                                   &                           & \#may-fail casts     & 998                      & 976                        & 888                        & 974                         & 883                      & 1,810                         \\
+                                   &                           & \#poly-call sites    & 1,392                    & 1,402                      & 1,379                      & 1,435                         & 1,378                         & 1,852                      \\
+                                   &                           & \#call-graph-edges   & 52,544                   & 53,198                     & 52,377                     & 52,647                         & 52,374                         & 63,453                     \\\cmidrule(){2-9}
+                                   & \multirow{4}{*}{eclipse}  & analysis time (s)    & 1,395(+103)                    & 652(+92)                        & 9,701(+114)                           & 159                         & $>$10,800     & 91                         \\
+                                   &                           & \#may-fail casts     & 2,989                    & 3,211                      & 2,897                           & 3,178                         & -                         & 4,190                      \\
+                                   &                           & \#poly-call sites    & 8,418                    & 8,486                      & 8,390                           & 8,627                         & -                         & 9,197                      \\
+                                   &                           & \#call-graph-edges   & 144,873                  & 145,953                    & 143,727                           & 146,512                         & -                         & 161,222                     \\\cmidrule(){2-9}
+                                   & \multirow{4}{*}{jedit}    & analysis time (s)    & 845(+90)                      & 1,377(+79)                      &   $>$10,800                         & 137                         & $>$10,800      & 78                         \\
+                                   &                           & \#may-fail casts     & 2,196                    & 2,397                      &  -                          & 2,298                         &  -                        & 3,398                      \\
+                                   &                           & \#poly-call sites    & 3,917                    & 4,012                      &  -                          & 4,091                         &  -                        & 4,769                      \\
+                                   &                           & \#call-graph-edges   & 98,401                   & 99,536                     &  -                          & 99,697                         &  -                        & 120,309                     \\\cmidrule(){2-9}
+                                   & \multirow{4}{*}{briss}    & analysis time (s)    & 2,368(+169)                    & 907(+151)                           & $>$10,800                           & 499                         & $>$10,800     & 149                        \\
+                                   &                           & \#may-fail casts     & 3,065                    & 3,428                      &  -                          & 3,162                         &  -                        & 4,904                      \\
+                                   &                           & \#poly-call sites    & 5,099                    & 5,323                      &  -                          & 5,291                         &  -                        & 6,297                      \\
+                                   &                           & \#call-graph-edges   & 150,351                  & 152,761                    &  -                          & 151,861                         &  -                        & 176,785                     \\\cmidrule(){2-9}
+                                   & \multirow{4}{*}{soot}     & analysis time (s)    & $>$10,800     & 883(+727)                        & $>$10,800                           & $>$10,800                         & $>$10,800     & 698                        \\
+                                   &                           & \#may-fail casts     &  -                        & 10,549                     &   -                         & -                         &   -                       & 16,570                     \\
+                                   &                           & \#poly-call sites    &  -                        & 14,822                     &   -                         & -                         &   -                       & 16,532                     \\
+                                   &                           & \#call-graph-edges   &  -                        & 374,877                    &  -                          & -                         &  -                        & 415,476                     \\\cmidrule(){2-9}
+                                   & \multirow{4}{*}{jython}   & analysis time (s)    & $>$10,800     & 314(+96)                        & $>$10,800                           & 425                         & $>$10,800     & 73                         \\
+                                   &                           & \#may-fail casts     & -                         & 1,852                      &  -                          & 1,773                          &  -                        & 2,234                      \\
+                                   &                           & \#poly-call sites    & -                         & 2,500                      &  -                          & 2,481                         & -                         & 2,778                      \\
+                                   &                           & \#call-graph-edges   &  -                        & 107,410                     & -                           & 106,837                         &  -                        & 114,856
+\\\midrule \midrule
+\multirow{3}{*}{\rotatebox[origin=c]{90}{Valid}}
+                                   & \multirow{3}{*}{findbugs} & analysis time (s)    & 305(+58)                      & 191(+36)                        & 1,399(+43)                           & 59                         & 2,458                    & 35                      \\
+                                   &                           & \#may-fail casts     & 1,436                    & 1,452                      & 1,412                           & 1,663                         & 1,409                    & 2,508                         \\
+                                   &                           & \#poly-call sites    & 2,188                    & 2,195                      & 2,182                           & 2,220                         & 2,182                         & 2,925                      \\
+                                   %&                           & \#call-graph-edges   & 65,874                   & 66,177                     &  65,838                          & 66,028                         &  65,836                        & 77,370                     \\
+\bottomrule
+\end{tabular}
+\end{table} 

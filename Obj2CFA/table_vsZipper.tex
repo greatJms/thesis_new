@@ -1,0 +1,78 @@
+% !TEX root = ./paper.tex
+
+%\begin{table}[]
+\begin{table}[]
+\setlength\extrarowheight{-1pt}
+\caption{Performance comparison of \ours, \twoobjZipper~(i.e., \Zipper~\cite{Li2018a}), and \oursZipper. 
+%We also evaluate the baseline state-of-the-art 1-object sensitivity with tunneling~\oneobjHT. 
+%Unlike tunneling heuristics used in \ours~or \oneobjHT~that determine whether to update contexts, the heuristic Zipper determine whether to apply 2-object sensitivity or context insensitivity for each method call.
+}
+\label{tbl:eval:vsZipper}
+\centering\scriptsize
+\begin{tabular}{@{}clrr | clrr@{}}
+\toprule
+Program                     & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\#fail-casts} & \multicolumn{1}{c |}{Time} & Program                   & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\#fail-casts} & \multicolumn{1}{c}{Time} \\ \midrule
+\multirow{3}{*}{eclipse}    & \ours                    & 460                              & 62                           & \multirow{3}{*}{fop}      & \ours                    & 1,359                             & 368                          \\
+                            & \oursZipper                      & 482                              & 42                           &                           & \oursZipper                      & 1,397                             & 279                          \\
+                            & \twoobjZipper                  & 586                              & 45                          &                           & \twoobjZipper                  & 1,471                             & 318                          \\\midrule
+\multirow{3}{*}{bloat}      & \ours                    & 1,136                             & 456                          & \multirow{3}{*}{jpc}      & \ours                    & 1,279                             & 201                          \\
+                            & \oursZipper                      & 1,168                             & 397                          &                           & \oursZipper                      & 1,368                             & 176                          \\
+                            & \twoobjZipper                  & 1,224                             & 1,942                         &                           & \twoobjZipper                  & 1,415                             & 147                          \\\midrule
+\multirow{3}{*}{chart}      & \ours                    & 810                              & 80                           & \multirow{3}{*}{xalan}    & \ours                    & 463                              & 91                           \\
+                            & \oursZipper                      & 890                              & 58                           &                           & \oursZipper                      & 482                              & 72                          \\
+                            & \twoobjZipper                  & 910                              & 54                           &                           & \twoobjZipper                  & 568                              & 66                          \\\midrule
+\multirow{3}{*}{sunflow}    & \ours                    & 1,787                             & 438                          & \multirow{3}{*}{findbugs} & \ours                    & 1,316                             & 288                          \\
+                            & \oursZipper                      & 1,818                             & 279                          &                           & \oursZipper                      & 1,360                             & 164                          \\
+                            & \twoobjZipper                  & 1,869                             & 361                          &                           & \twoobjZipper                  & 1,437                             & 604                          \\\midrule
+\multirow{3}{*}{checkstyle} & \ours                    & 522                             & 106                          & \multirow{3}{*}{batik}    & \ours                    & 1,602                             & 1,422                         \\
+                            & \oursZipper                      & 535                              & 88                          &                           & \oursZipper                      & 1,782                             & 1,649                          \\
+                            & \twoobjZipper                  & 607                              & 248                          &                           & \twoobjZipper                  & 1,614                             & 667                          \\\midrule
+\multirow{3}{*}{sunflow09}  & \ours                    & 1,101                             & 126                          & \multirow{3}{*}{xalan09}  & \ours                    & 989                              & 241                          \\
+                            & \oursZipper                      & 1,146                             & 84                           &                           & \oursZipper                      & 1,004                             & 166                          \\ 
+                            & \twoobjZipper                  & 1,192                             &73                           &                           & \twoobjZipper                  & 1,074                             & 214                          \\\midrule
+\multirow{3}{*}{avrora09}   & \ours                    & 918                              & 147                          & \multirow{3}{*}{h2} & \ours                    & 1,207                             & 3,766                          \\
+                            & \oursZipper                      & 964                             & 105                          &                           & \oursZipper                      &  1,225                            & 2,318                          \\
+                            & \twoobjZipper                  & 1,042                             & 115                          &                           & \twoobjZipper                  & 1,311                             & 8,216                          \\%\midrule
+
+\bottomrule
+                            
+\end{tabular}
+\vspace{-10pt}
+\end{table}
+
+% \begin{table}[]
+% \caption{Comparison of our 1-call-site sensitivity (\ours) against Zipper~(\twoobjZipper~\cite{Li2018a}). 
+% %We also evaluate the baseline state-of-the-art 1-object sensitivity with tunneling~\oneobjHT. 
+% %Unlike tunneling heuristics used in \ours~or \oneobjHT~that determine whether to update contexts, the heuristic Zipper determine whether to apply 2-object sensitivity or context insensitivity for each method call.
+% }
+% \label{tbl:eval:vsZipper}
+% \begin{tabular}{@{}clrr | clrr@{}}
+% \toprule
+% Program                     & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\# fail-casts} & \multicolumn{1}{c |}{sec} & Program                   & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\# fail-casts} & \multicolumn{1}{c}{sec} \\ \midrule
+% \multirow{2}{*}{eclipse}    & \ours                    & 460                              & 62                           & \multirow{2}{*}{fop}      & \ours                    & 1,359                             & 368                          \\
+%                             & \twoobjZipper                  & 586                              & 67                          &                           & \twoobjZipper                  & 1,471                             & 424                          \\\midrule
+% %                            & \oneobjHT                      & 562                              & 64                           &                           & \oneobjHT                      & 1,472                             & 357                          \\\midrule
+% \multirow{2}{*}{bloat}      & \ours                    & 1,136                             & 456                          & \multirow{2}{*}{jpc}      & \ours                    & 1,279                             & 201                          \\
+%                             & \twoobjZipper                  & 1,224                             & 1,969                         &                           & \twoobjZipper                  & 1,415                             & 229                          \\\midrule
+% %                            & \oneobjHT                      & 1,210                             & 376                          &                           & \oneobjHT                      & 1,418                             & 123                          \\\midrule
+% \multirow{2}{*}{chart}      & \ours                    & 810                              & 80                           & \multirow{2}{*}{xalan}    & \ours                    & 463                              & 91                           \\
+%                             & \twoobjZipper                  & 910                              & 98                           &                           & \twoobjZipper                  & 568                              & 107                          \\\midrule
+% %                            & \oneobjHT                      & 892                              & 80                           &                           & \oneobjHT                      & 541                              & 247                          \\\midrule
+% \multirow{2}{*}{sunflow}    & \ours                    & 1,787                             & 438                          & \multirow{2}{*}{findbugs} & \ours                    & 1,316                             & 288                          \\
+%                             & \twoobjZipper                  & 1,869                             & 459                          &                           & \twoobjZipper                  & 1,437                             & 647                          \\\midrule
+% %                            & \oneobjHT                      & 1,908                             & 240                          &                           & \oneobjHT                      & 1,410                             & 217                          \\\midrule
+% \multirow{2}{*}{checkstyle} & \ours                    & 522                             & 106                          & \multirow{2}{*}{batik}    & \ours                    & 1,602                             & 1,422                         \\
+%                             & \twoobjZipper                  & 607                              & 299                          &                           & \twoobjZipper                  & 1,614                             & 820                          \\\midrule
+% %                            & \oneobjHT                      & 591                              & 199                          &                           & \oneobjHT                      & 1,632                             & 470                          \\\midrule
+% \multirow{2}{*}{sunflow09}  & \ours                    & 1,101                             & 126                          & \multirow{2}{*}{xalan09}  & \ours                    & 989                              & 241                          \\
+%                             & \twoobjZipper                  & 1,192                             & 124                           &                           & \twoobjZipper                  & 1,074                             & 272                          \\\midrule
+% %                            & \oneobjHT                      & 1,230                             & 88                           &                           & \oneobjHT                      & 1,065                             & 362                          \\ \midrule
+% \multirow{2}{*}{avrora09}   & \ours                    & 918                              & 147                          & \multirow{2}{*}{h2} & \ours                    & 1,207                             & 3,766                          \\
+%                             & \twoobjZipper                  & 1,042                             & 175                          &                           & \twoobjZipper                  & -                             & >5,400                          \\%\midrule
+% %                            & \oneobjHT                      & 1,037                             & 160                          &                           & \oneobjHT                      &  1,301                            & 482                          \\
+
+% \bottomrule
+% \bottomrule
+                            
+% \end{tabular}
+% \end{table}

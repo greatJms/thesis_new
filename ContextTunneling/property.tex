@@ -1,0 +1,69 @@
+\section{Learning}
+\subsection{Abstraction Space} \label{sec:setting} 
+Let $P \in \Program$ be a program to analyze. Let $\mbm_P$ be the set
+of methods in $P$.  Then, we define the set $\mca_P$ of abstractions
+for $P$ as follows:
+\[
+\vec{a} \in \mca_P = \myset{true,false}^{\mbm_P}
+\]
+\subsection{Static Analysis}
+We assume that a set $\Assertion_P$ of assertions is given together
+with $P$. We model static analysis for $P$ by the function
+($\power{\Assertion_P}$ denotes proven queries.):
+\[
+F_P : \mca_P \to \power{\Assertion_P}.
+\]
+
+
+\subsection{Optimization problem}
+\[
+\mbox{Find $a \in \mca$ that }
+\forall a' \in \mca. |\proved (F_{P}( \vec{a'}))| \le
+|\proved(F_P (\vec{a}))| 
+\]
+\subsection{Learning Algorithm}
+Above algorithm is a greedy algorithm to solve the optimization problem.
+\begin{algorithm}[t]
+	\caption{Algorithm for Learning a Boolean Formula}\label{alg:learning}
+	\begin{algorithmic}[1]
+		\Require % Programs $\vec{P}$, Atomic features $\mba$, 
+		 codebase $\vec{P}$, atomic features $\afeatures$
+		\Ensure Boolean formula $f_i$ in disjunctive normal form
+		\Procedure{LearnBooleanFormula}{$
+			 \vec{P}, \afeatures$}
+		
+		\State $f \gets \myset{a \in \afeatures \mid F(a) - F(true) > 0}$
+		\State $W \gets f$
+%		\Comment{initial formula}
+		\While {$W \neq \emptyset$}
+			\State $c \gets ChooseClause(W,F,P)$
+			\State $a \gets ChooseAtom(\afeatures,F,c,P)$
+			\State $c' \gets c \cup \myset{a}$ \Comment{refined clause}
+			\State $f' \gets (f\setminus \myset{c}) \cup 
+			\myset{c'}$ \Comment{refined formula}
+			\State $W \gets W \setminus \myset{c}$
+			\If {$F(f')>F(f)$}
+			\State $W \gets W \cup \myset{c'}$
+			\State $f \gets f'$
+			\EndIf
+		\EndWhile
+		\State \Return $f$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+\section{Evaluation}
+We implement context tunneling for 1-object sensitive+heap and learned tunneling heuristic. Experimental results shows that our approach improves precision significantly.\\
+%\textbf{Not important = InnerClass' methods $\land f_2$ in %OOPSLA17'\\ 
+%Important = else}\\
+		\begin{tabular}{cc}
+			\includegraphics[width=7cm]{figures/bloat1.pdf} &
+			\includegraphics[width=7cm]{figures/eclipse.pdf}\\
+		\end{tabular}
+
+
+\begin{comment}
+\subsection{Can be Combine with Selective Context sensitivity}
+We can apply both tunneling and selective contextsensitivity.\\
+\includegraphics[width=9.4cm,height=10.5cm,keepaspectratio]{figures/bloat2.pdf}
+\end{comment}

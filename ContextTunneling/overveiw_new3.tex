@@ -1,0 +1,667 @@
+%\newpage
+\minseok{{Motivating Examples}}
+\section{Motivating Examples}
+\label{sec:overview}
+
+In this section, we illustrate our technique with simple examples. To show
+existence of aforementioned $k$-limiting context-sensitivity's limitation
+regardless of choice of context flavor, our examples are designed around two
+major principles, $k$-limiting call-site-sensitivity and $k$-object
+sensitivity. But it is also applicable to other flavors of
+context-sensitivity too, such as type-sensitivity.  The general description
+is presented in Section~\ref{sec:tunneling}.
+
+\subsection{Call-site sensitivity}
+\myparagraph{Example Code}
+
+Suppose that we analyze the example Java code in
+Fig.~\ref{fig:overview:code} using a $k$-call-site-sensitive points-to
+analysis~\cite{Smaragdakis2015}.  The example code has three class
+definitions, namely \texttt{A}, \texttt{B}, and \texttt{C}.  Classes
+\texttt{A} and \texttt{B} are empty and class \texttt{C} has two
+methods: \texttt{id} and \texttt{main}.  Method \texttt{id} is
+essentially the identity function on the first argument, which takes an
+object \texttt{v} and an integer \texttt{i}, and returns the same
+object after making recursive calls until \texttt{i} becomes 0. In
+\texttt{main}, \texttt{id} is invoked twice with different
+objects. Both method invocations share the same argument \texttt{i}
+that comes from the external environment (i.e. user input).  The goal
+of the points-to analysis is to prove the safety of two type casts at
+lines 8 and 9.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{.45\columnwidth}
+\begin{lstlisting}
+class A {} class B {}
+class C {
+  static Object id (Object v, int i){
+      return i >= 0 ? id(v, i-1) : v;
+  }
+  public static void main (){
+    int i = input();
+    A a = (A) id(new A(), i);	//Query 1
+    B b = (B) id(new B(), i);	//Query 2
+  }
+}
+\end{lstlisting}
+\caption{Example code}
+\label{fig:overview:code}
+\end{subfigure}
+\quad
+\begin{subfigure}[b]{.45\columnwidth}
+
+%%% k-CFA
+\begin{center}
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {{\tt main} \\ $[\cdot]$};
+    \node [block, above right=0cm and 0.4cm of main] (id1) {{\tt id}\\$[8]$};
+    \node [block, below right=0cm and 0.4cm of main] (id2) {{\tt id}\\$[9]$};
+    \node [block, right=0.4cm of id1] (id3) {{\tt id} \\$[8,4]$};
+    \node [block, right=0.4cm of id2] (id4) {{\tt id} \\$[9,4]$};
+    \node [block2, right=0.4cm of id3] (id5) {{\tt id}\\$[\underbrace{8,4,\cdots,4}_k]$};
+    \node [block2, right=0.4cm of id4] (id6) {{\tt id}\\$[\underbrace{9,4,\cdots,4}_k]$};
+    \node [block2, below right=-0.5cm and 0.4cm of id5] (id7) {{\tt id} \\$[\underbrace{4,\cdots,4}_{k}]$};
+
+    \path [line] (main) -- (id1);
+    \path [line] (main) -- (id2);
+    \path [line] (id1) -- (id3);
+    \path [line] (id2) -- (id4);
+    \path [line, dashed] (id3) -- (id5);
+    \path [line, dashed] (id4) -- (id6);
+    \path [line] (id5) -- (id7);
+    \path [line] (id6) -- (id7);
+    \path [line] (id7) edge[loop above] ();
+\end{tikzpicture}
+}
+\end{center}
+
+
+%%% 2-CFA
+% \begin{center}
+% \resizebox{\columnwidth}{!}{
+% \begin{tikzpicture}
+%     \node [block] (main) {{\tt main} \\ $[\cdot]$};
+%     \node [block, above right=0cm and 0.4cm of main] (id1) {{\tt id}\\$[8]$};
+%     \node [block, below right=0cm and 0.4cm of main] (id2) {{\tt id}\\$[9]$};
+%     \node [block, right=0.4cm of id1] (id3) {{\tt id} \\$[8,4]$};
+%     \node [block, right=0.4cm of id2] (id4) {{\tt id} \\$[9,4]$};
+%     \node [block, below right=0cm and 0.4cm of id3] (id7) {{\tt id} \\$[4,4]$};
+
+%     \path [line] (main) -- (id1);
+%     \path [line] (main) -- (id2);
+%     \path [line] (id1) -- (id3);
+%     \path [line] (id2) -- (id4);
+%     \path [line] (id3) -- (id7);
+%     \path [line] (id4) -- (id7);
+%     \path [line] (id7) edge[loop above] ();
+% \end{tikzpicture}
+% }
+% \end{center}
+\caption{Call-graph by $k$-CFA}
+\label{fig:overview:kCFA}
+\vspace{2ex}
+
+\begin{center}
+\resizebox{0.5\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {{\tt main}\\$[\cdot]$};
+    \node [block, above right=0cm and 0.5cm of main] (id1) {{\tt id}\\$[8]$};
+    \node [block, below right=0cm and 0.5cm of main] (id2) {{\tt id}\\ $[9]$};
+
+    \path [line] (main) -- (id1);
+    \path [line] (main) -- (id2);
+
+    \path [line] (id1) edge[loop right] ();
+    \path [line] (id2) edge[loop right] ();
+\end{tikzpicture}
+}
+\end{center}
+\caption{Call-graph by 1-CFA with tunneling}
+\label{fig:overview:tunneling}
+\end{subfigure}\qquad
+\caption{Example and call-graphs constructed by the conventional
+  $k$-call-site sensitivity ($k$-CFA) and our 1-call-site-sensitivity
+  with context tunneling}
+\label{fig:overview}
+\end{figure}
+
+
+
+
+\myparagraph{\minseok{Conventional k-limiting Context-Sensitive Analysis}}
+
+The conventional $k$-call-site-sensitive analysis fails to prove the queries no matter what $k$ value is used.
+Because the value of \texttt{i} can be any integer, the following set $K_{\infty}$ of infinite number of call-strings can be generated for method \texttt{id} at runtime:
+\[
+K_{\infty} = \myset{[8], [9], [8,4], [9,4], [8,4,4], [9,4,4], [8,4,4,4], [9,4,4,4], \dots}
+\]
+where, for example, $[8,4]$ denotes the context that method \texttt{id} was called along the sequence of
+call-sites 8 and 4.
+ The $k$-call-site-sensitive analysis approximates the call-strings in $K_{\infty}$ by their suffixes of length up to $k$. For example, when $k=2$, the analysis uses the following set $K_2$ of abstract contexts:
+\[
+K_2 = \myset{[8], [9], [8,4], [9,4], [4,4]}
+\]
+where an infinite number of contexts, $\myset{[8,4,4], [9,4,4], [8,4,4,4], [9,4,4,4],\dots}$, in $K_{\infty}$ are approximated by their common suffix $[4,4]$. The analysis analyzes the method \texttt{id} separately for each context in $K_2$. % producing the call-graph in Fig.~\ref{fig:overview}(b).
+Although this approximation ensures termination, the analysis is now unable to differentiate the two separate calls to \texttt{id} at lines 8 and 9, causing the argument {\tt v} of {\tt id} to point to both objects {\tt A} and {\tt B} at the same time when the context becomes $[4,4]$. Thus, both objects get returned to both queries simultaneously, making the analysis fail to prove their cast safety.
+Note that the analysis fails to prove the queries for any $k$ values, because all the context strings longer than $k$ are eventually
+merged into a single context $[\underbrace{4,\dots,4}_{k}]$ (see Fig.~\ref{fig:overview:kCFA}).
+\minseok{
+	Be aware that other kinds of context sensitivity like value context
+	can prove the queries but	our goal is to overcome limitation of k-limiting context-sensitivity
+	which is widely used.}
+	
+\myparagraph{Context Tunneling}
+
+With context tunneling, however, even $1$-call-site sensitive analysis
+becomes to prove the queries.
+% Our idea to improve the analysis is to identify and maintain important
+% context elements only.
+The main weakness of the conventional
+$k$-context-sensitive analysis is that it blindly updates the context
+of a method at every call-site, thereby allowing important context
+elements for the method to be easily overwritten by less important
+ones.  In the example, distinguishing the two call-sites
+at lines 8 and 9 is essential to proving the queries. However, this
+information is eventually lost by repeatedly appending the less
+important call-site 4 to the context of {\tt id}
+(Fig.~\ref{fig:overview:kCFA}).
+Our technique aims to overcome this weakness by maintaining important
+context elements only during analysis. For example, we exclude the
+call-site 4 from the context strings generated for method {\tt id} and
+thus approximate the set $K_{\infty}$ to the set $K_T$ of contexts:
+\[
+K_T = \myset{[8], [9]}.
+\]
+Here abstract contexts $[8]$ and $[9]$ in $K_{T}$ denote the sets of concrete contexts
+$\myset{[8], [8,4], [8,4,4], \dots}$ and
+$\myset{[9], [9,4], [9,4,4], \dots}$ in $K_{\infty}$, respectively. The resulting
+context-sensitive analysis with $K_{T}$ is able to prove the queries as it differentiates the two calls
+to {\tt id} at lines 8 and 9 completely, producing the call-graph in
+Fig.~\ref{fig:overview:tunneling}.
+
+% With context tunneling, however, even $1$-call-site sensitive analysis
+% is able to prove the queries.
+
+\subsection{Object sensitivity}
+%\include{objExample}
+\lstset{
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\scriptsize\ttfamily},
+  numbers=left,
+  numbersep=5pt,
+  numberstyle=\small\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+\begin{figure}
+\begin{subfigure}[b]{.9\columnwidth}
+\begin{multicols}{2}
+\centering
+\begin{lstlisting}
+class A {} class B {}
+class C {
+  public static void main (){
+    ArrayList al1 = new ArrayList();//AL1
+    ArrayList al2 = new ArrayList();//AL2
+
+    al1.add(new A());
+    al2.add(new B());
+
+    ArrayList.ListItr it1 = al1.iterator();
+    ArrayList.ListItr it2 = al2.iterator();
+
+    A a = (A)it1.next();  //Query 1
+    B b = (B)it2.next();  //Query 2
+  }
+}
+
+class ArrayList{
+  Object[] elementData = new Object[10];
+  int size = 0;
+  void add(Object e){
+    elementData[size++] = e;
+  }
+  ListItr iterator(){
+    return new ListItr(); //IT
+  }
+  class ListItr{
+    int cursor = 0;
+    Object next(){
+      return elementData[cursor++];
+    }
+  }
+}
+\end{lstlisting}
+\end{multicols}
+\caption{Example code}
+\label{fig:obj:code}
+\end{subfigure}
+\begin{multicols}{2}
+\begin{subfigure}[b]{.9\columnwidth}
+\begin{center}
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {{\tt main}\\$[*]$};
+    \node [block, below left=1cm and 2.7cm of main] (add1) {{\tt add}\\$[AL1]$};
+    \node [block, right=0.4cm of add1] (add2) {{\tt add}\\$[AL2]$};
+    \node [block2, right=0.4cm of add2] (iterator1) {{\tt iterator}\\ $[AL1]$};
+    \node [block2, right=0.4cm of iterator1] (iterator2) {{\tt iterator}\\$[AL2]$};
+    \node [block, right=0.4cm of iterator2] (next) {{\tt next}\\$[IT]$};
+
+    \path [line] (main) -- (add1);
+    \path [line] (main) -- (add2);
+    \path [line] (main) -- (iterator1);
+    \path [line] (main) -- (iterator2);
+    \path [line] (main) -- (next);
+
+\end{tikzpicture}
+}
+\end{center}
+\caption{Call-graph by $1$-object-sensitive analysis}
+\label{fig:obj:callgraph}
+\end{subfigure}
+\vfill\null
+\columnbreak
+\begin{subfigure}[b]{.9\columnwidth}
+\begin{center}
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {\tt main\\$[*]$};
+    \node [block, below left=1cm and 2.7cm of main] (add1) {{\tt add}\\$[AL1]$};
+    \node [block, right=0.4cm of add1] (add2) {\tt add\\$[AL2]$};
+    \node [block2, right=0.4cm of add2] (iterator1) {\tt iterator\\$[AL1]$};
+    \node [block2, right=0.4cm of iterator1] (iterator2) {\tt iterator\\$[AL2]$};
+    \node [block, right=0.4cm of iterator2] (next1) {\tt next\\$[AL1]$};
+    \node [block, above=0.4cm of next1] (next2) {\tt next\\$[AL2]$};
+
+    \path [line] (main) -- (add1);
+    \path [line] (main) -- (add2);
+    \path [line] (main) -- (iterator1);
+    \path [line] (main) -- (iterator2);
+    \path [line] (main) -- (next1);
+    \path [line] (main) -- (next2);
+
+\end{tikzpicture}
+}
+
+\end{center}
+\caption{Call-graph by $1$-object-sensitive analysis with tunneling}
+\label{fig:obj:tunneling}
+\end{subfigure}
+\end{multicols}
+\setlength{\abovecaptionskip}{-5pt}
+\caption{Example code and callgraphs}
+\label{fig:overviewObj}
+\end{figure}
+
+\myparagraph{Example Code} Example code in Fig.~\ref{fig:obj:code} shows
+common pattern that 1-object-sensitivity with a context-sensitive heap
+abstraction loses precision. We found the prevalence of this pattern in data
+structure implementations like List of Map. In the example code, we have four
+top-level classes, \texttt{A}, \texttt{B}, \texttt{C}, and
+\texttt{ArrayList}, and an inner class \texttt{ListIter} inside of the
+\texttt{ArrayList}. The \texttt{ArrayList} class, as the name suggests,
+models on \texttt{java.util.ArrayList}, which is resizable-array
+implementation. For the sake of simplicity, it maintains data in fixed-size
+\texttt{elementData} array and has \texttt{add} method to append new data at
+the end of \texttt{elementData}. It also has \texttt{iterator} method who
+returns \texttt{ListIter} object to provide access to \texttt{elementData}.
+The \texttt{main} method in class \texttt{C} performs usual allocate, add,
+and retrieve tasks using \texttt{ListIter}. The goal of the points-to
+analysis is same as before; proving the safety of two type casts at lines 13
+and 14.
+
+\myparagraph{\minseok{Conventional $k$-Object Sensitivity}}  Object
+sensitivity tags method calls with their base objects' heap allocation sites
+and heap contexts (if needed).  For example, if we analyze \texttt{next}
+invocation at line 13, object sensitivity gives $[\texttt{AL1}, \texttt{IT}]$
+as a context when $k = 2$ because base object \texttt{it1}'s allocation site
+is \texttt{IT} and it's heap context is \texttt{AL1}.  Likewise, second
+\texttt{next} invocation gets $[\texttt{AL2}, \texttt{IT}]$, thus analyzer
+can distinguish those two. Taking base objects into account makes object
+sensitivity more favorable than call-site sensitivity for OO languages like
+Java. However, it still unconditionally updates context for every method
+calls and looses old but possibly important context elements when $k$ is
+insufficiently large. For example, if we analyze the same code using object
+sensitivity with $k = 1$, two \texttt{next} invocations drop older but
+discerning context elements \texttt{AL1} and \texttt{AL2} from their contexts
+and get merged (see Fig.~\ref{fig:obj:code}). As a result, both objects get
+returned to both queries simultaneously, making the analysis fail to prove
+their cast safety.
+
+%Example code in Fig.~\ref{fig:obj:code} present common pattern that
+%1-object-sensitive+heap +analysis lose precision. The main method use two
+%data structure Arraylist, and it add +different data to each Arraylist. Main
+%method makes iterator for each Arraylist and +get data with iterators. The
+%queries ask if two type casts at line 13 and 14 are +safe.
+%1-object-sensitive+heap analysis fails to prove the queries because
+%+\texttt{next} method invoked in 13 and 14 are merged as +the method
+%invocations have same context \texttt{IT}, +constructing call-graph in
+%Fig.~\ref{fig:obj:callgraph}.
+
+\myparagraph{\minseok{Context Tunneling for Object sensitivity}} With context
+tunneling, object sensitivity with $k = $ can prove the queries. Note that
+object-sensitivity has different flavor from call-site sensitivity; it
+updates context using heap context. Base variables \texttt{it1} and
+\texttt{it2} point to same heap allocation but have different heap contexts:
+\texttt{AL1} and \texttt{AL2}. Applying context tunneling for \texttt{next}
+method makes method call at line 13 to have context \texttt{AL1} and method
+call at 14 to have context \texttt{AL2}, resulting context sensitive analysis
+proves the queries with a call-graph shown in Fig.~\ref{fig:obj:tunneling}.
+
+\subsection{Challenge and our approach }
+
+\myparagraph{Challenge}
+
+The example shows that the idea of context tunneling is potentially
+powerful; even $1$-context-sensitivity with
+tunneling can be as precise as
+$\infty$-context-sensitivity. The goal of this paper is to maximize
+this tremendous, yet untapped, potential of the existing $k$-context-sensitive analysis.
+However, achieving effective context tunneling in practice is
+challenging. The effectiveness of the technique is very sensitive
+to the choice of important context elements.  For example,
+choosing the call-site 4, rather than call-sites 8 and 9, does not
+work for the example program.  In the worst case, the analysis
+precision degenerates into the context-insensitive case (e.g. when
+selecting no context elements at all), becoming even inferior to the
+ordinary
+$k$-context-sensitive analysis.  Coming up with a good
+heuristic rule for choosing important context elements is nontrivial;
+hand-crafting such a rule not only requires a huge amount of
+engineering effort and domain knowledge but also likely fails to
+maximize the potential of the technique.
+% adaptable as a fixed heuristic rule tuned for a particular situation
+% may not be effective for other programs, analyses, or queries.
+
+
+\myparagraph{Data-Driven Context Tunneling}
+
+
+We address this challenge with a data-driven approach that
+automatically learns a good heuristic rule for context tunneling from
+a training set of programs.
+Our aim is to generate a heuristic $\heuristic$,
+% To do so, we first define a parameterized heuristic $\heuristic_\Pi$
+% (where $\Pi$ is a parameter). $\heuristic_\Pi$
+which takes a program and returns a relation $\TunnelingRelation$ on methods.
+The relation contains a method pair $(m_1, m_2)$ if the calling context of
+$m_1$ is more important than that of $m_2$. Thus, if $(m_1, m_2) \in
+\TunnelingRelation$, the analysis applies context tunneling when $m_2$ is
+invoked; that is, $m_2$ inherits the context of $m_1$ ignoring the current
+context element. For the $k$-call-site sensitivity example, $\heuristic_\Pi$
+produces the relation $\TunnelingRelation = \myset{({\tt id}, {\tt id})}$,
+which means that tunneling is applied when {\tt id} is called from {\tt id}.
+As a result, the call-site 4, on which {\tt id} is called from {\tt id}, will
+not be used as important context elements during analysis.  When {\tt main}
+calls {\tt id}, however, the analysis updates the contexts as the ordinary
+analysis since $({\tt main}, {\tt id}) \not\in \TunnelingRelation$.  In our
+approach, the heuristic is parameterized and the parameter determines the
+contents of the relation $\TunnelingRelation$.  The goal of our data-driven
+technique is to characterize the two classes of methods: 1) methods that
+increase the analysis precision by passing their contexts to others, and 2)
+methods that increase the analysis precision by inheriting contexts from
+others. Section~\ref{sec:learning} defines the learning problem and presents
+an efficient algorithm to solve the problem.
+
+% The parameter $\Pi$ controls the behavior of the heuristic
+% $\heuristic_\Pi$.
+% Following the recent data-driven technique by~\citet{JeJeChOh17}, the
+% parameter $\Pi$ consists of boolean formulas over
+% atomic features on methods. We use two boolean formulas $\fprime$ and
+% $\fsecond$, which describe the sets of methods whose calling contexts
+% are important and unimportant, respectively.
+% For example, suppose we are given three atomic features
+% $\mba = \myset{a_1,a_2,a_3}$, where a feature $a_i : \mbox{Method} \to \myset{\true, \false}$ is a
+% predicate on methods (e.g. whether the return type of a method is
+% string, etc) and
+% assume that the methods {\tt main} and {\tt id} in the example
+% code have the features as follows:
+% \[
+% \begin{array}{llll}
+% &a_1({\tt main}) = \false, \quad &a_2 ({\tt main}) = \false, \quad &a_3({\tt main}) =
+% \true \\
+% &a_1({\tt id}) = \true, \quad &a_2({\tt id}) = \true,  \quad& a_3({\tt id}) = \false
+% \end{array}
+% % \mbox{features}({\tt main}) = \myset{a_3}, \qquad \mbox{features}({\tt
+% %   id}) = \myset{a_1, a_2}.
+% \]
+% Then, the following formulas $\fprime$ and $\fsecond$
+% \[
+% \fprime = a_1 \land \neg a_3, \qquad \fsecond = a_2 \land \neg a_3
+% \]
+% represent the sets of methods as follows:
+% \[
+% \db{\fprime} = \myset{{\tt id}}, \qquad \db{\fsecond}=\myset{{\tt id}}.
+% \]
+% Given $\Pi = \myset{\fprime, \fsecond}$, the heuristic
+% $\heuristic_\Pi$ produces the tunneling relation $\TunnelingRelation$
+% as follows:
+% \[
+% \TunnelingRelation = \myset{(m_1,m_2) \mid m_1 \in \db{\fprime} \vee m_2
+%   \in \db{\fsecond}}.
+% \]
+% That is, we apply tunneling if the caller context is important or the
+% callee context is unimportant.
+% Thus, the effectiveness of tunneling depends on $\Pi = \myset{\fprime,
+%   \fsecond}$ and it is the job of the learning algorithm to find
+% formulas $\fprime$ and $\fsecond$ such that the analysis with
+% $\heuristic_\Pi$ consistently performs well on a wide range of programs.
+
+
+
+% \myparagraph{Learning Context Tunneling Heuristics}
+% \begin{figure}
+% \begin{multicols}{2}
+% \begin{lstlisting}
+% Class A{} Class B{}
+% Class C{
+% 	static Object id(Object v){
+% 		return v;
+% 	}
+% 	static Object idrec(Object v, int i){
+% 		return i >= 0 ? idrec(v, i-1) : v;
+% 	}	
+% 	static Object id1(Object v){
+% 		return id(v);
+% 	}
+% 	static Object id2(Object v, int i){
+% 		return idrec(v,i);
+% 	}
+
+% 	public static void main(){
+% 		int i = input();
+% 		A a1 = (A) id(new A());       //Q1
+% 		B b1 = (b) id(new B());       //Q2
+% 		A a2 = (A) id(new A());       //Q3
+% 		B b2 = (b) id(new B());       //Q4
+		
+% 		A a3 = (A) id1(new A());      //Q5
+% 		B b3 = (B) id1(new B());      //Q6
+		
+% 		A a4 = (A) id2(new A(), i);   //Q7
+% 		B b4 = (B) id2(new B(), i);   //Q8
+% 	}
+% }
+% \end{lstlisting}
+% \end{multicols}
+% \caption{Extended example code}
+% \label{fig:overview:new}
+% \end{figure}
+% We illustrate how our learning algorithm infers the tunneling relation, more specifically two Boolean formulas $\fprime$ and $\fsecond$. We extended previous example code to have three additional identity functions (i.e., \texttt{id1}, \texttt{id2}, and \texttt{idrec}) and more queries (i.e., Q1 -- Q8) as shown in Figure~\ref{fig:overview:new}. For simplicity, we consider the example code as sole training program, and suppose we are about to learn tunneling heuristic for $\onecallH$ using four atomic features $\afeatures=\myset{a, b, c, d}$. The goal of the learning algorithm is finding good heuristic parameter $\params=\langle \fprime, \fsecond \rangle$ that maximizes analysis precision (i.e., prove all queries) while keeping cost as small as conventional analysis.
+
+% Before we begin, we briefly explain a desirable context tunneling relation $\TunnelingRelation$ to analyze the example code with $\onecallHT$.
+% \begin{itemize}
+% \item In order to prove first four queries Q1 -- Q4, {\tt id} invocations in {\tt main} should generate context information and hence the tunneling relation shouldn't have $({\tt main}, {\tt id})$ in it.
+% \item Next two queries, Q5 and Q6, can be proved if we generate context information for {\tt id1} invocations and pass it to the nested {\tt id} invocation. In other words, $\TunnelingRelation$ should have $({\tt id1}, {\tt id})$ or $({\tt id1}, *)$ if we denote all methods in the code with $*$ for generality. This inclusion makes analysis to treat {\tt id} invocations differently with regard to their callers. Hence, invocations in line 18 -- 21 are analyzed in conventional way but one in line 10 gets context tunneling.
+% \item For last two queries, Q7 and Q8, we need a relation; $(*, {\tt idrec})$. It means $({\tt id2}, {\tt idrec})$, which makes analysis to transfer context information from {\tt id2} invocations to the nested {\tt idrec} at line 13, and $({\tt idrec}, {\tt idrec})$, which is for preserving the transferred context information from {\tt id2} across indefinite recursive {\tt idrec} invocations at line 7.
+% \end{itemize}
+% All in all, $\onecallHT$ can prove all queries in the example using the desirable context tunneling relation $\TunnelingRelation$:
+% \[
+% \TunnelingRelation=\myset{({\tt id1}, *), (*, {\tt idrec})}
+% \]
+% Remaining of this subsection illustrates how our learning process infers two Boolean formulas $\fprime$ and $\fsecond$ to imply the desirable relations $\TunnelingRelation$.
+
+% Our learning algorithm begins with learning $\fsecond$, which means callee methods who should inherit context information from their callers instead of generating new ones. After that, our algorithm uses very same procedure to learn $\fprime$ to distinguish caller methods that should propagate their context information to descendants with regard to $\fsecond$. That means, we learn $\fprime$ such that, propagating context information from $m' \in \sem{\fprime}$ to its descendants increases precision even if one of descendant methods $m$ is meant to generate context information because $m \notin \sem{\fsecond}$.
+
+% Learning $\fsecond$ (or $\fprime$) starts with setting baseline parameter $\params$ to $\langle \false, \false \rangle$, which means conventional analysis (i.e., $\onecallH$).  Using the baseline parameter, our learning algorithm identifies a set of atomic features $W$ who has context tunneling potential. We say an atomic feature $a$ has potential if $\params_a=\langle \false, \fsecond=a \rangle$ makes analysis to prove queries that the baseline analysis can't. Suppose that each atomic feature means methods as follows:
+% \[
+% \begin{array}{r c l c r c l}
+% \sem{a}(P) & = & \myset{\texttt{id1}, \texttt{id2}, \texttt{idrec}} & \quad\quad & \sem{b}(P) & = & \myset{\texttt{id}, \texttt{id2}, \texttt{idrec}}\\
+% \sem{c}(P) & = & \myset{\texttt{id}, \texttt{id1}, \texttt{idrec}} & \quad\quad & \sem{d}(P) & = & \myset{\texttt{id}, \texttt{id1}, \texttt{id2}}
+% \end{array}
+% \]
+% Evaluating each atomic features including the baseline parameter gives following precisions:
+% \[
+% F_P(\heuristic_{\langle \false, \false \rangle}(P)) : Q1, Q2, Q3, Q4
+% \]
+% \[
+% \begin{array}{r c l c r c l}
+% F_P(\heuristic_{\langle \false, a \rangle}(P)) &:& Q1, Q2, Q3, Q4 &\quad\quad& F_P(\heuristic_{\langle \false, b \rangle}(P)) &:& \underline{Q5}, \underline{Q6} \\
+% F_P(\heuristic_{\langle \false, c \rangle}(P)) &:& \underline{Q7}, \underline{Q8} &\quad\quad&
+% F_P(\heuristic_{\langle \false, d \rangle}(P)) &:& \emptyset \\
+% \end{array}
+% \]
+% From the evaluation, our algorithm initializes workset $W$ with the features who proved queries except Q1 -- Q4, which are provable by the baseline parameter. The learning process ends after refining each feature in $W$:
+% \[
+% W=\myset{b, c}
+% \]
+% Than, our algorithm picks a feature from $W$ with the highest potential, not with the highest precision, and it conservatively refines the chosen feature by conjoining it with the other atomic features. Suppose that we choose $c$ from $W$. Since a feature $d$ shares many methods with $c$ than other features, $c$ becomes $c\land d$ (i.e., applying tunneling for \texttt{id} and \texttt{id1}). Once refined, we check the intermediate formula's precision and cost. Running analysis with the refined parameter gives following result:
+% \[
+% F_P(\heuristic_{\langle \false, c \land d \rangle}(P)) : \emptyset
+% \]
+% Since it has less precise than before, we drop the last refinement and record it to avoid in future. Suppose the next conservative choice is $a$. The refinement gives us following analysis result:
+% \[
+% F_P(\heuristic_{\langle \false, c \land a \rangle}(P)) : Q1, Q2, Q3, Q4, Q7, Q8
+% \]
+% The refinement was successful and suppose we continue to conjoin it with $b$. The refined formula $c \land a \land b$ means \texttt{idrec} method only, and evaluating it results same precision as before:
+% \[
+% F_P(\heuristic_{\langle \false, c \land a \land b\rangle}(P)) : Q1, Q2, Q3, Q4, Q7, Q8
+% \]
+% In this case, our algorithm accepts the refinement only if it makes analysis cheaper than before. Suppose this refinement is the case and proceed to the last refinement, conjoining with $d$. However, this attempt refines the formula too much and results the conventional analysis. Since analysis with our best formula (i.e., $c \land a \land b$) already surpassed it, we reject the refinement and finalize a refinement for the $c$.
+
+% Once we have a fully refined conjunction, we update parameter with the conjunction to compare with the baseline parameter. If the updated parameter is more precise and cheaper than the baseline, we set the updated parameter to new baseline and continue to refine next atomic feature in $W$. Otherwise, we discard the conjunction and proceed to next iteration. In this example, $\heuristic_{\langle \false, c \land a \land b\rangle}$ is more precise than the baseline. We assume that it also cheaper than the baseline and proceed to refining next atomic feature in $W$, which is $b$.
+
+% Refining $b$ takes exactly same steps as for the case of refining $c$, except we have better baseline heuristic from previous iteration. For simplicity, suppose we have $b \land c \land d$ at the end of refinements. The refined conjunction means applying context tunneling for \texttt{id} method. Performing analysis using the updated parameter $\heuristic_{\langle \false, (c \land a \land b) \lor (b \land c \land d)\rangle}$ gives following result:
+% \[
+% F_P(\heuristic_{\langle \false, (c \land a \land b) \lor (b \land c \land d)\rangle}(P)) : Q5, Q6, Q7, Q8
+% \]
+% Since it is less precise than the baseline, the last refinement is discarded. and, emptied $W$ means we have $\fsecond$ as follows:
+% \[
+% \sem{\fsecond = c \land a \land b} = \myset{\texttt{idrec}}
+% \]
+
+% On top of the learned $\fsecond$, our algorithm learns $\fprime$, which means methods who should generate context information and transfer to their descendants, using same procedure as for $\fsecond$. First, we populate a workset $W$ with atomic features who has tunneling potential with regard to the given $\fsecond$. Evaluating potential gives us results as follows;
+% \[
+% \begin{array}{r c l}
+% F_P(\heuristic_{\langle \false, c \land a \land b \rangle}(P)) &:& Q1, Q2, Q3, Q4, Q7, Q8\\
+% F_P(\heuristic_{\langle a, c \land a \land b \rangle}(P)) &:& Q1, Q2, Q3, Q4, \underline{Q5}, \underline{Q6}, Q7, Q8\\
+% F_P(\heuristic_{\langle b, c \land a \land b \rangle}(P)) &:& Q1, Q2, Q3, Q4, Q7, Q8 \\
+% F_P(\heuristic_{\langle c, c \land a \land b \rangle}(P)) &:& Q1, Q2, Q3, Q4, \underline{Q5}, \underline{Q6}\\
+% F_P(\heuristic_{\langle d, c \land a \land b \rangle}(P)) &:& Q1, Q2, Q3, Q4, \underline{Q5}, \underline{Q6}, Q7, Q8
+% \end{array}
+% \]
+% and features proved underlined queries comprise $W$:
+% \[
+% W=\myset{a, c, d}
+% \]
+
+% Suppose we choose $c$ to refine. Conservative refinement makes $c$ be $c \land a$. Performing analysis with the conjunction as $\fprime$ results as follows:
+% \[
+% F_P(\heuristic_{\langle c \land a, c \land a \land b \rangle}(P)) : Q1, Q2, Q3, Q4, Q7, Q8
+% \]
+% Assume that this parameter is cheaper than the baseline, we pick another feature to conjoin, which is $d$. The refined conjunction $(c \land a \land d)$ now means \texttt{id1} only, and gives us following analysis result:
+% \[
+% F_P(\heuristic_{\langle c \land a \land d, c \land a \land b \rangle}(P)) : Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8
+% \]
+% Now we have parameter to prove all queries in the example code, we proceed refinement to find cheaper solutions if any. However, conjoining the conjunction with $b$ makes the conjunction to mean nothing. We discard the refinement and finalize the refinement for the chosen $c$. Needless to say, the conjunction has enough precision to pass later evaluation against the baseline. For simplicity, we omit further refinements and it gives us two Boolean formulas $\fprime$ and $\fsecond$ as follows:
+% \[
+% \begin{array}{c c c}
+% \sem{\fprime = c \land a \land d} = \myset{\texttt{id1}} &\quad\quad& \sem{\fsecond = c \land a \land b} = \myset{\texttt{idrec}}
+% \end{array}
+% \]
+
+% \begin{figure}
+% \begin{tikzpicture}
+% \node [block] (main) {{\tt main} \\ $[\cdot]$};
+% \node [block, below left=0.4cm and -0.5cm of main] (id_1) {{\tt id} \\ $[21]$};
+% \node [block, left=0.4cm of id_1] (id_2) {{\tt id} \\ $[20]$};
+% \node [block, left=0.4cm of id_2] (id_3) {{\tt id} \\ $[19]$};
+% \node [block, left=0.4cm of id_3] (id_4) {{\tt id} \\ $[18]$};
+% \node [block, below right=0.4cm and -0.5cm of main] (id1_1) {{\tt id1} \\ $[23]$};
+% \node [block, below=0.4cm of id1_1] (id_5) {{\tt id} \\ $[23]$};
+% \node [block, right=0.4cm of id1_1] (id1_2) {{\tt id1} \\ $[24]$};
+% \node [block, below=0.4cm of id1_2] (id_6) {{\tt id} \\ $[24]$};
+% \node [block, right=0.4cm of id1_2] (id2_1) {{\tt id2} \\ $[26]$};
+% \node [block, below=0.4cm of id2_1] (idrec_1) {{\tt idrec} \\ $[26]$};
+% \node [block, right=0.4cm of id2_1] (id2_2) {{\tt id2} \\ $[27]$};
+% \node [block, below=0.4cm of id2_2] (idrec_2) {{\tt idrec} \\ $[27]$};
+
+% \path [line] (main) -- (id_1);
+% \path [line] (main) -- (id_2.north);
+% \path [line] (main) -- (id_3.north);
+% \path [line] (main) -- (id_4.north);
+% \path [line] (main) -- (id1_1);
+% \path [line] (id1_1) -- (id_5);
+% \path [line] (main) -- (id1_2.north);
+% \path [line] (id1_2) -- (id_6);
+% \path [line] (main) -- (id2_1.north);
+% \path [line] (id2_1) -- (idrec_1);
+% \path [line] (idrec_1) edge[loop below] ();
+% \path [line] (main) -- (id2_2.north);
+% \path [line] (id2_2) -- (idrec_2);
+% \path [line] (idrec_2) edge[loop below] ();
+% \end{tikzpicture}
+% \caption{Call-graph of code in Figure~\ref{fig:overview:new} from $\onecallHT$ analysis with context tunneling relations $\TunnelingRelation=\myset{({\tt id1}, *), (*, {\tt idrec})}$. Symbol $*$ can be any methods.}
+% \end{figure}
+
+% \begin{figure}
+% \begin{tikzpicture}
+% \node [block] (main) {{\tt main} \\ $[\cdot]$};
+% \node [block, below left=0.4cm and -0.5cm of main] (id_1) {{\tt id} \\ $[21]$};
+% \node [block, left=0.4cm of id_1] (id_2) {{\tt id} \\ $[20]$};
+% \node [block, left=0.4cm of id_2] (id_3) {{\tt id} \\ $[19]$};
+% \node [block, left=0.4cm of id_3] (id_4) {{\tt id} \\ $[18]$};
+% \node [block, below right=0.4cm and -0.5cm of main] (id1_1) {{\tt id1} \\ $[23]$};
+% \node [block, below right=0.4cm and -0.4cm of id1_1] (id_5) {{\tt id} \\ $[10]$};
+% \node [block, right=0.4cm of id1_1] (id1_2) {{\tt id1} \\ $[24]$};
+
+% \node [block, right=0.4cm of id1_2] (id2_1) {{\tt id2} \\ $[26]$};
+% \node [block, below right=0.4cm and -0.4cm of id2_1] (idrec_1) {{\tt idrec} \\ $[13]$};
+% \node [block, right=0.4cm of id2_1] (id2_2) {{\tt id2} \\ $[27]$};
+% \node [block, below=0.4cm of idrec_1] (idrec_2) {{\tt idrec} \\ $[7]$};
+
+% \path [line] (main) -- (id_1);
+% \path [line] (main) -- (id_2.north);
+% \path [line] (main) -- (id_3.north);
+% \path [line] (main) -- (id_4.north);
+% \path [line] (main) -- (id1_1);
+% \path [line] (id1_1) -- (id_5);
+% \path [line] (main) -- (id1_2.north);
+% \path [line] (id1_2) -- (id_5);
+% \path [line] (main) -- (id2_1.north);
+% \path [line] (id2_1) -- (idrec_1);
+% \path [line] (main) -- (id2_2.north);
+% \path [line] (id2_2) -- (idrec_1);
+% \path [line] (idrec_1) -- (idrec_2);
+% \path [line] (idrec_2) edge[loop right] ();
+
+
+% \end{tikzpicture}
+% \caption{Call-graph of code in Figure~\ref{fig:overview:new} with from conventional $\onecallH$ analysis.}
+% \end{figure}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

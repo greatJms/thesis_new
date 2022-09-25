@@ -1,0 +1,38 @@
+% !TEX root = ./paper.tex
+
+
+%basicstyle=\linespread{1.2}\small\ttfamily
+\begin{figure}[t]
+%\setlength{\columnsep}{0.07cm}
+\begin{lstlisting}[multicols=2, escapeinside={(*}{*)},xleftmargin=4.0ex ,basicstyle={\linespread{1.2}\fontsize{9.5}{10}\selectfont\ttfamily}]
+class D {
+ Object id(v) {
+  return v;}
+ Object id1(v) {
+  return this.id(v);}
+ void m() {
+  A a = (A)this.id(new A());//A1, qry1
+  B b = (B)this.id(new B());//B1, qry2
+ }
+}
+void main() {
+ D d1 = new D();//D1
+ D d2 = new D();//D2
+ D d3 = new D();//D3 
+
+ A a3 = (A)d1.id1(new A());//A2, qry3 
+ B b3 = (B)d2.id1(new B());//B2, qry4
+ d3.m();
+}
+\end{lstlisting}
+\vspace{-15pt}
+\caption{Running example}
+\vspace{-15pt}
+\label{simulation:example}
+\end{figure}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

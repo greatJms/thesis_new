@@ -1,0 +1,33 @@
+\section{Learning gAlgorithm}
+\begin{algorithm}[t]
+\caption{Our Learning Algorithm}\label{alg:learning-outer}
+\begin{algorithmic}[1]
+\Require Static analyzer $F$, codebase $\vec{P}$, 
+atomic features $\afeatures$
+\Ensure a boolean formula 
+\Procedure{Learn}{$F, \vec{P}, \afeatures$}
+\State $f \gets \emptyset$
+\State $C \gets \{ a \in \afeatures | F(a) - F(false) \neq \emptyset\}$\Comment{See potential}
+
+\For {\textbf{each} $c_i \in C$} :\Comment{Refine each clause}
+  \While {($a \gets \ChooseAtom(c_i)$)}
+    \State $c' \gets c_i \cup \{a\}$
+      \If {$|F(c')| > |F(c)|$}\Comment{Check if refined clause is better}
+        \State $c_i \gets c'$
+      \Else
+        \State \textbf{continue}
+      \EndIf
+  \EndWhile
+\EndFor
+  \While {($c \gets \ChooseClause(C)$)}\Comment{Appending clauses for f}
+    \State $f' \gets f \cup c$
+      \If {$|F(f')| > |F(f)|$}\Comment{Check if appended formula is better}
+        \State $f \gets f'$
+      \Else
+        \State \textbf{continue}
+      \EndIf
+  \EndWhile
+\State \Return $f$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}

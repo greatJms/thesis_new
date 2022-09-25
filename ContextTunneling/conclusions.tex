@@ -1,0 +1,46 @@
+\section{Conclusion and Future Work}
+%We showed that context tunneling is a promising way to gain both precision and scalability in $k$-limited context sensitive points to analysis. We also propose data-driven approach to automatically learn context tunneling heuristics. We have implemented our approach in Doop, and learn context tunneling heuristics for representative contexts in Java: selective hybrid object-sensitivity, object-sensitivity, type-sensitivity, and call-site sensitivity. Experimental results show that our approach achieve an extraordinary balance between precision and scalability. We believe that context tunneling is a big step forward in $k$-limited context sensitive points-to analysis. It is an effective technique that will rescue many key context elements resulting incredible analysis quality.
+
+Developing a precise and scalable context-sensitive analysis
+is a major challenge in program analysis research.  
+This paper
+demonstrates that we can effectively address this challenge by
+applying context tunneling, which carefully maintains the
+{\em $k$ most important} context elements, as opposed to the
+traditional approaches that simply maintain the {\em $k$
+  most recent} ones. 
+Experimental results with four flavors of context-sensitivity show
+that the new approach improves the state-of-the-art
+points-to analyses remarkably in both
+precision and scalability.
+% However, as choosing
+% important context elements is nontrivial, using an automated technique
+% is essential for achieving effective context tunneling in practice.
+To achieve this, we developed a new machine-learning algorithm specialized for generating
+context-tunneling heuristics automatically from a dataset of programs.
+
+We believe that the use of context tunneling is not limited
+to points-to analysis for Java. As future work, we plan to apply
+context tunneling to static analysis
+for dynamic languages or control-flow analysis for functional
+languages, where deeper context-sensitivity (e.g., $k > 5$) is known to be
+greatly
+beneficial~\cite{park_et_al:LIPIcs:2015:5245,Kashyap2014}.
+Our conjecture is that the same (or even higher) precision can be obtained with smaller
+$k$ values if they use context tunneling. 
+
+
+
+% We have presented a new axis of parameterizing $k$-limited context sensitive points-to
+% analysis, namely context tunneling heuristic, to improve precision and scalability.
+% The key idea is ignoring worthless contexts while inheriting key contexts when methods
+% are invoked. We use machine learning technique to automatically obtain classifiers who
+% decides where to apply context tunneling. We applied the technique to well-known
+% context sensitivities on top of Doop Java points-to analysis framework. Our
+% experiments with these instances and benchmarks of DaCapo suite show that context
+% tunneling makes $1$-context-sensitive analyses to have precision of deeper equivalents
+% and performance of baselines.
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

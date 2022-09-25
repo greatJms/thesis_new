@@ -1,0 +1,454 @@
+\newcommand{\mca}{\mathcal{A}}
+\newcommand{\mcb}{\mathcal{B}}
+\newcommand{\mcc}{\mathcal{C}}
+\newcommand{\mcf}{\mathcal{F}}
+\newcommand{\mcg}{\mathcal{G}}
+\newcommand{\mcp}{\mathcal{P}}
+\newcommand{\mcl}{\mathcal{L}}
+\newcommand{\mcm}{\mathcal{M}}
+\newcommand{\mco}{\mathcal{O}}
+\newcommand{\mcu}{\mathcal{U}}
+\newcommand{\mcv}{\mathcal{V}}
+\newcommand{\mcr}{\mathcal{R}}
+\newcommand{\mci}{\mathcal{I}}
+
+\newcommand{\myland}{\;\land\;}
+\newcommand{\mylor}{\;\vee\;}
+
+\newcommand{\power}[1]{\wp(#1)}
+
+\newcommand{\myset}[1]{\{ #1 \}}
+\newcommand{\myvec}[1]{\langle #1 \rangle}
+
+\newcommand{\db}[1]{\llbracket #1 \rrbracket}
+\newcommand{\pdb}[1]{\llbracket #1 \rrbracket_{\pconf}}
+\newcommand{\ppdb}[1]{\llbracket #1 \rrbracket^{\pre}}
+\newcommand{\po}{{po}}
+
+
+%% Learning
+\newcommand{\Classifier}{\mathcal{C}}
+%\newcommand{\argmax}[1]{\underset{#1}{\mathrm{argmax}}}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+
+%% Comment
+\newcommand{\todoc}[2]{{\textcolor{#1} {\textbf{[[#2]]}}}}
+
+\newcommand{\todored}[1]{\todoc{red}{#1}}
+\newcommand{\todoblue}[1]{\todoc{blue}{#1}}
+\newcommand{\todogreen}[1]{\todoc{green}{#1}}
+
+\newcommand*{\TODO}[1]{\todored{#1}}
+\newcommand*{\sehun}[1]{\todoblue{Sehun: #1}}
+\newcommand*{\hakjoo}[1]{\todoblue{Hakjoo: #1}}
+\newcommand*{\minseok}[1]{\todoblue{Minseok: #1}}
+\newcommand*{\junhee}[1]{\todoblue{Minseok: #1}}
+\newcommand{\commentout}[1]{}
+
+\newcommand{\abst}{}
+\newcommand{\aF}{\abst{F}}
+\newcommand{\oracle}{{\mathcal{O}}}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+%% Program
+\newcommand{\mba}{\mathbb{A}}
+\newcommand{\mbb}{\mathbb{B}}
+\newcommand{\mbc}{\mathbb{C}}
+\newcommand{\mbd}{\mathbb{D}}
+\newcommand{\mbe}{\mathbb{E}}
+\newcommand{\mbf}{\mathbb{F}}
+\newcommand{\mbg}{\mathbb{G}}
+\newcommand{\mbh}{\mathbb{H}}
+\newcommand{\mbi}{\mathbb{I}}
+\newcommand{\mbj}{\mathbb{J}}
+\newcommand{\mbk}{\mathbb{K}}
+\newcommand{\mbl}{\mathbb{L}}
+\newcommand{\mbm}{\mathbb{M}}
+\newcommand{\mbn}{\mathbb{N}}
+\newcommand{\mbo}{\mathbb{O}}
+\newcommand{\mbp}{\mathbb{P}}
+\newcommand{\mbq}{\mathbb{Q}}
+\newcommand{\mbr}{\mathbb{R}}
+\newcommand{\mbs}{\mathbb{S}}
+\newcommand{\mbt}{\mathbb{T}}
+\newcommand{\mbu}{\mathbb{U}}
+\newcommand{\mbv}{\mathbb{V}}
+\newcommand{\mbw}{\mathbb{W}}
+\newcommand{\mbx}{\mathbb{X}}
+\newcommand{\mby}{\mathbb{Y}}
+\newcommand{\mbz}{\mathbb{Z}}
+\newcommand{\cfgto}{\hookrightarrow}
+
+\newcommand*{\cD}{\mathcal{D}}
+\newcommand*{\cF}{\mathcal{F}}
+\newcommand*{\cP}{\mathcal{P}}
+\newcommand*{\cV}{\mathcal{V}}
+
+\newcommand{\mcs}{\mathcal{S}}
+\newcommand{\wv}{\mathbf{w}}
+\newcommand{\Pgm}{{\it Pgm}}
+
+\newcommand{\Hint}{{\it Profile}}
+\newcommand{\hint}{R}
+\newcommand{\compo}{\mbj}
+\newcommand{\importance}{\mbr}
+\newcommand{\feat}{f}
+\newcommand{\features}{{\vec{\feat}}}
+\newcommand{\strategy}{\mathcal{S}}
+
+\newcommand{\score}{{\it score}}
+
+\newcommand{\mse}{E}
+
+\let\oldvec\vec
+\renewcommand{\vec}[1]{\mathbf{#1}}
+
+
+%\newcommand{\obj}{{\it obj}}
+\newcommand{\model}{\mathcal{M}}
+\newcommand{\counter}{\mathcal{C}}
+\newcommand{\lfp}{{\sf lfp}}
+\newcommand{\widenop}{\triangledown}
+\newcommand{\lub}{{\it lub}}
+\newcommand{\glb}{{\it glb}}
+
+\newcommand*{\sans}{\fontfamily{phv}\selectfont}
+\newcommand*{\cour}{\fontfamily{pcr}\selectfont}
+
+\newcommand{\true}{{\it true}}
+\newcommand{\false}{{\it false}}
+\newcommand{\afeatures}{\mba}
+\newcommand{\afeat}{a}
+\newcommand{\Methods}{\text{\it Mthd}}
+\newcommand{\Invos}{{\mbi}}
+\newcommand{\sem}[1]{[\![#1]\!]}
+\newcommand{\mthd}{{{M}}}
+\newcommand{\Program}{\mbp}
+\newcommand{\selector}{S}
+\newcommand{\component}{\mbm}
+\newcommand{\idx}{j}
+\newcommand{\heuristic}{\mathcal{T}}
+\newcommand{\weight}{\vec{w}}
+\newcommand{\formulas}{\mcf}
+\newcommand{\cost}{{\sf cost}}
+\newcommand{\proved}{{\sf proved}}
+\newcommand{\method}{{\sf meth}}
+\newcommand{\precision}{\proved}
+
+\newcommand{\pr}{\Psi}
+
+\newcommand{\Assertion}{\mbq}
+
+\newcommand{\params}{\Pi}
+\newcommand{\lparams}{\Theta}
+\newcommand{\lparam}{\theta}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\newcommand{\Update}{{\sf Update}}
+\newcommand{\Prec}{{\sf Prec}}
+\newcommand{\Refiner}{\Gamma}
+\newcommand{\ChooseClause}{{\sf ChooseClause}}
+\newcommand{\ChooseAtom}{{\sf ChooseAtom}}
+\newcommand{\ChooseSeed}{{\sf ChooseSeed}}
+\newcommand{\RefineClause}{{\sf RefineClause}}
+\newcommand{\RefineSeed}{{\textsc{RefineSeed}}}
+\newcommand{\BetterThan}{{\sf Improved}}
+\newcommand{\PrecP}{{\sf Prec^{+}}}
+\newcommand{\PrecE}{{\sf Prec^{=}}}
+\newcommand{\CostM}{{\sf Cost^{-}}}
+\newcommand{\HasSeed}{{\sf HasPotential}}
+\newcommand{\GoodHeuristicFound}{{\sf BetterHeuristicFound}}
+\newcommand{\isSatisfactory}{{\sf isSatisfactoryPrecision}}
+
+\newcommand{\hypospace}{\mathcal{M}}
+
+\newcommand{\AnalyzeWith}{{\sf Analyze}}
+
+\newcommand{\Record}{{\sf record}}
+\newcommand{\Merge}{{\sf merge}}
+\newcommand{\MergeTunneled}{\textbf{\textsc{ParentContext}}}
+\newcommand{\MergeStatic}{\textbf{\textsc{MergeStatic}}}
+\newcommand{\ectx}{\star}
+\newcommand{\ApplyDepth}{\textsc{\textbf{ApplyDepth}}}
+\newcommand{\Tunnel}{\textsc{\textbf{Tunnel}}}
+\newcommand{\ContextMadeIn}{{{\textsc{\textbf{ParentMethod}}}}}
+\newcommand{\Tunneling}{{{\textsc{{Tunneling}}}}}
+\newcommand{\TunnelingRelation}{\mathcal{T}}
+
+\newcommand{\childMeth}{{\it childMeth}}
+
+\newcommand{\onesobjH}{{\it S1objH}}
+\newcommand{\oneobjH}{{\it 1objH}}
+\newcommand{\onetypeH}{{\it 1typeH}}
+\newcommand{\onecallH}{{\it 1callH}}
+\newcommand{\onecall}{{\it 1call}}
+
+\newcommand{\onesobjHT}{{\it S1objH+T}}
+\newcommand{\bonesobjHT}{{\textit{\textbf{S1objH+T}}}}
+\newcommand{\oneobjHT}{{\it 1objH+T}}
+\newcommand{\oneobjHTnew}{\oneobjHT$_{\it new}$}
+%\newcommand{\oneobjHT}{{\it 1objH+$\objheuristic$}}
+\newcommand{\onetypeHT}{{\it 1typeH+T}}
+%\newcommand{\onecallHT}{{\it 1callH+$\callheuristic$}}
+\newcommand{\onecallHT}{{\it 1callH+T}}
+\newcommand{\callH}{{\it 1callH+S}}
+%\newcommand{\bsimonecallH}{\textit{\textbf{1callH+S}}}
+\newcommand{\sobjSimLearn}{{\it 1callH+SL'}}
+\newcommand{\simonecallH}{{\it 1callH+S'}}
+
+\newcommand{\kth}{\text{\it last}}
+
+\newcommand{\Graphick}{{\it Graphick}}
+\newcommand{\Scaler}{{\it Scaler}}
+\newcommand{\Zipper}{{\it Zipper}}
+\newcommand{\twoobjZipper}{{\it 2objH+Zip}}
+\newcommand{\oursZipper}{{\it 1callH+SL+Zip}}
+%\newcommand{\Zipper}{{\it Zipper}}
+
+
+\newcommand{\twoobjHT}{{\it 2objH+T}}
+\newcommand{\ours}{{\it 1callH+SL}}
+\newcommand{\oursim}{{\it 1callH+S}}
+\newcommand{\oursbf}{{\it\textbf{1callH+SL}}}
+%\newcommand{\ours}{{\it 1callH+$\heuristic_{\sf ours}$}}
+
+\newcommand{\onecallThis}{{\it 1callH+T$_{C1}$}}
+
+\newcommand{\onecallHours}{{\it 1callH+}$\heuristic_f$}
+\newcommand{\onecallHdtree}{{\it 1callH+}$\heuristic$}
+%\newcommand{\onecallHDT}{{\it 1callH+}$\heuristic_\decisionTree$}
+\newcommand{\onecallHDT}{{\it 1callH+D}}
+\newcommand{\onecallHL}{{\it 1callH+L}}
+\newcommand{\twosobjH}{{\it S2objH}}
+\newcommand{\threesobjH}{{\it S3obj2H}}
+\newcommand{\twoobjH}{{\it 2objH}}
+\newcommand{\twotypeH}{{\it 2typeH}}
+\newcommand{\twocallH}{{\it 2callH}}
+
+\newcommand{\threeobjH}{{\it 3obj2H}}
+
+\newcommand{\kobjkH}{{\it kobj+kH}}
+
+\newcommand{\sobjHdata}{{\it \sobjH+Data}}
+\newcommand{\objHdata}{{\it \objH+Data}}
+\newcommand{\typeHdata}{{\it \typeH+Data}}
+\newcommand{\calldata}{{\it \call+Data}}
+
+\newcommand{\sobjHIntroA}{{\it \sobjH+IntroA}}
+\newcommand{\objHIntroA}{{\it \objH+IntroA}}
+\newcommand{\typeHIntroA}{{\it \typeH+IntroA}}
+\newcommand{\callHIntroA}{{\it \call+IntroA}}
+
+\newcommand{\sobjHIntroB}{{\it \sobjH+IntroB}}
+\newcommand{\objHIntroB}{{\it \objH+IntroB}}
+\newcommand{\typeHIntroB}{{\it \typeH+IntroB}}
+\newcommand{\callHIntroB}{{\it \call+IntroB}}
+
+\newcommand{\pair}{{\it pair}}
+\newcommand{\first}{{\it first}}
+%\newcommand{\second}{{\it second}}
+
+\newcommand{\classof}{{\it classof}}
+\newcommand{\methof}{{\it methof}}
+\newcommand{\typeof}{{\it typeof}}
+\newcommand{\lookup}{{\it lookup}}
+%\newcommand{\methofinvo}{{\sf methof}}
+
+\newcommand{\truncateCtx}[2]{{\lceil #1 \rceil_{#2}}}
+%\newcommand{\truncateCtx}[2]{{\sf last}_{#2}(#1)}
+\newcommand{\appendCtx}[2]{#1 \concat #2}
+
+\newcommand{\ctxElem}{{\sf ctxof}}
+\newcommand{\pctx}{{\it pctx}}
+\newcommand{\parentCtx}{{\sf pctx}}
+\newcommand{\parentMeth}{{\sf pmeth}}
+
+\newcommand{\parentMethod}{{\sf pmeth}}
+
+%\newcommand{\hide}[1]{{\color{red}{#1}}}
+\newcommand{\hide}[1]{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% relations for representing programs
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\meth}{{\it meth}}
+\newcommand{\toMeth}{{\it m'}}
+\newcommand{\inMeth}{{\it m}}
+
+\newcommand{\ctx}{\text{\it ctx}}
+\newcommand{\toCtx}{{\it c}_2}
+\newcommand{\fromCtx}{{\it c}_1}
+\newcommand{\hctx}{\text{\it hctx}}
+\newcommand{\heap}{{\it heap}}
+\newcommand{\var}{{\it x}}
+\newcommand{\tovar}{{\it x}}
+\newcommand{\fromvar}{{\it y}}
+\newcommand{\base}{{\it z}}
+\newcommand{\baseH}{{\it h}'}
+\newcommand{\baseHCtx}{{\it hc}'}
+\newcommand{\fld}{\text{\it fld}}
+\newcommand{\calleeCtx}{{\it c}_2}
+\newcommand{\callerCtx}{{\it c}_1}
+\newcommand{\invo}{{\it l}}
+
+\newcommand{\this}{{\it this}}
+\newcommand{\sig}{{\it sig}}
+\newcommand{\heapT}{{\it hT}}
+
+\newcommand{\Alloc}{\textsc{Alloc}}
+\newcommand{\Move}{\textsc{Move}}
+\newcommand{\Load}{\textsc{Load}}
+\newcommand{\Store}{\textsc{Store}}
+\newcommand{\VCall}{\textsc{Call}}
+\newcommand{\SCall}{\textsc{SCall}}
+\newcommand{\FormalArg}{\textsc{FormalArg}}
+\newcommand{\ActualArg}{\textsc{ActualArg}}
+\newcommand{\FormalReturn}{\textsc{FormalReturn}}
+\newcommand{\ActualReturn}{\textsc{ActualReturn}}
+\newcommand{\ThisVar}{\textsc{ThisVar}}
+\newcommand{\HeapType}{\textsc{HeapType}}
+\newcommand{\LookUp}{\textsc{LookUp}}
+
+\newcommand{\VarPointsTo}{\textit{ptsto}}
+\newcommand{\CallGraph}{\textit{CallGraph}}
+\newcommand{\FldPointsTo}{\textit{fldptsto}}
+\newcommand{\InterProcAssign}{\textit{InterProcAssign}}
+\newcommand{\Reachable}{\textit{reachable}}
+\newcommand{\Callgraph}{\textit{callgraph}}
+
+
+\newcommand{\Flavor}{{\it flavor}}
+\newcommand{\Flavorcall}{\Flavor_{\it call}}
+\newcommand{\Flavorobj}{\Flavor_{\it obj}}
+\newcommand{\Flavorsobj}{\Flavor_{\it sobj}}
+\newcommand{\Flavortype}{\Flavor_{\it type}}
+
+\newcommand{\parent}{\Flavor}
+\newcommand{\parentcall}{\Flavorcall}
+\newcommand{\parentsobj}{\Flavorsobj}
+\newcommand{\parentobj}{\Flavorobj}
+\newcommand{\parenttype}{\Flavortype}
+
+
+\newcommand{\HeapDepth}{{\it maxH}}
+\newcommand{\CallDepth}{{\it maxK}}
+
+
+\newcommand{\concat}{%
+  \mathbin{{+}\mspace{-8mu}{+}}%
+}
+
+\newcommand{\cmd}{{\it inst}}
+\newcommand{\lcmd}{{\it linst}}
+
+\newcommand{\Context}{\mbc}
+\newcommand{\HeapContext}{\mbh\mbc}
+
+%\newcommand{\myparagraph}[1]{{\fontshape{\itdefault}\fontseries{\bfdefault}\selectfont
+%#1\/\,\,}}
+
+\newcommand{\myparagraph}[1]{
+\medskip
+\noindent{\it \textbf{#1.}}}
+
+
+%\newcommand{\myparagraph}[1]{\paragraph{\fontshape{\itdefault}\fontseries{\bfdefault}\selectfont
+%#1\/}}
+
+\newcommand{\mybf}[1]{{\fontshape{\itdefault}\fontseries{\bfdefault}\selectfont#1\/}}
+
+\newcommand{\Bean}{\textsc{Bean}}
+
+\newcommand{\fprime}{f_{\it imp}}
+\newcommand{\fsecond}{f_{\it unimp}}
+
+\newcommand{\tspace}{\mcr}
+
+%\newcommand{\Simulation}{\textsc{Simulation}}
+%\newcommand{\Recovery}{\textsc{Recovery}}
+
+\newcommand{\LearnBooleanFormula}{\textsc{LearnParameter}}
+\newcommand{\CollectSeedFeatures}{\textsf{CollectSeedFeatures}}
+\newcommand{\Failed}{{\it Failed}}
+
+\newcommand{\SeedFeature}{\textsf{SeedFeature}}
+
+\newcommand{\CallGraphEdge}{{\sf CallGraphEdge}}
+
+
+\newcommand{\Inst}{\text{\it Label}}
+\newcommand{\Invo}{\text{\it Invo}}
+\newcommand{\inst}{l}
+\newcommand{\fix}{{\it fix}}
+\newcommand{\entry}{\text{\it main}}
+\newcommand{\emptyctx}{\epsilon}
+\newcommand{\updatectx}{U}
+\newcommand{\Var}{\text{\it Var}}
+\newcommand{\Ctx}{\text{\it Ctx}}
+\newcommand{\Heap}{\text{\it Heap}}
+\newcommand{\Hctx}{\text{\it Hctx}}
+\newcommand{\project}{\Pi}
+\newcommand{\weakupdate}{\stackrel {{\it w}}{\mapsto}}
+
+
+%\newcommand{\fld}{{\it fld}}
+\newcommand{\ptsto}{X}
+\newcommand{\fptsto}{Y}
+\newcommand{\reachable}{R}
+\newcommand{\callgraph}{G}
+
+\newcommand{\mthdof}{\text{\it Mthdof}}
+
+\newcommand{\moreprecise}{\succeq}
+\newcommand{\strictlylessprecise}{\prec}
+
+
+\newcommand{\decisionTree}{{\sf DT}}
+\newcommand{\simulate}{{\sf simulate}}
+\newcommand{\obj}{{\sf obj}}
+\newcommand{\Tobj}{T_{\text{\it obj}}}
+\newcommand{\call}{{\sf call}}
+\newcommand{\Tcall}{T_{\text{\it call}}}
+\newcommand{\learn}{{\sf learn}}
+\newcommand{\callheuristic}{\heuristic_{\call}}
+\newcommand{\objheuristic}{\heuristic_{\obj}}
+\newcommand{\simheuristic}{\heuristic_{{\sf sim}}}
+\newcommand{\dtheuristic}{\heuristic_{{\sf \decisionTree}}}
+\newcommand{\ourheuristic}{\heuristic_{{\sf ours}}}
+
+
+
+\newcommand{\featmean}[2]{\sem{#1}_{#2}}
+\newcommand{\xor}{\oplus}
+
+%\newcommand{\Gobj}{G_{\it obj}}
+\newcommand{\Gobj}{G}
+\newcommand{\transform}{{\sf transform}}
+
+\newcommand{\objective}{{\it O}}
+
+
+\newcommand{\learnold}{A}
+\newcommand{\learnsup}{B}
+
+\newcommand{\ourtechnique}{\textsc{Obj2Cfa}}
+
+
+
+%\newcommand{\Existing}{{\it Existing}~\cite{JeJeOh18}}
+\newcommand{\Existing}{{\it 1callH+T$_{\it new}$}}
+\newcommand{\DecisionTree}{{\it Decision tree}}
+\newcommand{\OurLearn}{{\it 1callH+SL}}
+
+\newcommand{\failcasts}{\#may-fail-casts}
+
+\newcommand{\callgraphedges}{\#call-graph-edges}
+\newcommand{\reachableMethods}{\#reachable-methods}
+\newcommand{\polycalls}{\#polymorphic-calls}
+
+
+%%% Local Variables:
+%%% mode: plain-tex
+%%% TeX-master: "paper"
+%%% End:

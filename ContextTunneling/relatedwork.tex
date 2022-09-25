@@ -1,0 +1,227 @@
+\section{Related Work}\label{sec:related}
+
+Points-to analysis has a large body of past
+literature\cite{Lhotak2006,Smaragdakis2015,hind2001pointer,Lhotak2008,Might2010,
+ liang1999efficient,wilson1995efficient, liang2005evaluating, chatterjee1999relevant, Whaley2004, Shivers1988,Sharir1981, Milanova2005,Milanova2002, Smaragdakis2011, kastrinis2013hybrid}. Below, we discuss prior works that are closely related to
+ours.
+
+% been widely studied in past literature\cite{Lhotak2006,Smaragdakis2015,hind2001pointer,Lhotak2008,Might2010,
+% liang1999efficient,wilson1995efficient, liang2005evaluating, chatterjee1999relevant, Whaley2004, Shivers1988,Sharir1981, Milanova2005,Milanova2002, Smaragdakis2011, kastrinis2013hybrid}.
+% In this section, we discuss how this work contributes to context sensitive points-to anlaysis.
+
+\subsection{Context-Sensitive Analysis} To our knowledge, all
+existing techniques for context-sensitive analyses
+(e.g.~\cite{Sharir1981,Milanova2002,Shivers1988,
+  Whaley2004,Milanova2005,Smaragdakis2011, Khedker2008,
+  Karkare2007,kastrinis2013hybrid,WeiR15,Smaragdakis2014,JeJeChOh17,Oh2014,TanLX16,PadhyeK13})
+suffer from the problem we tackle in this paper. All of those
+techniques update the calling contexts at every call-site and
+therefore may lose important context elements when $k$-limiting is used.  For example,
+techniques for varying context depths
+adaptively~\cite{WeiR15,JeJeChOh17,Oh2014, Smaragdakis2014} have proven
+their effectiveness for tuning the performance of context-sensitivity.  However,
+the primary goal of these techniques is to selectively analyze methods
+with appropriate $k$ values, rather than to be selective in context
+construction.
+
+% , instead of blindly applying $k$-context depth for all program
+% parts and waste resources, making good prediction models that assign
+% promising context depth for each method
+% invocation. \citet{Smaragdakis2014} uses a manually-designed
+% heuristic to identify ``break-even points'' of context sensitivity
+% with pre-analysis, and then the main analysis selectively applies
+% context-sensitivity with the prediction. \citet{JeJeChOh17}
+% introduced a disjunctive model and a learning algorithm to infer
+% such heuristics automatically from codebase. However, as far as
+% those techniques rely on conventional $k$-limited
+% context-sensitivity at their core, they suffer from the same problem
+% that our paper concerns.
+
+The technique, called \Bean, by~\citet{TanLX16} is similar to ours in
+that it aims to improve precision of $k$-object-sensitive points-to
+analysis without increasing $k$. The idea is to identify ``redundant''
+context elements by running a pre-analysis and building a so-called
+object allocation graph. An object allocation graph is analogous to a
+call-graph in call-site-sensitivity and captures how context strings
+are generated during an object-sensitive analysis. The technique
+identifies redundant nodes in the graph, which can be removed without
+reducing the number of distinct contexts; in fact, this technique
+guarantees to result same or more distinct contexts than conventional
+analysis with same $k$. The redundant nodes are excluded when
+selecting heap contexts for an object. The main focus of \Bean~is in
+choosing good heap contexts and therefore it still suffers from the
+core problem we tackle in this paper; that is, \Bean~always append the
+last context element to the parent context on method calls (i.e. it
+uses the last rule in Figure~\ref{fig:baseline-rules}, not
+Figure~\ref{fig:tunneling-rules}). As the result, when $k=1$ for
+example, \Bean~analyzes every method under the same calling context as
+the ordinary $1$-object-sensitive analysis. The goal of context
+tunneling is to mitigate this problem.
+
+Merging equivalent contexts~\cite{Xu2008} or abstract heaps~\cite{Tan2017} also have been studied to
+increase scalability of context-sensitive points-to analysis. \citet{Xu2008} first defines a fine-grained
+notion of context equivalence that guarantees to increase scalability without losing original analysis's
+precision, which is $\infty$-context-sensitivity. Based on the equivalence, the paper introduces its abstracted
+version to extend scalability even further at the cost of precision. \citet{Tan2017} merges two
+abstract heaps if their fields-points-to-graphs indicate that any field access sequence (i.e.,
+$o.f.g.\cdots .h$) ends up with same typed objects for two graphs. This approach demonstrated that it brings
+little or no negative impact on precision but scales deep context
+sensitive analysis.
+
+% \citet{WeiR15} suggest a technique that choose a context from multiple kinds of context for each method to
+% achieve precision. Such paramter share same goal of ours, but our technique uses a single kind of
+% context to improve precision.
+
+
+% Full context string approaches~\cite{Khedker2008, Karkare2007} has been used for a limited classes of data
+% flow analysis problems for instance bit-vector problems. Naturally, various heuristics such as replacing
+% consecutive context elements with the representative one~\cite{Khedker2008} or limiting occurrences of same
+% context element~\cite{Karkare2007} have been proposed in order to mitigate possibly infinite length of call
+% string thus poor scalability.
+
+
+\subsection{Parametric and Data-Driven Program Analysis}
+
+Our work presents a new instance of parametric program analysis.
+Previously, parametric program analyses have been used for
+context-sensitivity~\cite{Tan2017,Oh2014, JeJeChOh17, Liang2011learning, Zhang2014,Liang2011}, flow-sensitivity~\cite{Oh2015}, variable clustering for
+relational analysis~\cite{Heo2016learning}, and widening
+thresholds~\cite{cha2016learning}.
+Typically, the goal of these analyses is to find a parameter which
+is as scalable as possible while sacrificing as little precision as possible.
+For example,
+\citet{Oh2015,Oh2014,Smaragdakis2014, JeJeChOh17, Liang2011learning}
+sacrifice the precision of full flow- or context-sensitivity to obtain
+tractable scalability.
+\citet{Heo2016learning} compromises the full precision of relational
+analysis and cluster variables whose relationships should be kept
+during analysis.
+\citet{Hassanshahi2017} and \citet{Tan2017} aim to find appropriate heap
+abstraction that scales well without losing precision too much.
+In this paper, we propose a new knob, called context tunneling, which
+is able to improve both precision and scalability of the conventional
+context-sensitive analysis.
+
+% Context tunneling is a unique knob to control both scalability
+% and precision in context sensitive points to analysis. In parametric program analysis, analyzers are
+% equipped with parameters and achieve cost effective analysis with suitable parameters.
+% Most of the existing parameters in program
+% analysis are designed to achieve scalability
+% by sacrificing precision\cite{Oh2014,JeJeChOh17,Oh2015,Heo2016learning,cha2016learning}.
+% \citet{Oh2015,Oh2014,Smaragdakis2014, Liang2011learning} use parameter that choose methods that should be analyzed
+% context sensitively, \citet{JeJeChOh17} use parameter that assign context depth (0$\sim$k)for each method and
+% parameters in \citet{Heo2016learning} cluster variables that analyzer should track the relations.
+% \citet{Hassanshahi2017} use depth of heap contexts as a knob and the goal is to find appropriate heap
+% context depth to each heap alloation site.
+%  In such parameters, the goal of parameteric anlaysis is to find a parameter which
+% are as scalable as possible while sacrificing precision as little as possible. Parameter in context
+% tunneling, however, has different property that it is designed to achieve precision while not sacrificing
+% scalability.
+
+% \citet{Liang2011learning} defined the notion of minimal abstraction and suggested an algorithm to find the minimal
+% abstractions for context-sensitivity in points-to analysis. However,
+% the algorithm cannot be used for learning a program analysis
+% heuristic.
+% \citet{Zhang2014} proposed a CEGAR-based
+% algorithm that learns a parameter for context-sensitive points-to analysis for Java. Both
+% \citet{Liang2011learning} and \citet{Zhang2014} assume that abstractions are ordered with respect to
+% precision like \citet{JeJeChOh17} while abstractions in context tunneling are not.
+
+
+From the perspective of data-driven program analysis, our work
+presents a new learning algorithm for disjunctive model that is
+applicable even when the
+underlying analysis is not monotone with respect to the parameter
+space.
+Recently, data-driven approaches to program analysis have been
+popular to address the challenge of generating program-analysis
+heuristics~\cite{JeJeChOh17,Oh2015,ChOhHeYa17,Heo2016learning,heo2016unsound,WeiR15}.
+% Prior data-driven approaches in parametric program analysis are
+% unable to learn suitable parameters in context tunneling. Data-driven program analysis aims to generate good
+% program analysis heuristics automatically from
+% codebase~\cite{JeJeChOh17,Oh2015,ChOhHeYa17,Heo2016learning,heo2016unsound,WeiR15}, and our work lies in
+% this line of research.
+In particular, \citet{JeJeChOh17} recently proposed an algorithm with
+disjunctive model based on boolean formulas and used the model to
+learn a heuristic to determine appropriate context depths for each
+method. This algorithm drastically reduces the search space by
+exploiting the monotonicity of the analysis (i.e. applying deeper context-sensitivity will never decrease precision). Our approach is based on the
+disjunctive model proposed by~\cite{JeJeChOh17} but uses a
+different, non-greedy algorithm for learning context tunneling
+heuristics.
+The learning algorithm by~\citet{Oh2015} is applicable to non-monotone
+analyses, but its applicability is limited to analysis heuristics
+based on the linear combination of input features.
+\citet{ChOhHeYa17} solves an orthogonal problem, automatic
+generation features for learning heuristics, where feature programs
+are generated by running a program reducer and get abstracted to
+features represented by abstract data-flow graphs. However, it remains
+to be seen whether the technique is applicable beyond intraprocedural
+settings.
+
+
+% proposed an algorithm based on the simple linear
+% combination of features and Bayesian optimization.
+% learning strategy that use Bayesian optimization technique to
+% learn parameters that use linear model.
+% However, learning algorithms which learn linear combination do not
+% work in our setting as we use different model\cite{Oh2015,Heo2016learning,heo2016unsound,cha2016learning}.
+% \citet{JeJeChOh17} propose algorithms to learn parameter that assign appropriate context depth for each
+% method. The algorithm drastically reduce search space by exploiting a property that applying deeper context
+% sensitivity to methods do not lose precision. Although \citet{JeJeChOh17} use same model with ours, the
+% algorithm is inappropriate to
+% learn parameters in context tunneling as applying tunneling to methods may lose or gain precision.
+% \citet{Liang2011learning} defines minimal abstraction and suggested an algorithm to finds the minimal
+% abstractions of context-sensitivity in points-to analysis. \citet{Zhang2014} proposed a CEGAR-based
+% algorithm that learns a parameter for context-sensitive points-to analysis for Java. Both
+% \citet{Liang2011learning} and \citet{Zhang2014} assume that abstractions are ordered with respect to
+% precision like \citet{JeJeChOh17} while abstractions in context tunneling are not.
+
+
+
+%\myparagraph{Parametric program analysis}
+
+
+
+
+
+
+% \myparagraph{Demand-driven Program Analysis}
+% As we aim to analyze all queries in target programs, our approach differs from existing work on
+% demand-driven program analysis~\cite{Guyer2003,
+% Sridharan2006, Sridharan2005}. \citet{Yan2011} proposed demand-driven
+% approach that improve scalability in CFL-reachability analysis. It achieves scalability by summarizing procedural reachability for frequently used methods
+% during analysis and apply the summaries when CFL-reachability needs to enter the methods.
+% % \citet{Allen2015} combine type analysis with points-to analysis for library codes to approximate behaviors of appli
+%cations that use the libraries.
+% \citet{Xu2009} improve performance of CFL-reachability analysis by using pre-analysis that compute
+% must-not-alias information. Main analysis use pre-calculated information to prune out infeasible paths.
+
+
+\begin{comment}
+\begin{itemize}
+\item{\citet{Hassanshahi2017} use selective object-sensitivity as a knob and the goal is to find appropriate heap context depth to each heap alloation site, and \citet{Hassanshahi2017} employ pre-analysis to identify program parts. -O}
+\item{\citet{Yan2011} proposed demand-driven approach that improve scalability in CFL-reachability analysis.
+\cite{Yan2011} achieve analysis scalability by summarizing procedural reachability for heavily used methods
+during analysis and apply the summary when CFL-reachability needs to enter the methods. O}
+\item{\citet{Xu2009} improve preformance of CFL-reachability analysis by using pre-analysis that compute
+must-not-alias information. Main analysis use pre-calculated information to prune out infeasible paths. -O}
+\item{\citet{Hassanshahi2017} use selective object-sensitivity as a knob and the goal is to find appropriate heap context depth to each heap alloation site, and \citet{Hassanshahi2017} employ pre-analysis to identify program parts. -O}
+\item{\cite{Allen2015} combine type analysis with points to analysis for library codes to approximate behaviors of applications that use the libraries. O}
+
+\item{To improve precision, \citet{Khedker2012} combined points-to anlaysis with liveness analysis resulting
+precision improvement. X}
+\item{\cite{Avots2005} states that pointer analysis can help bug detector for C by reducing overhead.X}
+\item{\citet{Lam2005} propose hybrid pointer alias analysis that apply precise analysis for some parts
+while  the other parts are being analyzed imprecisely. \cite{Lam2005} also introduce an unsound assumption
+to reduce false positives and achieve scalability. X}
+\item{\cite{Livshits2003}X}
+\item{\cite{bodden2008object}}
+\end{itemize}
+\end{comment}
+%\cite{Yan2011, Xu2009, Lam2005, Hassanshahi2017, Dietrich2015, Allen2015, Khedker2012, Avots2005, Livshits2003, bodden2008object}
+
+%%%% Local Variables:
+%%%% mode: latex
+%%%% TeX-master: "paper"
+%%%% End:

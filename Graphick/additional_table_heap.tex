@@ -1,0 +1,37 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+\begin{table}[]
+\scriptsize
+\centering
+\caption{Performance comparison between the heap abstraction heuristics against the left benchmarks.}
+\label{appendix:heap}
+\begin{tabular}{@{}c|clrrrr@{}}
+\toprule
+\multicolumn{1}{c}{}&                         &                    & \OurHeap             & \Mahjong              & \AllocBased         & \TypeBased          \\ \midrule
+\multirow{28}{*}{\rotatebox[origin=c]{90}{Test programs}}&\multirow{4}{*}{eclipse} & analysis time (s)  & $>$10,800 & $>$10,800 & $>$10,800 & 222                  \\
+&                         & \#may-fail casts   & -                    & -                    & -                    & 4,852                 \\
+&                         & \#poly-call sites  & -                    & -                    & -                    & 10,177                \\%\cmidrule(){2-7}
+&                         & \#call-graph-edges & -                    & -                    & -                    & 182,000               \\\cmidrule(){2-7}
+&\multirow{4}{*}{pmd$_s$}  & analysis time (s)  & $>$10,800 & $>$10,800 & $>$10,800 & 4,317                 \\
+&                         & \#may-fail casts   & -                    & -                    & -                    & 2,941                 \\
+&                         & \#poly-call sites  & -                    & -                    & -                    & 4,124                 \\%\cmidrule(){2-7}
+&                         & \#call-graph-edges & -                    & -                    & -                    & 106,490               \\\cmidrule(){2-7}
+&\multirow{4}{*}{jedit}   & analysis time (s)  & 454(+242)                  & 1,392                 & 8,001                 & 245                  \\
+&                         & \#may-fail casts   & 1,143                 & 1,094                 & 1,094                 & 1,786                 \\
+&                         & \#poly-call sites  & 1,732                 & 1,688                 & 1,684                 & 2,064                 \\%\cmidrule(){2-7}
+&                         & \#call-graph-edges & 55,476                & 55,156                & 55,145                & 64,825                \\\cmidrule(){2-7}
+&\multirow{4}{*}{briss}   & analysis time (s)  & $>$10,800 & $>$10,800 & $>$10,800 & $>$10,800 \\
+&                         & \#may-fail casts   & -                    & -                    & -                    & -                    \\
+&                         & \#poly-call sites  & -                    & -                    & -                    & -                    \\%\cmidrule(){2-7}
+&                         & \#call-graph-edges & -                    & -                    & -                    & -                    \\\cmidrule(){2-7}
+&\multirow{4}{*}{soot}    & analysis time (s)  & $>$10,800 & $>$10,800 & $>$10,800 & 7,741                 \\
+&                         & \#may-fail casts   & -                    & -                    & -                    & 15,885                \\
+&                         & \#poly-call sites  & -                    & -                    & -                    & 14,617                \\%\cmidrule(){2-7}
+&                         & \#call-graph-edges & -                    & -                    & -                    & 359,358               \\\cmidrule(){2-7}
+&\multirow{4}{*}{jython}  & analysis time (s)  & $>$10,800 & $>$10,800 & $>$10,800 & 187                  \\
+&                         & \#may-fail casts   & -                    & -                    & -                    & 1,211                 \\
+&                         & \#poly-call sites  & -                    & -                    & -                    & 1,487                 \\%\cmidrule(){2-7}
+&                         & \#call-graph-edges & -                    & -                    & -                    & 50,544                \\ \bottomrule
+\end{tabular}
+\end{table}

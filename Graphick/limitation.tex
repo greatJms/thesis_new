@@ -1,0 +1,91 @@
+% !TEX root = ./paper.tex
+
+%\textcolor{red}{
+%The heuristics produced by \ourtool~ may not be general when the downstream clients for training steps are substantially different from those in evaluation.
+%In experiments, we trained heuristics with the may-fail-cast client and evaluated the learned heuristics on the test set using three clients (may-fail-casts, poly-call-sites, and call-graph-edges).
+%The evaluation results show that the heuristics learned by \ourtool~ are general in our evaluation environment.
+%The performance, however, may be unsatisfactory if the clients in the main analysis are different from the ones used when training. In such a case, \ourtool~should be retrained with the new target client.
+%}
+
+
+
+
+\subsection{Limitations and Discussion}
+%\TODO{Explain more about the limitation: e.g., Limitation 1 is ... Limitation 2 is ... And then discuss how to mitigate them in a separate paragraph.}
+\ourtool~has several limitations.
+One major limitation is that the heuristics produced by our approach may not be generalized
+if the setting in training steps is substantially different from that used in evaluation in terms of analyzer $F$, target client, and $\CallDepth$.
+More specifically, the learned heuristics by \ourtool~are dependent on the training data, the analyzer $F$ used, and the target client
+(e.g., may-fail casts).
+For example, the precision on the number of may-fail casts can be unsatisfactory if we train the heuristics with
+the number of poly-call sites as the target client.
+The context-length $\CallDepth$ for the main analysis is also limited to the one used in the training phase.
+%d) the context-length k used in the training phase is rather limited.
+Besides those generality issues, the training process of \ourtool~is time-consuming (i.e. it took 200 hours in our evaluation).
+
+%As the heuristics produced by \ourtool~is learned with the a) the training data and b) specific analyzer $F$,
+%the performance of \ourtool~may be unsatisfactory if the analyzer for main analysis is different from the one used in training phase.
+%Similarly, using different clients for the main analysis from the training process can result in the degraded performance of \ourtool~
+%in terms of precision and scalability.
+%For example, the precision on the number of may-fail casts can be unsatisfactory if we train the heuristics with
+%the number of poly-call sites as the target client.
+%Further, e) the learning cost of~\ourtool takes about 200 hours for a single heuristic,
+%which seems to be costly.
+
+Despite those limitations, we believe \ourtool~can be useful in practice. %for other settings as well in practice.
+First of all, note that in this paper we showed the effectiveness of \ourtool~in a realistic (yet particular) setting, where we used a real-world pointer analysis framework and benchmarks.
+In particular, we do not believe the expensive training phase of \ourtool~is a serious limitation in practice, because it is not only fully automatic but also rather cheap compared to the much more expensive process of handcrafting analysis heuristics or features by human experts.
+%\ourtool~can automate the manual process that typically requires weeks or months to develop a single heuristic.
+%All the processes of generating the heuristics are fully automated, which can dramatically reduce the
+%burdens of analysis designers in practice.
+%Even with the limitations above,~\ourtool, however, can be still used realistically in a production setting.
+%For example, although it takes about 200 hours to learn a single heuristic, it is cheaper than the manual process of
+%designing cost-effective heuristics from the given graph, which typically takes weeks or months.
+%Moreover, all the processes of generating the heuristics are fully automated, which can dramatically reduce the
+%burdens of human-involving tasks.
+The learned heuristic is dependent on the training data but, as we showed in this paper (Section~\ref{sec:justify}), using a small number of real programs is likely to provide a sufficient amount of actual training data (e.g., allocation sites) in practice. Also, the selection of training programs did not require careful engineering efforts in our case.
+The context length $\CallDepth$ is rather limited (2-object-sensitivity), but 2-object-sensitive pointer analysis is generally considered to be highly precise in practice~\cite{Li2018a}.
+
+For the issue on target clients, we showed that training heuristics using the may-fail-cast client
+generalizes well for the three clients (may-fail-casts, poly-call-sites, and call-graph-edges).
+When the downstream clients are substantially different, however,
+one solution is to choose the target clients as general as possible in the training process. For example, we can use the size of context-insensitive variable points-to sets instead of the number of may-fail-casts as the context-insensitive variable points-to set is one of the most general clients that affect the others.
+The clients we used in our evaluation (i.e. may-fail-casts, poly-call-sites, and call-graph-edges) are computed based on the context-insensitive variable points-to set and therefore minimizing it would likely minimize other clients too.
+%
+%\TODO{What is the point of the next paragraph? Saying another limitation and how to mitigate it? Be more explicit. }
+%Despite its dependency on the settings (e.g., training data, analyzer $F$, target client, and context depth $k$) and learning cost,
+%\ourtool~can be practically used in industry because user-involving tasks (e.g., deciding suitable settings) are light weighted and other processes are done automatically.
+%More precisely, for the analyzer $F$, the users only need to decide the one among the other available analyzers to suit their tastes.
+%Users can also organize the training data with other programs which have commonalities to the object program (e.g., functional behavior, type of inputs). These commonalities would likely provide appropriate data for learning.
+%For the context depth $k$, the users can simply determine the highest context depth $k$
+%by checking whether $\vec{k}$ (assign $k$ to all the program components) is scalable over the training programs while $\vec{k+1}$ (assign $k+1$ to all the program components) is not.
+%With the selected settings above, \ourtool~automatically produces the cost-effective heuristics,
+%of which the learning process takes about 200 hours.
+%Although the learning cost seems to be expensive, we believe that it is reasonably cheaper compared to the cost of manually designing graph-based heuristics which additionally requires high expertise and lots of human effort.
+%
+%
+
+
+
+
+
+%As \ourtool~automates the processes which typically require lots of human effort,
+%it can reduce the burdens
+%it is much more light weighted compared to manually designing graph-based heuristics which additionally requires high expertise and lots of human effort.
+
+%Only with small effort on deciding the settings, \ourtool~automatically produces the cost-effective heuristics.
+
+
+
+
+
+
+
+%\textcolor{blue}{Tone down the claim of Graphick as "an approach to learn heuristics for "object-sensitive" pointer analysis" instead of "a general-purpose approach to context-sensitive pointer analysis". In particular, argue convincingly how GraphicK can be used realistically in a production setting, given that (a) its training phase is time-consuming, (b) the learned predictor is dependent on the training data and the analyser F used, and (3) the context-length k used in the training phase is rather limited.}
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

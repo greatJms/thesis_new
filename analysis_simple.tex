@@ -1,0 +1,308 @@
+% !TEX root = ./paper.tex
+
+\chapter{Is Complete Simulation Possible?}\label{sec:setting}
+% In this thesis, we showed that it is practically possible to outperform object sensitivity via context-tunneled call-site sensitivity (Chapter~\ref{sec:Obj2CFA}). 
+% However, it remains to be seen whether or not call-site sensitivity can be fundamentally superior to object sensitivity.
+Before we introduce the formal description the fundamental superiority, we redefine pointer analysis with tunneling on which the formal description will be simply defined. Note that the analysis below is fundamentally the same analysis used in Chapter~\ref{sec:Preliminaries},~\ref{sec:Tunneling}, \ref{sec:Obj2CFA}, and \ref{sec:Graphick}.
+
+%In this section, we define a pointer analysis with context tunneling. 
+
+
+%\subsection{Context-Tunneled Pointer Analysis}
+\label{sec:pointeranalysis}
+
+
+\myparagraph{Program}
+We assume a program is a sequence of instructions, where each
+instruction is associated with a distinct label.  An instruction is
+either heap allocation (${\it x = new()}$), move (${\it x = y}$), 
+%\textcolor{red}{
+store (${\it x.f = y}$), load (${\it x = y.f}$),
+%}
+or
+virtual method call (${\it x = y.m_r^{p}(a)}$).  We
+assume that every method ($m$) has a single formal parameter ($p$) and
+return variable ($r$). 
+Given a program $P$ to analyze, we assume the following:
+\begin{itemize}[leftmargin=1.4em]
+\item $\Var_P$: the set of program variables.
+\item $\fld_P$: the set of field signatures.
+\item $\Inst_P$: the set of instruction labels of the program.
+\item $\Methods_P$: the set of methods of the program.
+\item $\mthdof_P$: the mapping from labels to the
+methods containing them (i.e. $\Inst_P \to \Methods_P$).
+\item $\Invo_P$: invocation sites (i.e. call sites, $\Invo_P \subseteq \Inst_P$).
+\item $\Heap_P$: heap allocation sites (i.e. $\Heap_P \subseteq \Inst_P$).
+\item $\Ctx_P$: the set of calling contexts (i.e. $\Ctx_P = \Inst_P^*$).
+\item $\Hctx_P$: the set of heap contexts (i.e. $\Hctx_P = \Inst_P^*$).
+\item $\entry_P$: the entry method of the program.
+\end{itemize}
+
+
+\myparagraph{Notation}
+For function $X: A \to B$, where $A$ and $B$ are sets, we write $X[a
+\mapsto b]$ %\begin{comment}
+(where $a \in A, b \in B$)
+%\end{comment}
+for the function $X$ that is extended to map  $a$ to $b$.
+For function $X: A \to \power{B}$,
+$X[ a \weakupdate b]$ 
+%\begin{comment}
+(where $a \in A, b \subseteq B$)
+%\end{comment} 
+denotes $X[ a\mapsto X(a) \cup b]$ (i.e. weak update).
+Given $X, Y: A \to \power{B}$, $X \sqcup Y$ denotes $\lambda
+a. X(a) \cup Y(a)$. Given a sequence $s = a_1a_2\dots a_{n-1}$ and an element
+$a_n$, we write $\truncateCtx{s \concat a_n}{k}$ for $a_1a_2\dots a_{n-1}a_n$
+if $n < k$. If $n \ge k$, the result is $a_{n-k+1} \dots a_{n-1}a_n$.
+
+
+%\myparagraph{Tunneling Abstraction}
+\myparagraph{Pointer Analysis} % with Context Tunneling}
+%The idea of context tunneling~\cite{JeJeOh18} is to selectively update contexts. 
+%To support context tunneling, we parameterize a pointer analysis by a tunneling abstraction, $T$, which is a set of invocation sites.  
+%
+%\begin{comment}
+%For example, when
+%$k=1$,  a caller method $m_{1}$ with context
+%$[i_{1}]$ calls a method $m_{2}$ at call-site $i_{2}$, and
+%$i_2 \in T$, the context of the callee $m_2$ inherits the caller's
+%and becomes $[i_{1}]$, not $[i_{2}]$.  
+%
+%When $T =
+%\emptyset$, we do not apply context tunneling at all, so the analysis
+%becomes the conventional
+%$k$-context-sensitive analysis. % that keeps the last
+%% $k$ context elements.
+%When $T =
+%\Invo_P$, on the other hand, the analysis becomes context-insensitive
+%because every call-site is tunneled and therefore all the
+%methods are analyzed under the initial context of the entry method.
+%%\end{comment}
+%
+%
+%
+%\myparagraph{Analysis Rules} 
+We consider a subset-based pointer analysis with on-the-fly call-graph construction~\cite{Smaragdakis2015}, which computes four pieces of
+information: points-to, field points-to, reachability, and call-graph
+information. The points-to information,
+$\ptsto\in \Var_P \times \Ctx_P \to \power{\Heap_P \times \Hctx_P}$, maps
+variables with contexts to sets of heaps with heap contexts.  
+The field points-to information,
+$\fptsto \in \Heap_P \times \Hctx_P \times \fld_P \to \power{\Heap_P \times \Hctx_P}$, maps
+fields of heaps with their heap contexts to sets of heaps with heap contexts.  
+The
+reachability information, $\reachable \in \Methods \to \power{\Ctx}$,
+maps methods to their reachable contexts. 
+A call-graph,
+$\callgraph\in \power{\Invo_P \times \Ctx_P\times \Methods_P\times \Ctx_P}$,
+is a set of context-sensitive call edges, where
+$(\invo,\ctx_1,m,\ctx_2) \in \callgraph$ indicates that method $m$ is
+called from the invocation-site $\invo$ and the caller and callee
+contexts are $\ctx_1$ and $\ctx_2$, respectively. The analysis is
+flow-insensitive and aims to compute the least fixed point of the semantic function $F$ defined as follows:
+\[
+F^{T,U}_{P,k} = \lambda (\ptsto, \fptsto, \reachable, \callgraph). \bigsqcup_{\inst \in \Inst_P}
+f^{T, U}_{\inst, k}(\ptsto, \fptsto ,\reachable, \callgraph) 
+\]
+where $k \in \mbn$ is the maximum context depth to distinguish and  $f^{T, U}_{\inst, k}$ is the transfer function for the instruction whose label is $\inst$. $T$ and $U$ are context-tunneling abstraction and context-update function, respectively, which will be explained shortly. Running the analysis is to compute $\fix F$:
+\[
+\fix F^{T,U}_{P,k} = F^{T,U}_{P,k} (\bot_X, \bot_Y, \bot_R, \bot_G) \sqcup F^{T,U}_{P,k} (F^{T,U}_{P,k} (\bot_X, \bot_Y, \bot_R, \bot_G)) \sqcup \dots
+\]
+where the bottom elements are defined as follows:
+\[
+  \bot_\ptsto = \lambda (x,c).\emptyset, \qquad   \bot_\fptsto = \lambda (l,hc,f).\emptyset, \qquad \bot_\reachable =
+\lambda m. \left\{ \begin{array}{ll} \myset{\epsilon} & \mbox{if}~m =
+                                                        \entry_P \\
+                     \emptyset & \mbox{otherwise} \end{array} \right., \qquad
+  \bot_\callgraph = \emptyset.
+\]
+
+
+\myparagraph{Transfer Function}
+The transfer function for the allocation, move, store, and load instructions is standard.
+Let $(\ptsto', \fptsto', \reachable',\callgraph')$ be $f^{T, U}_{\inst, k}(\ptsto, \fptsto,\reachable,\callgraph)$. 
+When the command is allocation ({\it x
+  = new()}), it extends the points-to map so that the variable {\it x}
+points-to the heap $\inst$ under the reachable context $\ctx \in \reachable(\mthdof(l))$: 
+\[
+\vspace{-0.3em}
+%\begin{array}{c}
+\ptsto' = \bigsqcup_{\ctx \in \reachable(\mthdof(l))} \ptsto [ (x,
+\ctx)\weakupdate \myset{(l, \ctx)} ].
+%\end{array}
+\]
+For a store command 
+({\it ${\it x.f = y}$}), the field points-to information is updated as follows:
+\[
+\vspace{-0.3em}
+%\begin{array}{c}
+\fptsto' = \bigsqcup_{\ctx \in \reachable(\mthdof(l))} \fptsto [(l,
+\hctx,f)\weakupdate \myset{(l', \hctx')} ]
+%\end{array}
+\]
+where $(l,hctx) \in \ptsto(x,ctx)$ and $(l',\hctx') \in
+X(y,\ctx)$. The points-to information is updated as follows for a
+load (${\it x = y.f}$) instruction: 
+\[
+\vspace{-0.3em}
+%\begin{array}{c}
+\ptsto' = \bigsqcup_{\ctx \in \reachable(\mthdof(l))} \ptsto [(x,
+\ctx)\weakupdate \myset{(l, \hctx)}]
+%\end{array}
+\]
+where $(l,\hctx) \in \fptsto(l',\hctx',f)$ and $(l',\hctx') \in X(y,\ctx)$.
+The reachability map and call-graph remain the same for the above instructions (i.e. $\reachable'=\reachable$ and $\callgraph'=\callgraph$). 
+The transfer function for move instruction ($\it x = y$) combines the points-to set of
+${\it y}$ into that of ${\it x}$ without modifying $\reachable$ and $\callgraph$.
+%\[
+%\ptsto' = \bigsqcup_{\ctx \in \reachable(\mthdof(l))} \ptsto[(x, \ctx) \weakupdate \ptsto(y,
+%                 \ctx)].
+%\]
+
+The transfer function for method calls is less standard as it should 
+account for context tunneling. 
+To support context tunneling~\cite{JeJeOh18}, we assume a context-tunneling space $\mbs$ is given. 
+The space $\mbs$ can be defined in various ways and the choice does not affect the soundness of the analysis. 
+In this paper, we simply define the space to be the set of all invocation sites, i.e., $\mbs = \Invo_P$ and let $T \subseteq \mbs$ be a tunneling abstraction given before the analysis. 
+For method call ${\it x =
+y.m^p_r(a)}$, 
+the transfer function, $f^{T, U}_{\inst, k}$,  first generates the callee's context $\ctx'$ using the context-update function $\updatectx$, $\ctx' = \updatectx(\ctx, T, X, l, y, k)$, which takes information available at the
+call-site. 
+The output $\ctx'$ of $\updatectx$ will be shortly defined for each context sensitivity flavor.
+Once $\ctx'$ is computed, the analysis makes the formal
+parameter $p$ under $\ctx'$ have the points-to set of the actual
+parameter $a$ under $\ctx$ and the points-to set of the return variable
+$r$ is transferred to the variable
+$x$. The resulting $\ptsto'$ is
+defined as follows: 
+\[
+ \bigsqcup_{\ctx \in \reachable(\mthdof(l))}
+  	\ptsto[	(p,\ctx')
+	\weakupdate \ptsto(a, \ctx), 
+	(x, \ctx) \weakupdate \ptsto(r,
+	\ctx')]
+\]
+     and the reachability and call-graph are updated accordingly:
+      $\reachable' = \reachable[ m \weakupdate \myset{\ctx'}]$ and $\callgraph' = \callgraph \cup\{(\inst,ctx,m,ctx')\}$.
+
+
+%the analysis generate
+%callee method's context and weak updates 
+
+%When the instruction at $\inst$ is ${\it x =
+%y.m^p_r(a)}$, $f_{k,i}^{T,
+%\updatectx}(\ptsto,\reachable, \callgraph)$ takes care of parameter and return
+%value passing, producing the following:
+%\[
+%\begin{array}{rr}
+%\bigsqcup\limits_{\ctx \in \reachable(\mthdof(l))}
+%\myset{(
+%\ptsto
+%\left[
+%\begin{array}{l}
+%             (p,\ctx')
+%  \weakupdate \ptsto(a, \ctx), \\
+%  (x, \ctx) \weakupdate \ptsto(r,
+%  \ctx')
+%\end{array}
+%  \right], \reachable[ m \weakupdate \myset{\ctx'}],
+%  \\\callgraph \cup\{(\inst,ctx,m,ctx')\})
+%  \mid \ctx'=\updatectx^{k, T}(\ctx, X, l, y)}.
+%\end{array}
+%\]
+%From the context $\ctx$, we first generate the callee's context
+%$\ctx'$ using $\updatectx$, which takes information available at the
+%call-site and produces new contexts (details to be explained shortly). Then, the analysis makes the formal
+%parameter $p$ under $\ctx'$ have the points-to set of the actual
+%parameter $a$ under $\ctx$. The points-to set of the return variable
+%$r$ is transferred to the variable $x$. 
+%%\end{itemize}
+
+%\subsection{Context Tunneling}\label{sec:tunneling}
+%
+%We now define object sensitivity and call-site sensitivity with context tunneling. 
+
+\myparagraph{Context Update}
+Let us define the context-update function $\updatectx$. 
+For object sensitivity, it is defined as follows: 
+\begin{equation}\label{eq:objsens}
+\begin{array}{rr}
+\updatectx (\ctx, T, X, l, y, k) =
+\left\{
+\begin{array}{ll}
+\truncateCtx{\hctx \concat h}{k} & l \not\in T, \\
+\hctx & l \in T
+\end{array}
+\right.\\
+\end{array}
+\end{equation}
+where $(h, \hctx) \in X(y, \ctx)$.
+When a method is called from an
+      invocation site $l$ with the base variable $y$ and caller's
+      context $\ctx$, the analysis first looks at the heap $h$ (and
+      its context $\hctx$) that the variable $y$ under $\ctx$ points
+      to, and creates the callee's context by appending the heap ($h$)
+      to its heap context ($\hctx$). The context may be truncated to
+      keep the last $k$ elements at most (i.e.
+      $\truncateCtx{\hctx \concat h}{k}$).
+Note that 
+$\updatectx$ creates the new context only when $l \not\in
+T$ (i.e. no context tunneling). Otherwise ($l \in T$), it applies context tunneling and propagates the existing 
+context ($\hctx$). 
+
+%By combining the information, 
+%The definition of $\updatectx$ for object-sensitivity~\cite{Milanova2005,Smaragdakis2011}
+%is defined as follows:
+% produces the callee's context.
+%For instance, object-sensitivity~\cite{Milanova2005,Smaragdakis2011} can be specified
+%by defining $\updatectx$ as follows:
+%
+
+%\paragraph{Call-Site Sensitivity}
+For call-site sensitivity, $\updatectx$ is defined as follows: 
+\begin{equation}\label{eq:cfa}
+\updatectx(\ctx, T, X, l, y, k) =
+    \left\{
+      \begin{array}{ll}
+        \truncateCtx{\ctx \concat l}{k} & l \not\in T, \\
+        \ctx & l \in T
+      \end{array}
+    \right.
+\end{equation}
+When $l \not\in T$, 
+%When a method is called at an invocation site $l$ in a method under the context
+%$\ctx$, 
+the analysis appends 
+the current invocation site $l$ to
+$\ctx$. With context tunneling ($l \in T$), it uses the caller's context $\ctx$ for the callee's. 
+
+
+
+%\textcolor{red}{
+%Note that we can define the abstraction space of context tunneling in various ways.
+%In this paper, we use the set of invocation sites as an abstraction space; a tunneling abstraction determines whether to update contexts with method invocation sites. 
+%In the previous work~\cite{JeJeOh18}, on the other hand, the space of tunneling is defined with methods; a tunneling abstraction determines whether to apply tunneling with methods.
+%}
+
+% \myparagraph{Instance Analyses}
+% Given  a program $P$ and 
+% its tunneling abstraction $T \subseteq \Invo_P$, 
+% we write $\call_k(P, T)$ and
+% $\obj_k(P, T)$ for the $k$-call-site- and
+% $k$-object-sensitive analyses, respectively. In the rest of the paper, we fix $k$ and omit the subscript $k$ from $\call_k$ and $\obj_k$. 
+% These instance analyses are used with a {\em context-tunneling policy}. 
+% A context-tunneling policy $\heuristic$ is a function that maps a program $P$ into
+% a tunneling abstraction for $P$: 
+% \[
+%   \heuristic(P) \subseteq \Invo_P.
+% \]
+% With a policy $\heuristic$, 
+% we  perform the analysis for a program $P$ as follows: $\call(P, \heuristic(P))$ or $\obj(P, \heuristic(P))$. 
+
+ % which first uses $\heuristic$ to produce a tunneling abstraction $\heuristic(P)$ and analyzes the program with the abstraction. 
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

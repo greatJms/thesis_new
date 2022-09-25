@@ -1,0 +1,131 @@
+% !TEX root = ./paper.tex
+
+
+\begin{figure}[t]
+	\[
+	  \begin{array}{c}
+		\infer[]
+		{
+		\begin{array}{c}
+		  \ctx' \in \Reachable ({m}) \quad
+		  ({\heap}, {\hctx}) \in  \VarPointsTo ({m_{\this}}, {\ctx'}) \\
+		  \VarPointsTo({\it arg}, \ctx) \subseteq \VarPointsTo(m_{\it param}, \ctx')
+		  \quad
+		  \VarPointsTo(m_{\it return}, \ctx') \subseteq \VarPointsTo(x, \ctx)\\
+		  (\invo, \ctx, m, \ctx') \in \CallGraph
+		\end{array}
+		}{
+		\begin{array}{c}
+		  {\it \invo : x = y.\sig({\it arg})} \quad
+		  \ctx \in    \Reachable ({\methof(\invo)}) \\
+		  ({\heap}, {\hctx})\in  \VarPointsTo ({\it y},\ctx) \quad
+		  t = {\typeof}(\heap)  \quad m = {\lookup}(t, \sig) \\
+  (e, {\pctx}, p) = \parent(\heap,\hctx, \invo, \ctx) \quad\\
+  \ctx' = \left\{
+	\begin{array}{l@{\quad}l}
+	\truncateCtx{\appendCtx{{ \hctx}}{heap}}{\CallDepth}
+	& \mbox{if}~\ctxAbstraction(heap) = \CallDepth \\
+	\truncateCtx{\appendCtx{{ \hctx}}{heap}}{\CallDepth-1}     & \mbox{if}~\ctxAbstraction(heap) = \CallDepth-1\\
+	\dots\\
+	\truncateCtx{\appendCtx{{ \hctx}}{heap}}{0}
+	& \mbox{if}~\ctxAbstraction(heap) = 0 \\
+	\end{array}
+	\right.
+		\end{array}
+															}
+	  \end{array}
+	\]
+	\caption{Parametric context sensitivity}
+  \label{fig:param-obj}
+  \end{figure}
+
+
+\section{Setup: Parameterized Pointer Analysis}
+
+In this section, we illustrate how to parameterize the analysis rule in Section~\ref{pre:baseline-rules} with context sensitivity and heap abstraction.
+
+
+
+
+\myparagraph{Parametric Context Sensitivity}
+The analysis in Figure~\ref{pre:baseline-rules} uses the same $\CallDepth$ value for every method call.
+The parametric object-sensitive analysis generalizes it to be able to assign different call depths for different method calls.
+To do so, the parameterized analysis uses the rule
+in Figure~\ref{fig:param-obj}
+instead of the last rule in Figure~\ref{pre:baseline-rules}.
+In Figure~\ref{fig:param-obj}, we use the function $\ctxAbstraction: \mbh \to [0,\CallDepth]$, which assigns a context depth between 0 and $\CallDepth$ to each method call.
+When a method is called on a receiver object  $\heap$, $\ctxAbstraction$
+produces an appropriate context depth for it.
+In Section~\ref{sec:approach}, we present a technique for automatically learning a heuristic that produces the $\ctxAbstraction$ information for a given program.
+
+
+\begin{figure}[t]
+		\[
+		\begin{array}{c}
+		
+		%% alloc %%
+		\infer[]{
+			(\heap', \hctx) \in \VarPointsTo({\var}, {\ctx})
+		}{ {(\var,\heap,\inmeth)\in Alloc} \qquad \qquad \ctx \in \MethodCtx(\inmeth) \qquad \qquad \qquad \qquad\\
+		{ \hctx = \truncateCtx{\ctx}{\HeapDepth}}  \quad
+		\heap' = \left\{
+		\begin{array}{l@{\quad}l}
+		\heap
+		& \mbox{if}~ \heapAbstraction(heap) = \mbox{`\alloc'} \\
+		\typeof(\heap)     & \mbox{if}~\heapAbstraction(heap) = \mbox{`\type'}
+		\end{array}
+		\right.		}
+		\end{array}
+	\]
+	\caption{Parametric heap abstraction}
+	\label{fig:param-heap}
+	\end{figure}
+	
+\myparagraph{Parametric Heap Abstraction}\label{sec:param-heap}
+
+The analysis in Figure~\ref{pre:baseline-rules} uses allocation-based heap abstraction for every heap object.
+We can generalize it to support selective use of allocation-site- and type-based heap abstractions. We first need to generalize the analysis results as follows:
+\begin{itemize}
+	\item $\VarPointsTo:\mbv \times \mbc \to \power{(\mbh + \mbt) \times \mbh\mbc}$
+	\item $\FldPointsTo:(\mbh + \mbt) \times \mbh\mbc \times \mbf \to \power{(\mbh + \mbt) \times \mbh\mbc}$
+%	\item $\ArrPointsTo:(\mbh + \mbt) \times \mbh\mbc \to \power{(\mbh + \mbt) \times \mbh\mbc}$	
+%\item $\MethodCtx: \mbm \to \power{\mbc}$
+\item $\Reachable: \mbm \to \power{\Context}$
+\item $\CallGraph: \power{\mbi \times \Context \times \mbm \times \mbc}$
+\end{itemize}
+$\VarPointsTo$ maps each variable with a context to abstract heaps, where an abstract heap is now either allocation site ($\mbh$) or class type ($\mbt$) with their heap context. $\FldPointsTo$ is also extended in a similar way to support type-based abstraction.
+We replace the first rule in Figure~\ref{pre:baseline-rules} by the parameterized rule in Figure~\ref{fig:param-heap}.
+The new rule uses the function $\heapAbstraction$ that takes an allocation site ($\heap$) and determines whether we use allocation-site-based abstraction (`{\it alloc}') or type-based abstraction (`{\it type}'). When $\heapAbstraction$ returns `{\it type}', we use the class type of the allocated object (i.e. $\typeof(\heap)$) instead of the allocation site. Otherwise, the analysis performs the conventional allocation-site-based heap abstraction.
+Our technique in Section~\ref{sec:approach} can be also used for learning a heuristic that produces appropriate $\heapAbstraction$ for each input program.
+
+
+
+
+
+
+%\subsection{Graph Representation}\label{sec:graphs}
+
+\myparagraph{Graph Representations}
+Before we present \ourtool, we introduce two popular graphs, object allocation graph (OAG) and field points-to graph (FPG), that existing graph-based heuristics~\cite{TanLX16,Tan2017,Li2018b} use. 
+The object allocation graph is a directed graph, $\GraphOAG = (\NodeOAG,\EdgeOAG)$, where nodes are
+allocation sites in the program (i.e. $\NodeOAG = \mbh$) and edges $(\EdgeOAG) \subseteq \mbh \times \mbh$ describe the object allocation relation defined as follows:
+\[
+h\; \EdgeOAG \; h' \iff \exists m \in \mbm.\; (h, \_) \in \VarPointsTo({\it this}_m, \_)~\mbox{and}~\methof(h') = m
+.
+\]
+In words, we have $h \; \EdgeOAG \; h'$ if $h$ is a receiver object of method $m$, i.e. $(h,\_) \in \VarPointsTo({\it this}_m, \_)$, and $m$ allocates $h'$, i.e. $methof(h') = m$.
+Intuitively, object allocation graph is the ``call graph'' in object sensitivity, which
+provides information about how each context is constructed in $k$-object-sensitive analysis~\cite{Li2018b}.
+The field points-to graph $\GraphPtsTo = (\NodePtsTo,\EdgePtsTo)$
+ is simply a context-insensitive representation of the $\FldPointsTo$ relation.
+We define $\NodePtsTo = \mbh$ and
+$h\; \EdgePtsTo\; h' \iff (h',\_) \in \FldPointsTo(h,\_,\_)$.
+In our evaluation, we give the two graphs to \ourtool~for learning graph-based heuristics.
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:
+
+

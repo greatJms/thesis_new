@@ -1,0 +1,364 @@
+% !TEX root = ./paper.tex
+
+
+\subsection{Simulation}\label{sec:simulation}
+
+%A key insight behind our technique is that call-site sensitivity with
+%context tunneling can simulate object sensitivity.  That is, 
+
+The first technical contribution of this paper is the simulation procedure. 
+Given a program $P$ and its tunneling abstraction $\Tobj \subseteq \mbi_P$, where $\Tobj$ is given by $\objheuristic$, i.e., 
+$\Tobj = \objheuristic(P)$,
+the goal of simulation is to infer a tunneling abstraction
+$\Tcall \subseteq \mbi_P$ such that $\call(P, \Tcall)$ becomes more
+precise than $\obj (P, \Tobj)$.
+
+
+\input{Obj2CFA/simulation_example}
+
+\myparagraph{Running Example}
+\label{sec:simulation-overview}
+We illustrate the simulation procedure with the
+example program in Figure~\ref{simulation:example}.  The code
+contains class {\tt D} that has three methods \texttt{id},
+\texttt{id1}, and \texttt{m}.  Methods \texttt{id} and \texttt{id1}
+are identity functions.
+The method \texttt{m} contains two method invocations at lines 7 and
+8, which call \texttt{id} with new \texttt{A} and \texttt{B} objects.
+The \texttt{main} method creates three objects at the
+allocation-sites \texttt{D1}, \texttt{D2}, and \texttt{D3}, and stores
+them in variables \texttt{d1}, \texttt{d2} and \texttt{d3},
+respectively.  At line 16, \texttt{main} calls \texttt{id1} with
+a new object of type {\tt A} and the base variable \texttt{d1}.  At line 17,
+\texttt{id1} is called with a new object with type {\tt B} and base variable
+\texttt{d2}.  At line 18, \texttt{main} also calls {\tt m} with base
+variable \texttt{d3}.  We assume that the code has four queries, which ask the
+safety of casting operations at lines 7, 8, 16, and 17. Note that all
+of these are safe since {\tt id} and {\tt id1} are identity
+functions.
+
+
+
+
+
+
+
+
+In this example, for simplicity, we assume an 1-object-sensitive analysis
+without context tunneling (i.e. $\Tobj = \emptyset$) is given but our technique is applicable
+to object sensitivity with arbitrary $k$ and tunneling abstraction $\Tobj \subseteq \mbi_P$. 
+Figure~\ref{fig:obj:callgraph} shows the call-graph produced by the
+baseline 1-object-senstivie analysis, 
+where a call-graph edge is represented by invocation-site, caller method, caller context, 
+callee method, and callee context. For example, the edge
+$\texttt{id1[D1]} \stackrel{5}{\to} \texttt{id[D1]}$ indicates that
+method {\tt id} is called from {\tt id1} at invocation-site $5$,
+where the callee and caller contexts are {\tt D1}.  Note that
+this object-sensitive analysis is not precise enough to prove all queries.
+Although it can prove queries at lines 16 and
+17 as it distinguishes the two different contexts of {\tt id1}, it
+fails to prove queries at lines 7 and 8 because it uses the same
+context {\tt [D3]} for {\tt id} at both call-sites.
+
+
+
+
+
+%\begin{comment}
+%\textcolor{blue}{
+Figure~\ref{fig:CFA:callgraph} shows the call-graph obtained by the
+ordinary 1-call-site-sensitive analysis without context tunneling. 
+Note that the precision of the analysis is incomparable to
+that of the baseline 1-object sensitivity. 
+Because the analysis uses the
+call-site as the calling context, it is able to prove
+the queries at
+lines 7 and 8 by separately analyzing the two calls to \texttt{id}. However,
+it fails to prove the queries at lines
+16 and 17 as the variable {\tt v} in \texttt{id} under context
+\texttt{[5]} points-to both heap objects \texttt{A2} and \texttt{B2}
+that in turn
+propagates back to the variables {\tt a} and {\tt b} in the
+\texttt{main} method.
+%}
+%\end{comment}
+
+
+\input{Obj2CFA/simulation_call_graph}
+
+\myparagraph{Inferring Tunneling Abstraction}
+Simulation is a two-step process. 
+It first runs the baseline object-sensitive analysis 
+%\begin{comment}
+(i.e. $\obj(P, \Tobj)$) 
+%\end{comment}
+to obtain its
+call-graph $\CallGraph \subseteq \mbi \times \mbc \times \mbm
+\times \mbc$.
+Next, it analyzes the structure of $\CallGraph$ and infers a tunneling abstraction
+$\Tcall$ that makes call-site sensitivity to simulate $\CallGraph$. 
+At a high-level, we infer three kinds of invocation sites and define
+\[
+\Tcall = (I_1 \cup I_2) \setminus I_3
+\]
+where $I_1$, $I_2$, and $I_3$ are invocations sites in $P$.
+Intuitively, $I_1$ and $I_2$ denote the invocation sites
+that require context tunneling in order for call-site sensitivity to simulate
+object sensitivity. On the other hand, $I_3$ is the invocation sites
+where context tunneling must be avoided to preserve the original
+precision of call-site sensitivity. % Thus, we can increase the
+% precision of call-site sensitivity even more than object sensitivity
+% by including $I_1\cup I_2$ and excluding $I_3$. 
+
+
+Our key idea to infer $I_1$ and $I_2$ is to assume that $\CallGraph$ was produced by a context-tunneled
+call-site-sensitive analysis and infer
+backward its tunneling abstraction.
+To this end, we identify and exploit two fundamental properties of context-tunneled call-site sensitivity.
+
+
+The first property is that the callee method's context becomes
+equivalent to the caller's context when context tunneling is applied during call-site sensitivity.
+This is because, in call-site sensitivity, applying
+context tunneling at an invocation site always makes the called
+method inherit the caller's context.
+Thus, we scan each call-graph edge $(l, c, m, c')$ of $\CallGraph$ and
+identify those that have this property ($c=c'$). 
+We define $I_1$ to be the set of invocation sites of all such edges:
+\vspace{-3pt}
+\[
+I_1 = \myset{l \in \mbi_P \mid (l,c,m,c') \in \CallGraph, c = c'}.
+\vspace{-3pt}\]
+For example, $I_1$ is $\myset{5, 7, 8}$ for the call-graph in
+Figure~\ref{fig:obj:callgraph}, where the invocation-site 5 comes from
+the call-graph edges $(5,{\tt D1},\texttt{id}, {\tt D1})$ and
+$(5,{\tt D2},\texttt{id}, {\tt D2})$,
+7 comes from $(7,{\tt D3},\texttt{id},{\tt D3})$, and 8 comes from $(8,{\tt
+  D3},\texttt{id},{\tt D3})$.
+
+  %$I_1$ is sound but incomplete property of call-site
+  %sensitivity with tunneling. 
+%\textcolor{red}{If context tunneling is not applied to the invocation $l$, the callee method's context $c'$ becomes different from the caller method's context $c$ as the new context $c'$ will include the context element $l$ which are not in $c$.}
+% Figure~\ref{fig:call:callgraph} shows the call-graph produced by the
+% 1-call-site-sensitive analysis with the tunneling abstraction $T_{\it call} =
+% \myset{5,7,9}$. Note that call-site-sensitivity with $T_{\it call} = I_1$ already
+% simulates
+% object-sensitivity, producing the call-graph identical to
+% that of the baseline object-sensitive analysis in Figure~\ref{fig:obj:callgraph}.
+
+
+% Intuition behind $I_1$ came from object-sensitivity's property of carrying
+% caller method's context over callee method if two methods share same base
+% object. The property is crucial in practice because it gives
+% object-sensitivity
+%\begin{comment}
+In practice, applying context tunneling at $I_1$ gives call-site
+sensitivity immunity against nested call chains that are popular in
+object-oriented programs. For example, Figure~\ref{fig:obj:callgraph} shows that
+object sensitivity precisely distinguishes two invocations of {\tt id}
+according to their base objects $D1$ and $D2$.  In contrast,
+conventional call-site sensitivity must use larger $k$ to precisely
+analyze those nested call chains. 
+%\end{comment}
+
+
+
+
+
+%$I_2$ includes invocation-sites where different caller contexts
+% imply different callee contexts:
+%\[
+%I_2 =\{\invo \in Invo \mid \forall (\invo, c_1, m, c_1'), (\invo, c_2, m, c_2') \in
+%G.\; c_1 \neq c_2 \implies c_1' \neq c_2'\}
+%\]
+%where we assume $(l,c_1,m,c_1')$ and $(l,c_2,m,c_2')$ are different
+%call-edges, i.e., $c_1 \not= c_2 \vee c_1' \neq c_2'$.
+
+
+%\textcolor{red}{
+The second property of context-tunneled call-site sensitivity is that
+different caller contexts imply different callee contexts. Suppose
+two different call-graph edges $(l, c_1, m, c_1')$ and
+$(l, c_2, m, c_2')$, where the last (i.e., $k$th) context element of $c_1$ is different from that of $c_2$, are generated in call-site sensitivity. 
+%$(l, c_2, m, c_2')$, where $c_1 \not= c_2$, are generated in call-site sensitivity. 
+If context tunneling was applied at $l$, then the last context elements of $c_1'$ and
+$c_2'$ are certainly different because the callee should inherit the
+caller's contexts (i.e. $c_1 = c_1'$ and $c_2 = c_2'$).
+We collect invocation sites in $\CallGraph$ with this property: %i.e., $I_2$ is%~\minseok{TODO}
+%\[
+% \{\invo \in S \mid \forall (\invo, c_1, m, c_1'), (\invo, c_2, m, c_2') \in
+%  \CallGraph.  c_1 \neq c_2 \implies  c_1' \neq c_2'\}
+%\]
+\begin{multline*}
+	I_2 =  \{\invo \in S \mid \forall (\invo, c_1, m, c_1'), (\invo, c_2, m, c_2') \in
+	\CallGraph.  \kth(c_1) \neq \kth(c_2) \implies \\ \kth(c_1') \neq \kth(c_2')\}
+\end{multline*}
+where $S$ denotes the invocation sites where a method is called under two different contexts:
+\[
+S = \{l \in \mbi_P \mid \exists (l,c1,m,c1'),(l,c2,m,c2')\in \CallGraph,  \kth(c1) \not = \kth(c2)\},
+\]
+
+
+%\[
+%S = \{l \in \Invo_P \mid \exists (l,c1,m,c1'),(l,c2,m,c2')\in \CallGraph,  c1 \not = c2\}.
+%\]
+and the function \kth~takes a context and returns its last context element, i.e., $\kth(a_1a_2\dots a_k) = a_k$.  
+ $I_2$ denotes a
+sound and complete property of context-tunneled call-site sensitivity. 
+That is, if context tunneling is not applied to $l$, the callee methods'
+contexts inevitably share the last context element $l$.
+%}
+In Figure~\ref{fig:obj:callgraph}, $I_2$ is $\myset{5}$ because the invocation-site 5
+has two outgoing edges $(5,{\tt D1},\texttt{id},{\tt D1})$ and $(5,{\tt
+D2},\texttt{id},{\tt D2})$, where ${\tt D1} \neq {\tt
+D2} \implies {\tt D1} \neq {\tt D2}$ holds. 
+%\textcolor{blue}{
+The invocation-sites 7 and 8 do not
+belong to $I_2$ because they have only one call-graph edge.
+%}
+In Figure~\ref{fig:obj:callgraph}, $I_1$ includes $I_2$, but in
+general, $I_2$
+may be distinct from $I_1$ as shown in the following call-graph:
+
+{
+	%\renewcommand{\baselinestretch}{1.5} 
+	\setstretch{1.0}
+	\begin{center}
+	\resizebox{0.3\columnwidth}{!}{
+                \tikzstyle{every node}=[font=\LARGE]
+		\begin{tikzpicture}
+		\node [block] (main) {{\tt main$_{}$}\\$[\cdot]$};
+		\node [block, above right = -0.4cm and
+		0.7cm of main] (Dm1) {\tt {D.m}\\$[$D1$]$};
+		\node [block, below = 0.4cm of Dm1] (Dm2) {\tt{D.m}\\$[$D2$]$};
+		\node [block, right = 0.7cm of Dm1] (Cm1) {\tt{C.m}\\$[$C1$]$};
+		\node [block, right = 0.7cm of Dm2] (Cm2) {\tt{C.m}\\$[$C2$]$};
+		
+		\path [line] (main) edge node[above] {$4$} (Dm1);
+		\path [line] (main) edge node[above] {$5$} (Dm2);
+		\path [line] (Dm1) edge node[above] {$9$} (Cm1);
+		\path [line] (Dm2) edge node[above] {$9$} (Cm2);
+		\end{tikzpicture}
+    }
+    \end{center}
+}
+where $I_1 = \emptyset$ and $I_2 = \myset{9}$. 
+% A detail example is described in Section 1.2 of our supplementary material~\footnote{\url{https://zenodo.org/record/5560499}}.
+      %Appendix~\ref{sec:unwrapped}.
+% Without context tunneling, $1$-call-site-sensitivity merges
+% two {\tt C.m} method calls under context of \texttt{[9]}.
+% By applying context-tunneling to invocations in $I_2$, however, 
+% the method calls inherit contexts from their callers,
+%  \texttt{[4]} and \texttt{[5}] respectively, thus becomes 
+% as precise as $1$-object-sensitivity.
+
+%\textcolor{red}{
+%Intuitively, the invocation-sites in a tunneling abstraction ($\Tcall$) are considered as bad context elements for call-site sensitivity; the invocation-sites will not be used as context elements. The tunneling abstraction $I_1\cup I_2 = \myset{5,7,8}$ considers the invocation-sites 5,7,8 as bad elements because they make call-site sensitivity produce a different context abstraction from the given object sensitivity.
+%}
+
+
+Note that applying context tunneling at $I_1\cup I_2 = \myset{5,7,8}$
+makes call-site sensitivity simulate the baseline object
+sensitivity (Figure~\ref{fig:call:callgraph} and Figure~\ref{fig:obj:callgraph} are equivalent). However, it loses the precision benefit of the original call-site
+sensitivity (compare Figure~\ref{fig:call:callgraph}
+vs. Figure~\ref{fig:CFA:callgraph}).
+The purpose of $I_3$ is to avoid this precision loss. 
+We define $I_3$ to be the set of invocation-sites where the called
+  method has a single context:
+\[
+I_3 = \myset{l \in \Invo_P \mid \forall (l, c_1, m, c_1'), (l, c_2,
+	m, c_2') \in G.\; c_1' = c_2'}.
+\]
+% where the edges $(l, c_1, m_1, c_1')$ and $(l, c_2,
+%   m_2, c_2')$ can be identical.
+In Figure~\ref{fig:obj:callgraph}, $I_3$ equals to $\myset{7, 8, 16,
+  17, 18}$. For example, $I_3$ includes 7 because only one call-graph
+edge exists out of that invocation-site and $I_3$ does not include 5
+because it has two outgoing edges to the same method ({\tt id}) under
+different contexts ({\tt [D1]} and {\tt [D2]}).
+%$I_3$ guarantees that call-site sensitivity analyzes the called method
+%more precisely than (or at least equal to) object sensitivity.\minseok{Check} This is because
+Intuitively, 
+$I_3$ represents the set of invocation-sites that make conventional call-site sensitivity %, which always updates contexts, 
+ at least as precise as the given object sensitivity; avoiding context tunneling at 
+$I_3$ would make call-site sensitivity analyze the called method
+more precisely than (or at least equal to) object sensitivity.
+ It is because updating context with the invocation sites ensures that the method invocation is not conflated with another invocation from different invocation-sites which is not the case for object sensitivity.
+%It is because conventional call-site sensitivity separates methods called from an invocation-site from the others which is not the case for object sensitivity.
+%Updating contexts at $I_3$ ensures that the method invocation is not conflated with another invocation from different invocation-sites.
+%As object sensitivity failed to separate any of the methods invoked in $I_3$.
+%The intuition behind $I_3$ is leveraging a property of conventional call-site sensitivity that methods called from an invocation-site is guaranteed to be separated from the ones called from the other invocation-sites which is not the case for object sensitivity. 
+%Updating contexts at $I_3$ would ensures that the method invocation is not conflated with another invocation from different invocation-sites, which is not the case for
+%object sensitivity.
+%This is because
+%it ensures that the method invocation is not conflated with another
+%invocation from different invocation-sites, which is not the case for
+%object sensitivity. 
+%Figure~\ref{fig:opt:callgraph} shows the resulting call-graph
+In summary, we infer $\Tcall = \myset{5}$ from
+Figure~\ref{fig:obj:callgraph}: 
+ $\Tcall = (I_1 \cup I_2)  \setminus I_3 = (\myset{5,7,8} \cup \myset{5})
+ \setminus \myset{7,8,16,17,18}
+= \myset{5}$. 
+
+%\textcolor{red}{
+Additionally, we apply context tunneling to the invocation-sites if all their parameters are passed from those of the caller methods. 
+For example, $\myset{5}$ in our example
+belongs to this case because all the parameters (i.e., \texttt{this} and \texttt{v}) come from the caller. 
+Such invocations need context tunneling because caller methods' contexts determine the value of the parameters.
+For the same reason, we avoid context tunneling if all the parameters
+are allocated just before the invocations (e.g., $\myset{16, 17}$ in
+our example). The invocation-sites are useful because using them as context elements determines the value of the invocations' parameters.
+
+\input{Obj2CFA/real_world_example}
+
+%\textcolor{red}{
+%\myparagraph{Effectiveness in the Real-World}
+%The simulation technique described above is principled (i.e., it exploits fundamental properties of context-tunneled call-site sensitivity) and yet powerful
+%enough to make call-site sensitivity to enjoy most of the precision
+%benefits of object sensitivity in practice. For example, our technique
+%enables 1-call-site sensitivity to effectively handle all
+%patterns of {\em precision-critical} methods
+%in~\cite{Li2018a}.  
+%\citet{Li2018a} identified fairly representative and
+%exhaustive patterns that require object sensitivity in real-world Java
+%programs;
+%applying 2-object sensitivity only to the methods with those patterns
+%is sufficient to achieve 98.8\% of the full precision~\cite{Li2018a}. 
+%Conventional call-site-sensitive analysis is
+%ineffective to handle such patterns as they require the
+%analysis to maintain deep calling contexts. With context tunneling,
+%however, our technique enables call-site
+%sensitivity to simulate object sensitivity in all cases. We provide
+%detailed description of the patterns and how our technique works in
+%Appendix~\ref{appendix:effectiveness}. 
+
+
+
+\myparagraph{Simulated Policy}
+Now we define the simulated policy $\simheuristic$. 
+Let $\simulate$ be the simulation process described above. 
+As input, $\simulate$ takes a program $P$ and a tunneling abstraction
+$\Tobj \subseteq \Invo_P$ of baseline object sensitivity.  
+Running the simulation procedure, denoted $\simulate(P, \Tobj)$, produces a tunneling abstraction $\Tcall \subseteq
+\Invo_P$ for call-site sensitivity.  
+With $\simulate$, we can transform $\objheuristic$ into
+$\simheuristic$ as follows:
+\begin{equation}\label{eq:simheuristic}
+  \simheuristic = \lambda P.\; \simulate(P,
+  \objheuristic(P)).
+\end{equation}
+Although the simulated policy $\simheuristic$ makes call-site
+sensitivity more precise than the baseline object sensitivity, using
+$\simheuristic$  is
+impractical because the simulation procedure incurs the overhead of running the baseline object-sensitive analysis.
+
+
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

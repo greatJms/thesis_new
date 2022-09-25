@@ -1,0 +1,104 @@
+\begin{figure*}[t]
+\begin{center}
+\begin{subfigure}[b]{\columnwidth}
+\begin{lstlisting}[multicols=2, xleftmargin=20pt]
+class Person {
+  String name;
+  String id;
+  void setName(String nm) {
+    this.name = nm;
+    updateID();
+  }
+  void updateID() {
+    String newName = this.name;
+    this.id = newName;
+  }
+  String getID() {
+    String id = this.id
+    return id;
+  }
+}
+void main() {
+  Person p1 = new Person();//P1
+  String name1 = new String("A");//S1
+  p1.setName(name1);
+  String id1 = p1.getID(); 
+	
+  Person p2 = new Person();//P2
+  String name2 = new String("B");//S2
+  p2.setName(name2);
+  String id2 = p2.getID();
+}
+\end{lstlisting}
+%\end{multicols}
+\caption{Example code}
+\label{fig:directflow:code}
+\end{subfigure}
+
+\begin{multicols}{2}
+
+\begin{subfigure}[b]{\columnwidth}
+	\begin{center}
+		\resizebox{\columnwidth}{!}{
+			\begin{tikzpicture}
+            \tikzstyle{every node}=[font=\Large]
+			\node [block] (main) {\tt {main}\\$[\cdot]$};
+			\node [block2, right = 0.8cm of main] (set1) {\tt {setName}\\$[$P1$]$};
+			\node [block2, below = 0.6cm of set1] (set2) {\tt {setName}\\$[$P2$]$};
+			
+			\node [block2, right=0.4cm of set1] (update1) {\tt {updateID}\\$[$P1$]$};
+			\node [block2, right=0.4cm of set2] (update2) {\tt {updateID}\\$[$P2$]$};
+				\node [block, below = 0.6cm of main] (get2) {\tt {getID}\\$[$P2$]$};
+			\node [block, left=0.4cm of get2] (get1) {\tt {getID}\\$[$P1$]$};
+			
+			\path [line] (main) edge node[above] {$20$} (set1);
+			\path [line] (main) edge node[above] {$25$} (set2);
+			\path [line] (set1) edge node[above] {$6$} (update1);
+			\path [line] (set2) edge node[above] {$6$} (update2);
+			\path [line] (main) edge node[above left] {$21$} (get1);
+			\path [line] (main) edge node[left] {$26$} (get2);
+			
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{$1$-object sensitivity with $T_{\it obj}=\emptyset$}
+	\label{fig:directflow:obj}
+\end{subfigure}
+\vfill\null
+\columnbreak
+%\vspace{200pt}
+\begin{subfigure}[b]{\columnwidth}
+	\begin{center}
+		\resizebox{\columnwidth}{!}{
+            \tikzstyle{every node}=[font=\Large]
+			\begin{tikzpicture}
+			\node [block] (main) {\tt {main}\\$[\cdot]$};
+			\node [block2, right = 0.8cm of main] (set1) {\tt {setName}\\$[20]$};
+			\node [block2, below = 0.6cm of set1] (set2) {\tt {setName}\\$[25]$};
+			
+			\node [block2, right=0.4cm of set1] (update1) {\tt {updateID}\\$[20]$};
+			\node [block2, right=0.4cm of set2] (update2) {\tt {updateID}\\$[25]$};
+			
+			\node [block, below = 0.6cm of main] (get2) {\tt {getID}\\$[26]$};
+			\node [block, left=0.4cm of get2] (get1) {\tt {getID}\\$[21]$};
+			
+			\path [line] (main) edge node[above] {$20$} (set1);
+			\path [line] (main) edge node[above] {$25$} (set2);
+			\path [line] (set1) edge node[above] {$6$} (update1);
+			\path [line] (set2) edge node[above] {$6$} (update2);
+			\path [line] (main) edge node[above left] {$21$} (get1);
+			\path [line] (main) edge node[left] {$26$} (get2);
+				
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{$1$-call-site sensitivity with $T_{\it call}=\myset{6}$}
+	\label{fig:directflow:1call}
+\end{subfigure}
+\end{multicols}
+\vspace{-20pt}
+\caption{Direct flow pattern~\cite{Li2018a} and call-graphs produced by
+1-object sensitivity and 1-call-site sensitivity with context tunneling}
+\label{fig:directflow}
+\end{center}
+\end{figure*}

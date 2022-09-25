@@ -1,0 +1,482 @@
+%\newpage
+\section{Learning Context-Tunneling Heuristics}\label{sec:learning}
+
+% Choosing a good set of the $\Tunneling$ relations is critical, as the analysis
+% performance (both precision and cost) varies significantly depending on the selection.
+
+Although the idea is simple and potentially powerful, realizing effective tunneling is
+challenging. The effectiveness of context tunneling depends on the
+choice of the tunneling relation $\TunnelingRelation$, but manually
+designing a heuristic rule for choosing an optimal $\TunnelingRelation$ for a
+given program is nontrivial and likely ends up with heuristics that
+are either too costly or imprecise.
+
+In this section, we present a data-driven approach to address this
+challenge. Given a training set of codebases, our approach generates
+an effective tunneling heuristic automatically, and uses it to analyze
+new, unseen programs. In Section~\ref{sec:setting}, ...
+
+% our machine-learning approach to context
+% tunneling. Our goal is to adaptively generate the $\TunnelingRelation$
+% relation appropriate for the input program.  We do so by learning  a
+% tunneling heuristic from codebases.  The learned heuristic
+% is then used for analyzing new, unseen programs.  % Our approach in this
+% section is general and applicable not only to points-to analysis but
+% also to other program analyses as well.
+
+
+\subsection{Points-to Analysis Parameterized by Tunneling Relation} \label{sec:setting}
+
+We first parameterize the context-sensitive points-to analysis in
+Section~\ref{sec:tunneling}.
+Let $P \in \Program$ be a program to
+analyze. Let $\Methods_P$ be the set of methods in $P$.  Then, we
+can define the set $\tspace_P$ of all tunneling relations for $P$ as follows: % \sehun{Why not
+% invocations?}
+\[
+ \TunnelingRelation \in \tspace_P = \power{\Methods_P \times \Methods_P}.
+\]
+The set $\tspace_P$ forms the parameter space of the analysis of $P$.
+An element $\TunnelingRelation \in \tspace_P$ --- a set of method pairs --- represents a tunneling
+relation.
+% Abstractions are sets of pairs of methods and are ordered by set
+% inclusion: $\vec{a} \sqsubseteq \vec{a'} \iff \vec{a} \subseteq
+% \vec{a'}$.\sehun{Do we need this property?}
+% An abstraction $\vec{a}$ represents a tunneling relation $\TunnelingRelation$;
+For each pair $(m_1,m_2)$ of methods in $\TunnelingRelation$, we apply
+context-tunneling by tranferring
+the calling context of $m_1$ to $m_2$ without creating a new context
+for $m_2$.
+For example, with $\TunnelingRelation = \emptyset$, the analysis
+becomes an ordinary $k$-context-sensitive analysis. With
+$\TunnelingRelation = \Methods_P \times \Methods_P$, the analysis degenerates into
+the context-insensitive analysis.
+
+
+% As described in Section~\ref{sec:tunneling}, tunneling can
+% be used for any kind of context-sensitivity flavors, including
+% call-site-sensitivity~\cite{Sharir1981},
+% object-sensitivity~\cite{Milanova2005}, and
+% type-sensitivity~\cite{Smaragdakis2011}, and therefore this section does not
+% concern about what kind of context-sensitivity is used.
+
+We assume that a set $\Assertion_P$ of assertions is given together
+with the input program $P$.  For instance, $\Assertion_P$ may denote the set of all type casts in
+$P$ and the analysis attempts to prove that they do not fail at
+runtime (i.e. no down-casting failures).  Then,
+we can model points-to analysis for $P$ by the function $F_P$:
+\[
+F_P : \tspace_P \to \power{\Assertion_P} \times \mbn.
+\]
+Given a program $P$ and a tunneling relation $\TunnelingRelation \in \tspace_P$,
+$F_P(\TunnelingRelation)$ returns the set $Q \subseteq \Assertion_P$ of proved
+assertions and the analysis time $n \in \mbn$ represented by a natural
+number.
+We define two projection functions:
+$\proved(F_P(\TunnelingRelation))$ and $\cost(F_P(\TunnelingRelation))$ denote the set of
+proved assertions ($Q$) and the analysis time ($n$) of the analysis
+$F_P(\TunnelingRelation)$, respectively.
+
+
+
+\subsection{Learning Algorithm}\label{sec:goal}
+
+\myparagraph{Goal}
+
+The goal of the learning algorithm is to learn a {\em tunneling
+  heuristic} from a codebase $\vec{P} = \myset{P_1,P_2,\dots,P_m}$.  A
+tunneling heuristic $\heuristic$ is defined as a function
+\[
+\heuristic(P) : \power{\Methods_P \times \Methods_P}
+\]
+which takes a program $P$ and returns a tunneling relation for $P$.  Once
+$\heuristic$ is learned from the codebase, it can be used to analyze
+previously unseen program $P$,  $F_P (\heuristic(P))$.
+Our goal is to find a tunneling heuristic $\heuristic$ such that
+the analysis $F_P(\heuristic(P))$ improves the precision as
+much as possible while retaining (or even decreasing) the cost of the baseline
+analysis $F_P(\emptyset)$ (i.e. the ordinary $k$-context-sensitive analysis).
+
+\myparagraph{Parameterized Tunneling Heuristic}
+
+We define a machine-learning model for tunneling
+heuristics. Our model is based on
+the disjunctive model introduced
+by~\citet{JeJeChOh17}, which combines atomic
+features with boolean formulas.
+
+% first need to define an adaptive model of the
+% tunneling heuristics. That is, we need to choose and
+% represent a model which is a restricted subset of the entire
+% heuristics. We use the nonlinear, disjunctive model introduced
+% by~\citet{JeJeChOh17}, which combines atomic
+% features with boolean formulas.
+
+Let us assume that a set of {\em atomic features} is given:
+$\afeatures = \myset{\afeat_1, \afeat_2, \dots, \afeat_n}$, where an atomic feature $\afeat_i$ describes a property of
+methods. It is a function from programs to predicates on
+methods:
+\[
+\afeat_i(P) : \Methods_P \to \myset{\true,\false}.
+\]
+For example, a feature $a_i$ expresses the set of methods that have
+heap allocation in their bodies.
+For points-to analysis for Java, we defined 23 atomic features, which
+will be explained in detail in Section~\ref{sec:features}.
+
+The key idea of the disjunctive model~\cite{JeJeChOh17} is to combine
+the atomic features by a boolean formula. A boolean formula $f$ is
+constructed by the following grammar:
+\[
+f \to \true \mid \false \mid \afeat_i \in \afeatures \mid \neg f \mid
+f_1 \land f_2 \mid f_1 \vee f_2
+\]
+which combines atomic features $a_i$ with negation ($\neg f$),
+conjunction ($f_1 \land f_2$), or disjunction ($f_1 \vee f_2$).
+Given a program $P$, a boolean formula $f$ denotes the set of methods
+on which the formula evaluates to true, which is defined inductively
+in a straightforward way: e.g., $\sem{\true}_P = \Methods_P$,
+$\sem{\false}_P = \emptyset$, $\sem{\afeat_i}_P = \myset{m \in
+  \Methods_P \mid \afeat_i(P)(m) = \true}$, $\sem{\neg f}_P =
+\Methods_P \setminus \sem{f}_P$, $\sem{f_1 \vee f_2}_P = \sem{f_1}_P
+\cup \sem{f_2}_P$, etc.
+% \[
+% \begin{array}{r@{~~}c@{~~}l@{\qquad}r@{~~}c@{~~}l}
+%   \sem{\true}_P &=& \Methods_P &   \sem{\neg f}_P &=& \Methods_P \setminus \sem{f}_P \\
+%   \sem{\false}_P &=& \emptyset &   \sem{f_1 \land f_2}_P &=& \sem{f_1}_P \cap \sem{f_2}_P \\
+%   \sem{\afeat_i}_P &=& \myset{m \in \Methods_P \mid \afeat_i(P)(m) = \true}
+% &
+%   \sem{f_1 \vee f_2}_P &=& \sem{f_1}_P \cup \sem{f_2}_P
+% \end{array}
+% \]
+
+
+% \[
+% \params = \myvec{f_1, f_2}.
+% \]
+% This vector will become
+% the parameter of the adaptive model.
+
+Our model uses two boolean formulas $f_1$ and $f_2$ as model
+parameters.
+Given $f_1$ and $f_2$, the model is defined as a parameterized
+heuristic, denoted
+$\heuristic_{\myvec{f_1,f_2}}$, as follows:
+\[
+\heuristic_{\myvec{f_1,f_2}} (P) = \myset{(m_1,m_2) \in \Methods_P \times
+  \Methods_P \mid
+  m_1 \in \sem{f_1}_P \vee m_2 \not\in \sem{f_2}_P}.
+\]
+In words, given $P$, the parameterized heuristic
+$\heuristic_{\myvec{f_1,f_2}}(P)$ returns a set of method pairs
+$(m_1,m_2)$
+such that $m_1$ is prescribed by $f_1$ and $m_2$ not by $f_2$.
+Intuitively, $f_1$ and $f_2$ measure the relative importance of
+calling contexts. The calling contexts of the methods prescribed by
+$f_1$ are considered more important than those implied by $f_2$ and therefore they are continuously used for
+any child methods.
+
+\sehun{
+Design rationales behind the heuristic came from the learning algorithm we will cover shortly. Our learning algorithm infers $f_2$ first without knowing $f_1$ so that the learned $f_2$'s negation prescribes methods whose contexts are not worthy enough regardless of their parent contexts' importance. Otherwise, our learning algorithm would include the methods into the $f_2$. In other words, the learned $f_2$ prescribes methods whose parent contexts bring more precision loss than gain. To find more tunneling candidates from $m_2 \in f_2$, we need more sophisticated heuristics, which is $f_1$. The role of $f_1$ is classifying methods $m_1$ who make better parent contexts than child context of the methods $m_2 \in f_2$. Therefore, learning $f_1$ requires $f_2$.
+}
+
+
+% assigns a context depth $j$ to each
+% method, where the depth $j$ is determined according to the model
+% parameter $\params$. A method $m$ is assigned the depth $j$ if the $j$-th
+% boolean formula $f_j$ of $\params$ includes the method $m$, i.e.,
+% $m \in \sem{f_j}_P$, and $m$ is not implied by any other formulas
+% $f_{j+1}, f_{j+2},\dots,f_k$ at higher levels. That is, when $m$
+% belongs to both $f_i$ and $f_j$ ($i > j$), we favor assigning the
+% greater context-depth $i$ to $m$.
+
+\myparagraph{Optimization Problem}\label{sec:opt}
+
+With the model $\heuristic_{\myvec{f_1,f_2}}$, learning a good
+tunneling heuristic corresponds to finding good model
+parameters $f_1$ and $f_2$.  Given a codebase
+$\vec{P} = \myset{P_1,\dots,P_m}$ and the parameterized model
+$\heuristic_{\myvec{f_1,f_2}}$, we
+aim to find parameters $f_1$ and $f_2$ that satisfy the following two objectives:
+\begin{enumerate}
+\item The analysis cost over the codebase is less than the
+  ordinary $k$-context-sensitive analysis:
+\[
+\sum_{P \in \vec{P}} \cost(F_P(\heuristic_{f_1,f_2}(P) )) \le \sum_{P \in \vec{P}} \cost(F_P(\emptyset)).
+\]
+\item The precision of the analysis is maximized:
+\[
+  \mbox{$f_1$ and $f_2$ maximize} \sum_{P \in \vec{P}}
+  |\proved(F_{P}( \heuristic_{{f_1,f_2}}(P)))|.
+\]
+\end{enumerate}
+
+% define the learning objective as the following optimization problem:
+% \begin{equation}\label{eq:opt-problem}
+%   \mbox{Find $f_1$ and $f_2$ that}~\mbox{maximizes}
+%   \sum_{P \in \vec{P}}  |F_{P}( \heuristic_{\myvec{f_1,f_2}}(P))|
+% \end{equation}
+% That is, we aim to find a parameter $\params$ that maximizes the
+% analysis precision over the codebase.
+
+% Although we assume a single client (e.g. safety of type casts) for
+% presentation brevity, the optimization problem can be defined for
+% multiple clients. Suppose we have $n$ clients, each of which is
+% accompanied with the corresponding projection function $\proved_i (1
+% \le i \le n$). Then, we can redefine the precision constraint by, for example,
+% $\frac{1}{n}
+%   {\sum_{j=1}^{n}\frac{\sum_{P \in \vec{P}} |\proved_{j} (F_P(
+%       \heuristic_{\params}(P)))|}{\sum_{P \in \vec{P}} |\proved_{j}
+%       (F_P(\vec{k}))|}} \ge \gamma$, where we evaluate the overall
+%   performance by averaging the results.
+
+\subsection{Challenges}
+First, we cannot statically determine a tunneling heuristic with maximally
+achievable precision for unseen program. Previous
+works~\cite{Oh2015b,Heo2016learning,JeJeChOh17} leveraged the given
+theoretical precision upper bound to design .
+
+
+The challenges come from the fact that analysis
+with context tunneling isn't monotone in a sense that $\TunnelingRelation
+\sqsubseteq \TunnelingRelation' \implies
+\precision(F_P(\TunnelingRelation))  \subseteq
+\precision(F_P(\TunnelingRelation'))$. This monotonic property played key
+role in previous abstraction refinement
+studies~\cite{Oh2015b,Heo2016learning,JeJeChOh17} because it
+readily provides two extremes (i.e. the most and least precise heuristics)
+and other intermediate heuristics in-between them. Since common goal of
+those studies is finding heuristics that make analysis as cheap as possible
+while maximizing precision, knowing the most precise heuristic is a huge
+benefit. In addition, the monotonicity means they don't have to reconsider
+root-causes of failed refinements again. In context tunneling, however, we
+can't leverage those useful properties of monotonicity to find good
+heuristics.
+
+
+In previous works, finding a superset of imaginary solution provided good
+enough precision. For this work, however, we need to find subset of
+imaginary solution. Otherwise, it gets poor precision???
+
+$f_{ri}(x)_{on}$: An automatic correctional facility for functional
+language
+programming assignments.
+
+% Did you consider other versions of tunneling heuristic?
+% This challenges may due to author's design choices. Tunneling heuristic,
+%as author said,
+% may not have precision/cost order between heuristics under M x M
+%domain. However, in other
+% domains, the order may exist. (DROP THE MIC.)
+
+\begin{itemize}
+	\item Large search space $|\mbs|^2$ where $\mbs$ is a set of possible
+	boolean formula.
+	\item Unlike well-known heuristics such as partial context-sensitivity or
+	flow
+	sensitivity, tunneling heuristic doesn't have obvious extremes such as
+	fast
+	but imprecise one and slow but precise one. This property makes
+	learning
+	process difficult because we can't gradually but soundly find good
+	enough
+	solutions by beginning searching from one extreme to another.
+	\item Disjunctive model is a key to express useful tunneling heuristics
+	required for points-to analysis for Java. Simple linear model used in prior
+	work yields suboptimal tunneling solutions.
+\end{itemize}
+\subsection{Learning Algorithm}
+\myparagraph{Overall algorithm}
+Algorithm~\ref{alg:learnig-outer} presents our overall algorithm for learning context tunneling heuristic. It takes three inputs: $k$-context-sensitive analysis with our parameterized context tunneling technique, a set of training programs $\vec{P}$, and a set of atomic features $\afeatures$. Than it produces a context tunneling heuristic $\langle f_1, f_2 \rangle$ makes the analysis to prove more queries than the ordinary $k$-context-sensitive analysis without compromising performance.
+
+Basically the algorithm calls same subroutine named \textsc{LearnBooleanFormula} twice with different parameters. At line 2, calling the subroutine results $f_2$ that means methods whose child context information is important. Note that, at this stage, we don't have prior knowledge about an important source of parent context. After learning $f_2$, the algorithm carries $f_2$ forward to the second invocation of \textsc{LearnBooleanFormula} as line 3. Resulting $f_1$ means a set of methods which makes more effective parent contexts with regard to child contexts generated by methods belong to $f_2$.
+
+\minseok{Why not f1-f2 but f2->f1?}
+Implementing alternative of the Algorithm~\ref{alg:learnig-outer} can be done by switching line 2 with line 3....
+
+\begin{algorithm}[b]
+	\caption{Our Learning Algorithm}\label{alg:learnig-outer}
+	\begin{algorithmic}[1]
+		\Require Static analyzer $F$, codebase $\vec{P}$, atomic features $\afeatures$
+		\Ensure Model parameters $f_1$ and $f_2$
+		\Procedure{Learn}{$F$, $\vec{P}$, $\afeatures$}
+		\State $f_2 \gets \textsc{LearnBooleanFormula}(2, \false, F, \vec{P}, \afeatures)$ \Comment{learn methods for child contexts}
+		\State $f_1 \gets \textsc{LearnBooleanFormula}(1, f_2, F, \vec{P}, \afeatures)$ \Comment{learn methods for parent contexts}
+		\State \Return $\langle f_1, f_2 \rangle$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+\myparagraph{Learning a Boolean formula}
+\sehun{Two conflicting meanings of $f_2$. In definition, $f_2$ means important methods who won't inherit context information from parent methods. However, in implementation, $f_2$ means the exact opposite. $f_1$ is ok. In both formalization and implementation, it implies important methods who will transfer their context information to child methods.}
+Algorithm~\ref{alg:learning-inner} shows our approach to learning a Boolean formula as a part of good context tunneling heuristics. We use exactly same algorithm for both of $f_1$ and $f_2$. Informally, our algorithm first find a set of seed features \sehun{confused with a name of the atomic feature category} that describe methods who make useful context information in a sense of context tunneling. Determining usefulness of a feature is done by observing if using the feature as the sole context tunneling heuristic proves at least one exclusive queries that ordinary context sensitivity can't. From the set of seed features, our algorithm strengthens each seed feature by gradually conjoining it with other atomic features to expand the set of exclusive queries without performance compromission. For every refined conjunction, 
+
+Our algorithm takes four inputs: index $i$ to indicate a target formula (i.e. $f_1$ or $f_2$), learned formula $f_2$ if any, a parameterized static analyzer $F$ with a $k$-context-sensitivity with our parametric context tunneling heuristic, a set of training programs $\vec{P}$, and a set of atomic features $\afeatures$. Note that we set the learned formula $f_2$ to $/false$ when learning $f_2$.
+
+Than, our learning algorithm outputs a context tunneling heuristic $f_i$ in a Boolean formula in disjunctive of conjunctions of literals that are atomic features and theirs negations. In our algorithm, we construct an conjunctive clause by a set of literals and an disjunction by a set of conjunctions.
+
+At line 2, we con
+
+\[
+\ChooseSeed(i,\params, W, F, \vec{P})=\argmax_{a\in W}{\sum\limits_{P\in \vec{P}}{\lvert \precision(F_P(\heuristic_{\params_{[f_i \mapsto f_i \lor a]}}(P)))} \setminus \precision(F_P(\heuristic_{\params}(P))) \rvert}
+\]
+
+\begin{multline*}
+\ChooseAtom(\afeatures, f, c, F, \vec{P})=\\ \left\{
+\begin{array}{l@{\quad}l}
+\argmax\limits_{a \in (\afeatures \cup \neg \afeatures) \setminus
+	c} \sum\limits_{P \in \vec{P}} \lvert \method(F_P (\heuristic_{\params_{f
+	\lor (c \land a)}}(P)))\rvert  & \mbox{if}~(\afeatures \cup \neg \afeatures)
+	\setminus c \not= \emptyset \\
+\false & \mbox{otherwise}
+\end{array}
+\right.
+\end{multline*}
+
+\[
+\PrecP(\params_1, \params_2, \vec{P}) = \forall_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params_1}(P)))\rvert < \lvert\precision(F_P(\heuristic_{\params_2}(P)))\rvert
+\]
+\[
+\PrecE(\params_1, \params_2, \vec{P}) = \forall_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params_1}(P)))\rvert = \lvert\precision(F_P(\heuristic_{\params_2}(P)))\rvert
+\]
+\[
+\HasSeed(\params_1, \params_2, \vec{P})=\bigcup_{P \in \vec{P}}\precision(F_P(\heuristic_{\params_1}(P))) \setminus
+                  \precision(F_P(\heuristic_{\params_2}(P)))  \neq \emptyset
+\]
+\[
+\CostM(\params_1, \params_2, \vec{P})=\sum_{P \in \vec{P}}(\cost(F_P(\heuristic_{\params_1}(P))) > \sum_{P \in \vec{P}}\cost(F_P(\heuristic_{\params_2}(P)))
+\]
+
+\begin{multline*}
+\GoodHeuristicFound(\params_1, \params_2, \vec{P})=\\ \sum_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params_1}(P)))\rvert < \sum_{P \in \vec{P}}\lvert\precision(F_P(\heuristic_{\params_2}(P)))\rvert \wedge \sum_{P \in \vec{P}}\cost(F_P(\heuristic_{\params_2}(P))) \le \sum_{P \in \vec{P}}\cost(F_P(\emptyset))
+\end{multline*}
+
+\begin{algorithm}[t]
+	\caption{Algorithm for Learning a Boolean Formula}\label{alg:learning-inner}
+    \small
+	\begin{algorithmic}[1]
+		\Require Target formula index $i$, learned formula $f_2$, static analyzer $F$, codebase $\vec{P}$,
+		atomic features $\afeatures$
+		\Ensure a boolean formula $f_i$
+		\Procedure{LearnBooleanFormula}{$i, f_2, F, \vec{P}, \afeatures$}
+		\State $\params \gets \langle \false, f_2 \rangle$
+		\State $W \gets \myset{a \in \afeatures \mid
+                  \bigcup_{P \in \vec{P}} \big( \precision(F_P(\heuristic_{\params[f_i\mapsto \myset{\myset{a}}]}(P))) \setminus \precision(F_P(\heuristic_{\params}(P)))\big) \neq \emptyset }$
+		
+		\While {$W \neq \emptyset$}
+		  \State $s \gets \ChooseSeed(i,\params,W,F,\vec{P})$
+		  \State $c \gets \myset{s}$	
+		  \State $W \gets W \setminus s$
+		  \While {$a \gets \ChooseAtom(\afeatures,f_i, c,\vec{P})$}
+  	        \State $c' \gets c \cup \myset{a}$
+  	        \If {$f_i \iff  f_i \cup c'$}
+  	        \State \textbf{continue}
+  	        \EndIf
+  	        \State $\params' \gets \params[f_i \mapsto f_i\vee c]$ \Comment{Old heuristic}
+  	        \State $\params'' \gets \params[f_i \mapsto f_i\vee c']$ \Comment{New heuristic}
+  	        \If {$\PrecP(\params', \params'', \vec{P}) \wedge \HasSeed(\params'', \params, \vec{P})$}
+  	          \State $c \gets c'$
+  	        \ElsIf{$\PrecE(\params', \params'', \vec{P}) \wedge \HasSeed(\params'', \params, \vec{P}) \wedge \CostM(\params', \params'', \vec{P})$}
+  	          \State $c \gets c'$
+  	        \EndIf
+		  \EndWhile
+		  \State $\params' \gets \params[f_i \mapsto f_i \vee c]$
+		  \If {$\GoodHeuristicFound(\params, \params', \vec{P})$}
+		    \State $f_i \gets f_i \cup \myset{c}$
+		  \EndIf
+		\EndWhile
+		\State \Return $f_i$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+\newpage
+\subsection{Atomic Features}\label{sec:features}
+Atomic features of our context tunneling describe syntactic properties of Java method definitions. We have 23 of them as in Table~\ref{tbl:features} including ten signature features (i.e. \#1 -- \#10) from the previous work~\cite{JeJeChOh17} and 13 newly introduced ones (\#11 -- \#23). Regarding the signature features, we opted to use them without modifications because not only its source shares same settings (i.e. a target language, benchmarks, and a learning model) with us but also they provide simple but effective way to trim unnecessary portion off from the Boolean formula under learning process.
+
+Besides the features for the trimming purpose, our learning process requires an initial chunk of methods. We tried many predicates over Java methods for a context tunneling heuristic and determined the second group of features (i.e. \#11 -- \#23) who 1) contributed to prove queries that aren't provable by conventional context-sensitivities or 2) cut analysis cost without precision drops. We call these ``seed features''. For example, \#11 served well as a sole tunneling heuristics for object-related sensitivities: object, hybrid context, and type sensitivities. However, without further refinements using other features, this simple heuristic ends up with suboptimal precision and performance. Likewise, \#22 is related with the potential cost explosion we mentioned in Section~\ref{sec:challenge}, but it lacks precision per se. We designed our learning process to find good heuristics in disjunctive normal form using the seed features and the signature features.
+
+We discuss about the selection of atomic features in later of this paper. In Section~\ref{sec:exp_feature}, we provide more details about the use of single feature as a heuristic with experimental results. In addition, we will discuss necessity of the new seed features instead of the statement features used in the previous work~\cite{JeJeChOh17} in the same section.
+\begin{comment}
+Table \ref{tbl:features} shows the atomic features used in our
+model. We should learn tunneling abstraction as
+precise as possible because approximation of $f_1 or f_2$ leads losing precision or
+scalability. To learn desirable tunneling abstraction without approximation,
+high qualitiy features are essential. \\
+ We tried to reuse features from previous work, but we found that some
+ features are too rough to learn good tunnel.
+
+
+
+\begin{itemize}
+\item{Table \ref{tbl:features} shows the atomic features used in our
+model.}
+\item{We should learn tunneling abstraction as
+precise as possible as approximation of $f_1 or f_2$ leads losing precision or
+scalability in this instance.}
+\item{To learn desirable context tunneling abstractions, high quality
+features are essential.}
+\item{Our learning algorithm is very sensitive with features.}
+\item{Features \#1$\sim$10 are from previous paper.}
+\item{As previous Statement features
+are too rough to learn desirable tunnel, we designed 13 specific
+method features.}
+\item{These features are maded with considering context
+tunnelning.}
+\item{For example feature \#22  is designed to avoid cost
+    explosion. It indicates methods which are in class
+    which contains more than 20 methods. }
+\item{For example feature \#22  is designed to avoid cost
+    explosion. It indicates methods which are in class
+    which contains more than 20 methods. }
+\item{Feature11 is dominant features for sobj, obj, type but learning
+    gives much more desirable tunneling abstraction.}
+\end{itemize}
+\end{comment}
+
+\begin{table}[t]
+     \centering
+    \caption{23 atomic features}
+    \label{tbl:features}
+\begin{tabular}{c}
+    \begin{tabular}{clclclclcl}
+        \toprule
+        \multicolumn{10}{c}{Signature features} \\
+        \midrule
+        \#1 & ``java'' & \#3 & ``sun''  &
+        \#5 & ``void'' & \#7 & ``int'' &
+        \#9 & ``String'' \\
+        \#2 & ``lang'' & \#4 & ``()''  &
+        \#6 & ``security'' & \#8 & ``util'' &
+        \#10 & ``init'' \\
+        \bottomrule
+    \end{tabular}
+\\
+\\
+    \begin{tabular}{cl}
+        \toprule
+        \multicolumn{2}{c}{Seed features} \\
+        \midrule
+         \#11 & Belongs to an inner class\\
+         \#12 & Takes more than one input argument\\
+         \#13 & Contains at least one \textsc{LoadArrayIndex} instruction\\
+         \#14 & Contains at least one local assignment\\
+         \#15 & Declares at least one variable\\
+         \#16 & Contains at least one \textsc{StoreInstanceField} instruction\\
+         \#17 & Contains at least one static method invocation\\
+         \#18 & Contains at least one virtual method invocation\\
+         \#19 & Contains one and only heap allocation \\
+         \#20 & Takes at least one ``Object'' type argument \\
+         \#21 & Contains at least one heap allocation \\
+         \#22 & Belongs to a class with many methods ($n>20$) \\
+         \#23 & A static method \\
+        \bottomrule
+    \end{tabular}
+\end{tabular}
+\end{table}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

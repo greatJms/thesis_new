@@ -1,0 +1,332 @@
+\section{Context Tunneling}
+% In this section we define a parametric context-sensitive points to analysis for Java. We build on the
+% previous work that defines a generic context-sensitive points-to
+% analysis in Datalog. We incrementally extend the analysis to allow tunneling for each method. 
+
+\subsection{Datalog Rules for Context-Sensitive Analysis}
+
+Figure~\ref{fig:pointsto}.
+
+
+\begin{figure}[t]
+\begin{tabularx}{\textwidth}{|X|}
+  \hline
+  \textsc{InterProcAssign}(\emph{to, calleeCtx, from, callerCtx})
+  $\leftarrow$\\
+  \quad \textsc{CallGraph}(\emph{invo, callerCtx, meth, calleeCtx}), \\
+  \quad \textsc{FormalArg}(\emph{meth, i, to}),
+  \textsc{ActualArg}(\emph{invo, i, from}).\\[1em]
+  
+  
+  \textsc{InterProcAssign}(\emph{to, callerCtx, from, calleeCtx})
+  $\leftarrow$\\
+  \quad \textsc{CallGraph}(\emph{invo, callerCtx, meth, calleeCtx}), \\
+  \quad \textsc{FormalReturn}(\emph{meth, from}),
+  \textsc{ActualReturn}(\emph{invo, to}).\\[1em]
+  
+  \textbf{\textsc{Record}}(\emph{heap, ctx})$=$\emph{hctx}, \\
+  \textsc{VarPointsTo}(\emph{var, ctx, heap, hctx})
+  $\leftarrow$ 
+  \textsc{Reachable}(\emph{meth, ctx}),
+  \textsc{Alloc}(\emph{var, heap, meth}).\\[1em]
+  
+  {\textsc{VarPointsTo}(\emph{to, ctx, heap, hctx}) 
+    $\leftarrow$  
+    \textsc{Move}(\emph{to, from}),
+    \textsc{VarPointsTo}(\emph{from, ctx, heap, hctx}).}\\
+  \\
+  {\textsc{VarPointsTo}(\emph{to, toCtx, heap, hctx})
+    $\leftarrow$} \\
+  \quad		\textsc{InterProcAssign}(\emph{to, toCtx, from, fromCtx}),
+  \textsc{VarPointsTo}(\emph{from, fromCtx, heap, hctx}).\\
+  \\
+  {\textsc{VarPointsTo}(\emph{to, ctx, heap, hctx}) $\leftarrow$}\\
+  \quad		\textsc{Load}(\emph{to, base, fld}),
+  \textsc{VarPointsTo}(\emph{base, ctx, baseH, baseHCtx}), \\
+  \quad \textsc{FldPointsTo}(\emph{baseH, baseHCtx, fld, heap,
+    hctx}).\\
+  \\	
+  \textsc{FldPointsTo} (\emph{baseH, baseHCtx, fld,
+    heap, hctx}) $\leftarrow$\\
+  \quad		\textsc{Store}(\emph{base, fld, from}),
+  \textsc{VarPointsTo}(\emph{from, ctx, heap, hctx}), \\
+\quad  \textsc{VarPointsTo}(\emph{base, ctx, baseH, baseHCtx}).\\
+  \\	
+  \textbf{\textsc{Merge}} (\emph{heap, hctx, invo,
+    callerCtx})$=$\emph{calleeCtx}, \\
+  \textsc{Reachable} (\emph{toMeth, calleeCtx}), \\
+  \textsc{VarPointsTo} (\emph{this, calleeCtx,
+    heap, hctx}), \\
+  \textsc{CallGraph} (\emph{invo, callerCtx,
+    toMeth, calleeCtx})
+  $\leftarrow$ \textsc{VCall} (\emph{base, sig, invo, inMeth}), \\
+  \quad		
+  \textsc{Reachable} (\emph{inMeth, callerCtx}),
+  \textsc{VarPointsTo} (\emph{base, callerCtx, heap, hctx}), \\
+  \quad		\textsc{HeapType} (\emph{heap, heapT}),
+  \textsc{LookUp} (\emph{heapT, sig, toMeth}),
+  \textsc{ThisVar} (\emph{toMeth, this}).\\
+  \\
+  \textbf{\textsc{MergeStatic}} (\emph{invo,
+    callerCtx}) $=$ \emph{calleeCtx}, \\
+  \textsc{Reachable} (\emph{toMeth, calleeCtx}), \\
+  \textsc{CallGraph} (\emph{invo, callerCtx,
+    toMeth, calleeCtx})
+  $\leftarrow$ \\
+  \quad \textsc{SCall} (\emph{toMeth, invo, inMeth}),
+  \textsc{Reachable} (\emph{inMeth, callerCtx}).\\
+  \hline
+\end{tabularx}
+\caption{Datalog rules for generic context-sensitive points-to analysis}
+\label{fig:pointsto}
+\end{figure}
+
+\begin{figure}[t]
+\begin{tabularx}{\textwidth}{|X|}
+  \hline
+  \textbf{\textsc{Merge}} (\emph{\textbf{bool},heap, hctx, invo,
+    callerCtx})$=$\emph{calleeCtx}, \\
+  \textsc{Reachable} (\emph{toMeth, calleeCtx}), \\
+  \textsc{VarPointsTo} (\emph{this, calleeCtx,
+    heap, hctx}), \\
+  \textsc{CallGraph} (\emph{invo, callerCtx,
+    toMeth, calleeCtx})
+  $\leftarrow$ \textsc{VCall} (\emph{base, sig, invo, inMeth}), \\
+  \quad		
+  \textsc{Reachable} (\emph{inMeth, callerCtx}),
+  \textsc{VarPointsTo} (\emph{base, callerCtx, heap, hctx}), \\
+  \quad		\textsc{HeapType} (\emph{heap, heapT}),
+  \textsc{LookUp} (\emph{heapT, sig, toMeth}),
+  \textsc{ThisVar} (\emph{toMeth, this}),\\
+  \quad \textsc{ContextMadeIn} (\emph{heap, invo})$=$\emph{ctxMeth},
+  \textbf{\textsc{Tunneling} (\emph{ctxMeth, toMeth})$=$\emph{bool}}.\\\\
+  
+  
+  
+  \textbf{\textsc{MergeStatic}} (\emph{\textbf{bool},invo,
+    callerCtx}) $=$ \emph{calleeCtx}, \\
+  \textsc{Reachable} (\emph{toMeth, calleeCtx}), \\
+  \textsc{CallGraph} (\emph{invo, callerCtx,
+    toMeth, calleeCtx})
+  $\leftarrow$ \\
+  \quad \textsc{SCall} (\emph{toMeth, invo, inMeth}),
+  \textsc{Reachable} (\emph{inMeth, callerCtx}),\\
+  \quad \textbf{\textsc{Tunneling} (\emph{inMeth, toMeth})$=$\emph{bool}}.
+%  \quad    \textsc{SContextMadeIn} (\emph{invo})$=$\emph{ctxMeth},
+
+ 
+  \\
+  \hline
+\end{tabularx}
+\caption{New Datalog rules for generic context-sensitive points-to analysis}
+\label{fig:pointsto}
+\end{figure}
+
+\begin{figure}[t]
+\begin{tabularx}{\textwidth}{|X|}
+  \hline  
+  {\textsc{Tunneling}} (\emph{ctxMeth,toMeth}) = false 
+  $\leftarrow$\\ \quad  \textsc{ImportantCallee} (\emph{toMeth}), 
+  \textsc{UnImportantCaller} (\emph{ctxMeth}).\\\\
+  
+  {\textsc{Tunneling}} (\emph{ctxMeth,toMeth}) = true 
+  $\leftarrow$  \textsc{ImportantCaller} (\emph{toMeth}).\\
+  
+  {\textsc{Tunneling}} (\emph{ctxMeth,toMeth}) = true
+  $\leftarrow$  \textsc{UnImportantCallee} (\emph{toMeth}).\\
+  \hline
+\end{tabularx}
+\caption{Approximation}
+\label{fig:pointsto}
+\end{figure}
+\subsection{1-obj+H}
+
+\begin{align*}
+\Record ({\it heap}, {\it ctx}) &= {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) &= {\it heap} \\
+\MergeStatic ({\it invo}, {\it ctx})&={\it ctx}\\
+\end{align*}
+
+
+\subsection{1-obj+heap+Tunneling(1obj+T)}
+\begin{align*}
+\Record (heap, ctx) &= ctx\\
+\Merge ({\it \textbf{bool}, heap, hctx, invo, ctx}) &= \left\{
+\begin{array}{rl}
+{\it heap} & \mbox{if}~{\it bool} = true \\
+{\it hctx} & \mbox{if}~{\it bool} = false
+\end{array}
+\right.\\
+\MergeStatic (bool, invo, ctx)&=ctx\\\\
+ContextMadeIn (heap ,invo)=ctxMeth&\leftarrow Alloc(var, heap, ctxMeth)\\
+%SContextMadeIn (invo)=ctxMeth&\leftarrow Scall(sig, invo, ctxMeth)\\
+\end{align*}
+
+
+\subsection{1-type+H}
+
+\begin{align*}
+\Record ({\it heap}, {\it ctx}) &= {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) &= {\it \mcc_{\mca}(heap)} \\
+\MergeStatic ({\it invo}, {\it ctx})&={\it ctx}\\
+\end{align*}
+
+\subsection{1-type+heap+Tunneling(1type+T)}
+\begin{align*}
+\Record (heap, ctx) &= ctx\\
+\Merge ({\it \textbf{bool}, heap, hctx, invo, ctx}) &= \left\{
+\begin{array}{rl}
+{\it \mcc_{\mca}(heap)} & \mbox{if}~{\it bool} = true \\
+{\it hctx} & \mbox{if}~{\it bool} = false
+\end{array}
+\right.\\
+\MergeStatic (bool, invo, ctx)&=ctx\\\\
+ContextMadeIn (heap ,invo)=ctxMeth&\leftarrow Alloc(var, heap, ctxMeth)\\
+\end{align*}
+
+\subsection{1-call+H}
+
+\begin{align*}
+\Record ({\it heap}, {\it ctx}) &= {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) &= {\it invo} \\
+\MergeStatic ({\it invo}, {\it ctx})&={\it invo}\\
+\end{align*}
+
+\subsection{1-call+heap+Tunneling(1call+T)}
+\begin{align*}
+\Record (heap, ctx) &= ctx\\
+\Merge ({\it \textbf{bool}, heap, hctx, invo, ctx}) &= \left\{
+\begin{array}{rl}
+{\it invo} & \mbox{if}~{\it bool} = true \\
+{\it ctx} & \mbox{if}~{\it bool} = false
+\end{array}
+\right.\\
+\MergeStatic ({\it {bool}, invo, ctx}) &= \left\{
+\begin{array}{rl}
+{\it invo} & \mbox{if}~{\it bool} = true \\
+{\it ctx} & \mbox{if}~{\it bool} = false
+\end{array}
+\right.\\
+ContextMadeIn (heap ,invo)=ctxMeth&\leftarrow Vcall(base, sig, invo, ctxMeth)\\
+\end{align*}
+
+
+
+
+\begin{comment}
+\begin{figure}[]
+	\centering
+    \small
+	\begin{subfigure}[]{1.0\textwidth}
+		\begin{tabularx}{\textwidth}{|X|}
+	\hline
+	\textsc{InterProcAssign}(\emph{to, calleeCtx, from, callerCtx})
+	$\leftarrow$\\
+	\quad \textsc{CallGraph}(\emph{invo, callerCtx, meth, calleeCtx}),
+	\textsc{FormalArg}(\emph{meth, i, to}),
+	\textsc{ActualArg}(\emph{invo, i, from}).\\[1em]
+	
+	
+	\textsc{InterProcAssign}(\emph{to, callerCtx, from, calleeCtx})
+	$\leftarrow$\\
+	\quad		\textsc{CallGraph}(\emph{invo, callerCtx, meth, calleeCtx}),
+	\textsc{FormalReturn}(\emph{meth, from}),
+	\textsc{ActualReturn}(\emph{invo, to}).\\[1em]
+	
+	\textbf{\textsc{Record}}(\emph{heap, ctx})$=$\emph{hctx}, \\
+	\textsc{VarPointsTo}(\emph{var, ctx, heap, hctx})
+	$\leftarrow$
+	\textsc{Reachable}(\emph{meth, ctx}),
+	\textsc{Alloc}(\emph{var, heap, meth}).\\[1em]
+	
+	{\textsc{VarPointsTo}(\emph{to, ctx, heap, hctx}) $\leftarrow$
+		\textsc{Move}(\emph{to, from}),
+		\textsc{VarPointsTo}(\emph{from, ctx, heap, hctx}).}\\
+	\\
+	{\textsc{VarPointsTo}(\emph{to, toCtx, heap, hctx})
+		$\leftarrow$} \\
+	\quad		\textsc{InterProcAssign}(\emph{to, toCtx, from, fromCtx}),
+	\textsc{VarPointsTo}(\emph{from, fromCtx, heap, hctx}).\\
+	\\
+	{\textsc{VarPointsTo}(\emph{to, ctx, heap, hctx}) $\leftarrow$}\\
+	\quad		\textsc{Load}(\emph{to, base, fld}),
+	\textsc{VarPointsTo}(\emph{base, ctx, baseH, baseHCtx}), \\
+	\quad \textsc{FldPointsTo}(\emph{baseH, baseHCtx, fld, heap,
+		hctx}).\\
+	\\	
+	\textsc{FldPointsTo} (\emph{baseH, baseHCtx, fld,
+		heap, hctx}) $\leftarrow$\\
+	\quad		\textsc{Store}(\emph{base, fld, from}),
+	\textsc{VarPointsTo}(\emph{from, ctx, heap, hctx}),
+	\textsc{VarPointsTo}(\emph{base, ctx, baseH, baseHCtx}).\\
+	\\	
+	\textbf{\textsc{Merge}} (\emph{heap, hctx, invo,
+		callerCtx})$=$\emph{calleeCtx}, \\
+	\textsc{Reachable} (\emph{toMeth, calleeCtx}), \\
+	\textsc{VarPointsTo} (\emph{this, calleeCtx,
+		heap, hctx}), \\
+	\textsc{CallGraph} (\emph{invo, callerCtx,
+		toMeth, calleeCtx})
+	$\leftarrow$ \textsc{VCall} (\emph{base, sig, invo, inMeth}), \\
+	\quad		
+	\textsc{Reachable} (\emph{inMeth, callerCtx}),
+	\textsc{VarPointsTo} (\emph{base, callerCtx, heap, hctx}), \\
+	\quad		\textsc{HeapType} (\emph{heap, heapT}),
+	\textsc{LookUp} (\emph{heapT, sig, toMeth}),
+	\textsc{ThisVar} (\emph{toMeth, this}).\\
+	\\
+	\textbf{\textsc{MergeStatic}} (\emph{invo,
+		callerCtx}) $=$ \emph{calleeCtx}, \\
+	\textsc{Reachable} (\emph{toMeth, calleeCtx}), \\
+	\textsc{CallGraph} (\emph{invo, callerCtx,
+		toMeth, calleeCtx})
+	$\leftarrow$ \\
+	\quad \textsc{SCall} (\emph{toMeth, invo, inMeth}),
+	\textsc{Reachable} (\emph{inMeth, callerCtx}).\\
+	\hline
+\end{tabularx}
+	\caption{Points-to analysis rules}
+	\end{subfigure}
+
+	\begin{subfigure}[]{1.0\textwidth}
+		\begin{tabularx}{\textwidth}{|X|}
+	\hline
+	\textbf{\textsc{Merge}} (\emph{\textbf{importantness}}, \emph{heap, hctx, invo,
+		callerCtx})$=$\emph{calleeCtx}, \\
+	\textsc{Reachable} (\emph{toMeth, calleeCtx}), \\
+	\textsc{VarPointsTo} (\emph{this, calleeCtx,
+		heap, hctx}), \\
+	\textsc{CallGraph} (\emph{invo, callerCtx,
+		toMeth, calleeCtx})
+	$\leftarrow$ \textsc{VCall} (\emph{base, sig, invo, inMeth}),\\
+	\quad		
+	\textsc{Reachable} (\emph{inMeth, callerCtx}),
+	\textsc{VarPointsTo} (\emph{base, callerCtx, heap, hctx}), \textsc{HeapType} (\emph{heap, heapT}),\\
+	\quad		
+	\textsc{LookUp} (\emph{heapT, sig, toMeth}),
+	\textsc{ThisVar} (\emph{toMeth, this}),
+	\textbf{\Tunnel}({\it \textbf{toMeth}}, {\it \textbf{importantness}}).\\
+	\\
+	\textbf{\textsc{MergeStatic}} (\emph{\textbf{importantness}}, \emph{invo,
+		callerCtx}) $=$ \emph{calleeCtx}, \\
+	\textsc{Reachable} (\emph{toMeth, calleeCtx}), \\
+	\textsc{CallGraph} (\emph{invo, callerCtx,
+		toMeth, calleeCtx})
+	$\leftarrow$ \\
+	\quad		\textsc{SCall} (\emph{toMeth, invo, inMeth}),
+	\textsc{Reachable} (\emph{inMeth, callerCtx}),
+	\textbf{\Tunnel}({\it \textbf{toMeth}}, {\it \textbf{importantness}}).\\
+	\hline
+	\end{tabularx}
+	\caption{Modified rules for our parametric points-to analysis}
+	\end{subfigure}
+
+	\caption{Datalog rules for context-sensitive points-to analysis}
+	\label{fig:analysis-rules}
+\end{figure}
+\end{comment}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

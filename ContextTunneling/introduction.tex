@@ -1,0 +1,386 @@
+\section{Introduction}
+
+\iffalse
+Points-to analysis is a fundamental program analysis technique with
+diverse applications in software engineering tasks.  The goal of
+points-to analysis is to safely yet accurately approximate the objects
+that pointer variables may point to at runtime, as precise pointer
+information is a key ingredient of modern software analysis techniques
+such as static bug-finding~\cite{Blackshear2015,Sui2014,Naik2006,Livshits2003,Avots2005},
+program verification~\cite{Fink2008}, security vulnerability
+detection~\cite{Tripp2009,Arzt2014,Yan2017}, and automatic program
+repair~\cite{Gao2015,memfix}.  The effectiveness and
+usefulness of these techniques are ultimately determined by the
+qualities of the underlying points-to analysis.
+
+
+Context-sensitivity holds the key to the development of precise and
+scalable points-to analysis.  In order to accurately track local
+variables and heap objects, a context-sensitive analysis treats
+multiple calls to the same method separately for its different calling
+contexts.  For object-oriented and functional languages,
+context-sensitivity is the single most important factor that affects
+both precision and scalability.  It has greater impact on the analysis
+precision than other techniques such as
+flow-sensitivity~\cite{Lhotak2006,Smaragdakis2015}, and the improved
+precision by context-sensitivity is likely to increase scalability as
+well~\cite{Smaragdakis2011, Kashyap2014}.
+\fi
+
+
+Developing effective approaches to context-sensitivity
+has been the major goal of research in points-to analysis.  In
+particular, 
+one practical approach to context-sensitivity is the
+so-called $k$-limited method~\cite{Sharir1981} and over the last
+decades researchers have explored various flavors and policies with different
+tradeoffs, such as object-sensitivity~\cite{Milanova2005},
+type-sensitivity~\cite{Smaragdakis2011}, hybrid
+context-sensitivity~\cite{KastrinisS13a}, and selective
+context-sensitivity~\cite{JeJeChOh17,Oh2014,Smaragdakis2014}.  These approaches vary
+depending on the program entities that they use as context elements or
+policies to assign $k$ values. 
+Unlike the classical $k$-call-site-sensitivity~\cite{Shivers1988},
+object- and type-sensitivity use a sequence of allocation-sites and a
+sequence of allocating-classes as context elements, respectively,
+providing new sweet spots for object-oriented languages. Hybrid
+context-sensitivity provides a way of combining call-site-sensitivity
+and object-sensitivity to enjoy benefits of both approaches. Selective
+context-sensitive analyses assign different $k$ values to different
+methods. 
+
+
+% \sehun{Another
+% noteworthy approach is making call-string-based context-sensitivity more
+% efficient without compromising precision by exploiting finite domains of
+% method-reaching values~\cite{Khedker2008, PadhyeK13}.} In
+% Section~\ref{sec:related}, we provide a more extensive survey on existing
+% techniques.
+% \minseok{Among two general ways to achieve context-sensitivity,
+% \emph{functional} and \emph{call-strings} approaches~\cite{Sharir1981},
+% approximated-version of call-string approach so called $k$-limiting
+% context-sensitivity is widely used in practice.  As it is impractical to
+% treat all the multiple calls to the same method separately, $k$-limiting
+% context-sensitivity uses $k$ most recent context elements and merges method
+% calls which have same context. In $k$-limiting context-sensitivity, it is
+% important to choose suitable context element and depth $k$ because it decides
+% precision and scalability of analysis.}
+
+% \minseok{In this paper, we present context tunneling, a new approach for
+% 	performing precise and scalable points-to
+% 	analysis with k-limiting context-sensitivity.}
+
+
+To develop an effective context abstraction, we present context tunneling, a new approach for
+performing precise and scalable $k$-limited context-sensitive 
+analysis. The key observation behind our approach is that, although
+existing approaches for context-sensitivity differ in various
+characteristics such as
+flavors~\cite{Shivers1988,Milanova2005,Smaragdakis2011,KastrinisS13a}
+and policies to assign $k$ values~\cite{Smaragdakis2014,JeJeChOh17,Oh2014},
+they all have a significant weakness in common: they update the
+context of a method unconditionally at {\em every} call-site and therefore important
+context elements are overwritten by more recent, but not necessarily
+more important, context elements. We found that this is a key factor
+that limits the effectiveness of the existing context-sensitive
+analyses, and show that dramatic increase in both precision and
+scalability can be gained by maintaining important context elements
+only. Our technique updates contexts selectively and decides when to
+preserve contexts without modification. 
+% \minseok{More specifically, we maintain \emph{caller}-\emph{callee} relations
+% to represent situations that updating context at callee would lose key
+% context elements. In such cases, the callee just inherits the key context
+% from parent context, which is defined differently by context flavors, without
+% modification.} 
+We formalize our technique in a general setting, so that it is
+applicable to all major flavors of context-sensitivity.
+
+
+We also present a new data-driven approach for realizing effective context
+tunneling.  Although the potential of context tunneling is
+tremendous, maximizing its impact  in practice is nontrivial.  This is mainly
+because precision increase by context tunneling is very sensitive to the
+choice of important context elements and even not monotone with respect to the ordering of the
+choices. As a result, manually coming up with a good heuristic rule
+for context tunneling is extremely challenging and likely ends up with
+suboptimal results.  To address this challenge, we leverage the recent
+trend of data-driven program analysis~\cite{JeJeChOh17,Oh2015,
+  Heo2016learning,heo2016unsound,WeiR15,Singh2018cav,ChOhHeYa17} and aim at automatically
+learning a context-tunneling heuristic from data.  Given a dataset of
+programs and a set of method features, our learning algorithm
+generates a heuristic that determines the context elements that
+contribute to improving the final analysis performance. Our algorithm
+is carefully designed for context tunneling, so it is able to produce
+effective heuristics over the non-monotonic space of context
+tunneling.
+
+% However, as the analysis with context tunneling
+% is not monotone with respect to the analysis precision
+% (Section~\ref{sec:setting}), finding a good tunneling heuristic is
+% challenging. In particular, we cannot use the existing learning
+% algorithms~\cite{JeJeChOh17,Liang2011learning} that work in a
+% greedy manner by exploiting the monotonicity of the analysis.  We
+% carefully designed a learning algorithm that interleaves a greedy
+% refinement procedure with explorations and therefore is able to find a
+% good parameter over the non-monotonic space of context tunneling (Section~\ref{sec:learning-algorithm}).
+
+
+
+We implemented our approach on top of
+the Doop framework~\cite{Bravenboer2009} and evaluated it with four
+major flavors of context-sensitivity: call-site-sensitivity~\cite{Shivers1988},
+object-sensitivity~\cite{Milanova2002, Milanova2005}, type-sensitivity~\cite{Smaragdakis2011},
+and hybrid context-sensitivity~\cite{KastrinisS13a}.
+In all analyses, context tunneling has improved the performance of the
+existing analyses remarkably.
+In particular, context tunneling enabled 1-context-sensitive analyses
+to far outperform 2-context-sensitive
+counterparts in both scalability and precision.
+We also demonstrate that the effectiveness of context tunneling comes from our learning algorithm; we
+evaluate our learning algorithm from various perspectives and justify
+the design decisions underlying the algorithm.
+% demonstrate that our non-greedy algorithm that deliberately performs
+% explorations plays a central role for learning good tunneling
+% heuristics.
+
+\myparagraph{Contributions}
+The contribution of this chapter is as follows:
+\begin{itemize}
+\item We present context tunneling, a new technique for
+  improving $k$-limited context-sensitive points-to analysis by carefully maintaining
+  important context elements. % context sensitive points-to analysis, and data-driven approach to
+  % learn effective context tunneling heuristics in Boolean formulas
+  % from codebase.
+
+  \item We present a new data-driven approach for learning context
+    tunneling heuristics. Key technical contribution is the non-greedy
+    learning algorithm that is able to effectively search for good
+    heuristics over non-monotonic parameter space of context
+    tunneling.
+
+  \item We extensively evaluate the effectiveness of context tunneling and our
+    learning approach with for four flavors of context sensitive
+    analysis for Java. % ; call-site, object, type, and hybrid context sensitivities. We also demonstrated that interleaving greedy search with exploration steps is key to success; fully-greedy variant of our algorithm converged toward less precise solutions early.
+\end{itemize}
+
+
+
+%  although keeping the most recent context
+% elements is not always the most value choice. In fact, we found that
+% blindly choosing the last $k$ context elements is a major factor may
+% sacrifice the analysis scalability without increasing precision.  From
+% the perspective of a call-site sensitivity, a place where a recursive
+% method is invoked by others is far more significant than the place
+% where the method calls itself.  To address this issue, our technique
+% enables the analysis to maintain important contexts only. For example,
+% method $m_1$ is called from method $m_2$ during 1-call-site-sensitive
+% analysis, our analysis updates the context only when the new context
+% is more important than the context of $m_2$. By doing so, with our
+% technique, a sequence of context elements contains only valuable
+% context elements which contribute to increase analysis precision.
+
+
+% abstract a program's possibly infinite concrete contexts into
+% computable one is to limit the maximum length of calling
+% contexts. And the most dominant way to do it is concatenating the
+% most recent $k$ context elements. For example, in
+% $k$-call-site-sensitivity~\cite{Shivers1988,Sharir1981}, the
+% analysis maintains a sequence of the last $k$ call-sites that lead
+% to each method call. Although the existing context-sensitive
+% points-to analyses differ in various characteristics (e.g. which
+% context elements to
+% use~\cite{Milanova2005,Smaragdakis2011,kastrinis2013hybrid}, which
+% $k$ values to assign to different
+% call-sites~\cite{Smaragdakis2014,JeJeChOh17}, etc), this recency
+% property remains in common.
+
+% However, the most recent context element may not the most valuable one.
+% Recursion is the prime example. From the perspective of a call-site sensitivity,
+% a place where a recursive method is invoked by others is far more significant
+% than the place where the method calls itself. Same story goes for an object
+% sensitivity, which uses heap allocation sites as context elements, too. Some classes have limited allocation sites as they only exist to comprise higher-level classes. In this case, the ``helper'' classes' allocation sites are likely less significant than the ones of the composite classes although the helper objects are relatively new than the composite objects. Problem is, knowing such cases for a wide range
+% of context abstractions and infusing the knowledge into static analyzers without negative side-effects is highly non-trivial.
+%Current context sensitivity, however, wastes given depth $k$ by blindly generating context elements and updating methods' context whenever they are invoked. As each method use most-recent-$k$ context elements as its context, generating new context elements results losing old context elements that would play a key role for the method. As a result, many methods lose their key context elements by updating contexts resulting lose of both precision and scalability.
+
+% In this paper, we present context tunneling, a general approach for improving
+% scalability and precision of context-sensitive points-to analysis. Key idea is not
+% updating methods's context but inheriting old contexts from parent methods when it is
+% considered to be beneficial. Our heuristic expresses such situations in relations
+% between two methods $(m_1, m_2)$. This relation states that if a method $m_2$ is invoked
+% under a parent method $m_1$, the called method $m_2$ should inherit $m_1$'s context
+% instead of making new context element. Recall the previous call-site example, context
+% tunneling heuristic with $(\texttt{rec}, \texttt{rec})$ relation keeps recursively
+% called $\texttt{rec}$ methods to generate redundant context elements. This
+% representation introduces the unusual characteristic that most known parameters in
+% designing static analyzer don't: precision doesn't monotonically increase (or decrease)
+% as we apply context tunneling to more methods. In fact, as context tunneling is applied
+% for more methods from nought, the analysis changes from conventional context sensitivity
+% to context-insensitive one; the most desirable heuristic is somewhere in between. It
+% falsifies the greedy approach, taking the largest benefit after evaluating small changes
+% from current state, thus achieving the goal of context tunneling --- finding a set of
+% method relations for target program that maximizes precision while not
+% losing scalability --- becomes extremely difficult.
+
+% %This simple mechanism can extend key contexts' lifespan
+% %indefinitely thus contributes to realize potential of $k$-limited context
+% %sensitive points-to analysis.
+% We use data-driven approach to automatically learn tunneling heuristic from codebase.
+% The learning algorithm is specifically designed around the problem of context tunneling
+% as it choices apparently bad refinement to see if the decision results better outcome at
+% the end. First, we parameterize context tunneling heuristic. We use disjunctive
+% parameter model introduced in~\citet{JeJeChOh17} for expressiveness. That is, the
+% heuristic's parameter is a set of two Boolean formulas $f_1$ and $f_2$ where
+% $f_i$ is a Boolean combination of atomic features that captures high-level property of
+% Java method for $m_i$. The atomic features are simple predicates over Java methods like
+% whether method has heap allocations or not. A heuristic ($f_1,f_2$) means a set of
+% context tunneling relations ($m_1$, $m_2$) where $f_i$ means a set of methods $m_i$.
+% Than, we propose new learning algorithm to find the good parameters $f_1$ and $f_2$.
+% Key technical idea is interleaving greedy refinement procedure with explorations. In the
+% exploration steps, our algorithm opts for the most exclusively provable queries, not
+% immediate precision gain. The choice is further refined in greedy fashion and approved if the refined one increases parameter's precision without cost explosion.
+%
+%
+%
+%Key technical challenge is finding the good parameters $f_1$ and $f_2$ efficiently as
+%brute-force methods simply cannot cope with the large parameter space, and more
+%importantly, we can't leverage prior learning algorithms are unable to learn desirable heuristic as this
+%new parameter space is not equipped with precision order that previous learning
+%algorithm~\cite{JeJeChOh17,Liang2011learning,Zhang2014} heavily
+%relied on. In this paper, we designed new learning algorithm that searches the
+%parameter space of context tunneling effectively. Key idea to overcoming
+%challenges is evaluating intermediate formula's
+%quality by counting exclusively proven queries rather than immediate precision gain. By doing so, our algorithm finds much more effective tunneling heuristics than learned one with seeing only immediate precision. Our learning algorithm also concerns cost aspect so the resulting parameters don't make analysis more costly than the conventions.
+
+
+%More precisely, our approach provides a heuristic to a static analyzer that tells
+%where to apply context tunneling technique for a given program. The heuristic express
+%such places using a set of relations $(m_1, m_2)$ between two methods in target
+%program. This relation states that if a method $m_2$ is invoked under a parent method
+%$m_1$, the called method $m_2$ should inherit $m_1$'s context. In previous call-site
+%example, $(rec, rec)$ means such case if we refer $rec$ to the recursive method.
+%Key challenge is that good context tunneling heuristics that generally work
+%well on target programs are difficult to find, and incompetent one can propagate
+%worthless contexts indefinitely thus degrades precision as a level of
+%context-insensitive analysis.
+%
+%To solve the search problem, we use data-driven approach, which is gaining popularity
+%in fine-tuning static analyzers
+%recently~\cite{JeJeChOh17,Oh2015,Heo2016learning,cha2016learning,WeiR15}.
+%First, we design a set of atomic features; each one of them is a Boolean predicate
+%over Java methods such as whether it has heap allocations or not. Than, we
+%parameterize context tunneling heuristic using two Boolean formulas $f_1$ and $f_2$.
+%Each Boolean formula is a Boolean combination of the atomic features and means a set
+%of methods in target program where $f_i$ means methods take the place of $m_i$ in
+%context tunneling relations. Finding a good set of parameters $f_1$ and $f_2$ that
+%maximizes analysis precision of given while not losing scalability is done by a
+%learning algorithm we specifically designed around the problem of context tunneling.
+
+
+%to obtain such good context tunneling heuristics automatically from existing codebase. First, we design a set of atomic features; each one of them is a Boolean predicate over Java methods such as whether it has heap allocations or not. Than, we design a learning algorithm that infers two formulas $f_1$ and $f_2$ where $f_i$ is a Boolean combination of atomic features. The goal of learning algorithm is to find a good set of $f_1$ and $f_2$ so that two methods from each formula constitute a set of tunneling relation tuple $(m_1, m_2)$ correspondingly. That is, those two Boolean formula become a parameter of context tunneling heuristic.
+%%In our approach, relations between two methods express situations that applying context tunneling has benefit. Each relation states that if a method is invoked under a parent method and the two methods are belong to the relation, called method should inherit context from parent method's context.
+%The goal of learning process is to find a good set of tunneling parameters $f_1$ and $f_2$ that maximizes analysis precision of given while not losing scalability.
+%
+%We use data-driven approach to obtain desirable context tunneling abstraction automatically. In our approach, analyzer is equipped with a parameterized and heuristic rules that decide whether to apply context tunneling. Key technical challenge is finding the good parameters efficiently as brute-force methods simply cannot cope with the large parameter space. Unfortunately, previous data driven approaches~\cite{JeJeChOh17,Oh2015,Heo2016learning,cha2016learning} is unable to learn appropriate context tunneling heuristic because abstraction space in context tunneling is not equipped with precision order which is assumed in previous works. We designed new non-greedy learning algorithm that efficiently learn context tunneling heuristic. Key idea is evaluating intermediate formula's quality by measuring potential rather than immediate precision gain. Our learning algorithm also concerns cost aspect so the resulting parameters don't make analysis more costly than the conventions.
+
+% The experimental results show generality and effectiveness of our approach; well-trained context tunneling heuristics make $1$-context sensitivity more precise and scalable than the deeper counterparts. We implemented our approach on Doop Java points-to analysis framework~\cite{Bravenboer2009} and applied to four well-known context sensitivities; call-site~\cite{Shivers1988,Sharir1981}, object~\cite{Milanova2002, Milanova2005}, type~\cite{Smaragdakis2011}, and hybrid context~\cite{kastrinis2013hybrid} sensitivities. For all analyses, $1$-context sensitive analyses with context tunneling are more precise than conventional analyses with deeper context $k=2$ without increasing cost. In fact, our approach is so effective for hybrid context sensitivity so that our version ($\onesobjHT$) was able to analyze all prepared benchmarks in time while less precise $\twosobjH$ violated the time constraint (5,400 sec) when analyzing \texttt{jython}.
+
+% In summary, our key contributions are as follow:
+% \begin{itemize}
+%   \item We introduce context tunneling, a new parameter space for context sensitive points-to analysis, and data-driven approach to learn effective context tunneling heuristics in Boolean formulas from codebase.
+%   \item We demonstrated effectiveness of context tunneling for four kinds of context sensitivities; call-site, object, type, and hybrid context sensitivities. We also demonstrated that interleaving greedy search with exploration steps is key to success; fully-greedy variant of our algorithm converged toward less precise solutions early.
+% \end{itemize}
+
+
+
+\commentout{
+Conventional context-sensitive analysis generates and utilzes contexts without considering any. Contexts, however, should be carefully generated because generating a useless context often results pushing off key contexts.
+\\
+Fig.\ref{fig:ExampleCode}(a) is an Example to illustrate how conventional context sensitive analysis lose precision and how context-tunneling handles the problem. In Fig.\ref{fig:ExampleCode}, we identify 2 heap allocations(A, B), 3 method call-sites(3, 7, 10) and 2 queries(Q1, Q2) with end-of-line comments in green. Method id is recursively defined identity funtion that always returns first parameter v. Method assginA(assignB) allocate heap object typed A(B) call id with the object and input parameter i. main method calls assignA and assignB with input integer i and queries ask safety of down castings. In Fig.\ref{fig:ExampleCode}(b), we give call graph of conventional k-call-site sensitive analysis, where each method is analyzed separately for each different calling context.
+\\
+As can be seen in Fig.\ref{fig:ExampleCode}(b), context 14 and 15 are key contexts that separate id methods called from assignA and that from assignB. However, contexts generated from call-site 3 push off the key contexts whenever it is called. Methods id called from assignA and  methods called from assignB are eventually merged. As a result, variable a and b can point to A and B, respectively.
+\\
+To address the problem that useless context disturb analysis, we propose context-tunneling, a general approach for improving precision of context-sensitive analysis. Key idea is inheriting meaningful contexts from ancestor methods by recycling the meaningful contexts as decendant methods' contexts. Let assume we know call-site 14 and 15 are the only key contexts of Fig.\ref{fig:ExampleCode}(a) and the other contexts are worthless. Under the assumption, we give call-graph of 1-call-site sensitive+Tunnel in Fig.\ref{fig:ExampleCode}(c). Now, id methods called from assignA and that from assignB are analyzed separately. Due to the improvements of precision, a (b) now points to A (B) only, causing may-alias to conclude that both are no longer alias and resulting analyzer proves the safety of the queries. In conventional call-site-sensitive anlaysis, such precision can only be obtained from $\infty$-call-site-sensitive analysis.
+%Context-tunneling is generally appliable approach that can be applied to any kinds of context,e.g., call-site sensitivity, object-sensitivity and type-sensitivity.
+\\
+Although context-tunneling has potential to increase precision significantly, it is another issue to judge usefulness of each context. We used data-driven approach to get a classifier for tunneling approach. In data-driven appraoch, We used disjunctive model to express heuristic and designed 25 features. We designed a new learning algorithm as context-tunneling has different properties from other previous instances, e.g., selective-context-sensitivity. From codebase, our learning algorithm automatically learns appropriate context-tunneling heuristics with disjunctive model and features. The experimental results show that learned heuristics improve precision significantly. For example, applying context-tunneling to 1-object-sensitive+heap shows nearly equal precision to conventional 3-object-sensitive+3-heap in Java Points-to analysis. In summary, our key contributions are as follows:
+\begin{itemize}
+\item{We propose "Context-Tunneling", a general approach for improving precision of context-sensitive analysis.}
+\item{We designed a new learning algorithm to obtain effective tunnel from code base.}
+\item{We demonstrate the effectiveness of our approach with applications to object sensitivity in Java Points-to analysis.}
+\end{itemize}
+
+\begin{figure}
+\begin{multicols}{2}
+\begin{lstlisting}
+Class A{} Class B{}
+Object id(Object v, int i) {
+  if(i>=0){
+   return id(i-1, v);}  //3
+  else{return v;}
+}
+Object assignA(int i) {
+ return id(new A(),i);  //A,7
+};
+Object assignB(int i) {
+ return id(new B(),i);  //B,10
+};
+void main() {
+  int i = input();
+  A a = (A)assignA(i);  //Query 1
+  B b = (B)assignB(i);  //Query 2
+ return;
+}
+\end{lstlisting}
+(a) Example Code\\
+\begin{center}
+\includegraphics[width=7cm,height=7cm,keepaspectratio]{figures/standard.pdf}\\
+(b) Conventional k-call-site-sensitive
+\includegraphics[width=6cm,height=6cm,keepaspectratio]{figures/important.pdf}\\
+(c) 1-call-site-sensitive+tunnel
+\end{center}
+\end{multicols}
+\caption{Motivating Example}
+\label{fig:ExampleCode}
+\end{figure}
+}
+
+% \begin{figure}
+% \begin{multicols}{2}
+% \begin{lstlisting}
+% 0:   Class A{} Class B{}
+% 1:   Object id(Object v, int i){
+% 2:     if(i>=0){
+% 3:      return id(i-1, v);}//3
+% 4:     else{return v;}
+% 5:   }
+% 6:   Object assignA(int i){
+% 7:    return id(new A(),i);//A,7
+% 8:   };
+% 9:   Object assignB(int i){
+% 10:   return id(new B(),i);//B,10
+% 11:  };
+% 12:  void main(){
+% 13:    int i = input();
+% 14:    A a = (A)assignA(i);//Q1
+% 15:    B b = (B)assignB(i);//Q2
+% 16:   return;}
+% \end{lstlisting}
+% (a) Example Code\\
+% \begin{center}
+
+% \includegraphics[width=7cm,height=7cm,keepaspectratio]{figures/standard.pdf}\\
+% (b) Conventional k-call-site-sensitive
+
+% \includegraphics[width=6cm,height=6cm,keepaspectratio]{figures/important.pdf}\\
+% (c) 1-call-site-sensitive+tunnel
+% \end{center}
+% \end{multicols}
+% \caption{Theoretical Example}
+% \label{fig:ExampleCode}
+% \end{figure}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

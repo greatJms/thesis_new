@@ -1,0 +1,20 @@
+\begin{table}[]
+\setlength\extrarowheight{-1pt}
+\caption{Performance of our manually-designed graph-based heap abstraction heuristic for FPG}
+\label{tbl:principle}
+\centering
+\footnotesize
+\begin{tabular}{@{}clrr | clrr@{}}
+\toprule
+benchmarks               & \multicolumn{1}{c}{} & \multicolumn{1}{c}{alarms} & \multicolumn{1}{c|}{time(s)} & benchmarks                & \multicolumn{1}{c}{} & \multicolumn{1}{c}{alarms} & \multicolumn{1}{c}{time(s)} \\ \midrule
+\multirow{2}{*}{luindex} & \Principle              & 374                        & 29(+29)                         & \multirow{2}{*}{lusearch} & \Principle            & 388                        & 33(+31)                        \\
+                         % & \OurHeap            & 358                        & 23                          &                           & \OurHeap              & 372                        & 21                          \\
+                         & \AllocBased          & 358                        & 5,475                       &                           & \AllocBased          & -                          & $>$10,800        \\\midrule
+\multirow{2}{*}{antlr}   & \Principle              & 478                        & 44(+47)                        & \multirow{2}{*}{pmd$_{m}$}      & \Principle            & 886                        & 83(+65)                          \\
+                         % & \OurHeap            & 463                        & 49                          &                           & \OurHeap              & 871                        & 48                          \\
+                         & \AllocBased          & 463                        & 5,241                       &                           & \AllocBased          & 871                        & 9,146                       \\\midrule
+\multirow{2}{*}{fop}     & \Principle            & 391                        & 41(+46)                          & \multirow{2}{*}{xalan}    & \Principle            & 548                        & 841(+85)                         \\
+                         % & \OurHeap              & 376                        & 30                          &                           & \OurHeap              & 539                        & 489                         \\
+                         & \AllocBased          & -                          & $>$10,800        &                           & \AllocBased          & -                          & $>$10,800        \\ \bottomrule
+\end{tabular}
+\end{table}

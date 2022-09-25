@@ -1,0 +1,417 @@
+%% For double-blind review submission
+%\documentclass[acmlarge,review,anonymous]{acmart}\settopmatter{printfolios=true}
+\documentclass[acmsmall, screen, 10pt]{acmart}\settopmatter{printfolios=true}
+%\settopmatter{printfolios=true,printccs=false,printacmref=false}
+
+%\usepackage{amsmath,amssymb,amsfonts}
+%\usepackage{fancyvrb}
+%\usepackage[numbers]{natbib}
+%\usepackage{mathtools, amsfonts, mathrsfs,balance}
+%\usepackage{algorithm}% http://ctan.org/pkg/algorithms
+%\usepackage[noend]{algpseudocode}% http://ctan.org/pkg/algorithmicx
+%\usepackage{textcomp}
+\usepackage{makecell, url}
+%\usepackage{hyperref}
+
+%\usepackage{float}
+%\restylefloat{table}
+
+
+%% Some recommended packages.
+\usepackage{booktabs}   %% For formal tables:
+%% http://ctan.org/pkg/booktabs
+\usepackage{subcaption} %% For complex figures with subfigures/subcaptions
+%% http://ctan.org/pkg/subcaption
+\usepackage{textcomp}
+\usepackage{tabulary}
+\usepackage{algorithm}% http://ctan.org/pkg/algorithms
+\usepackage{algpseudocode}% http://ctan.org/pkg/algorithmicx
+
+\usepackage{multicol}
+
+%\usepackage{kotex}
+
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage[latin1]{inputenc}
+
+\usepackage{tikz} \usetikzlibrary{shapes,arrows,positioning}
+\usepackage{scalefnt}
+
+
+\usepackage{newtxmath}
+\usepackage{siunitx}
+\newcommand\bmmax{2}
+\usepackage{bm}
+
+\usepackage{esvect}
+
+
+
+%\usepackage{amsthm} %for theorem
+\usepackage{multirow}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage{afterpage}
+\usepackage{pdflscape}
+\usepackage{pifont}
+%\usepackage[notextcomp]{stix}
+\usepackage{afterpage}
+\newcommand{\rowgroup}[1]{\hspace{-1em}#1}
+%For java code piece
+\usepackage{listings}
+\usepackage{color}
+
+\usepackage{centernot}
+
+\usepackage{proof}
+
+\usepackage{cancel}
+
+
+\usepackage{graphicx}
+\graphicspath{ {./figures/} }
+
+
+\usepackage[framemethod=tikz]{mdframed}
+
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+	language=Java,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=3,
+	frame=none
+}
+
+\lstdefinestyle{mydefault}{frame=tb,
+	language=Java,
+	xleftmargin=0.5cm,
+	aboveskip=-3mm, % top margin
+	belowskip=0mm,  % bottom margin
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=false,
+	tabsize=3,
+	frame=none
+}
+
+
+\lstdefinestyle{myCustomMatlabStyle}{
+	language=Java,
+	xleftmargin=0.5cm,
+	aboveskip=-3mm, % top margin
+	belowskip=0mm,  % bottom margin
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\large\ttfamily},
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=false,
+	tabsize=3,
+	frame=none
+}
+
+
+
+\usepackage{tabularx}
+
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+%\setcopyright{none}
+\usepackage {tikz}
+\usetikzlibrary {shapes,positioning}
+\usepackage {bm}
+\tikzstyle{block} = [rectangle, draw, fill=white, text width=3.8em,
+, text
+centered, rounded corners, minimum height=4em]
+\tikzstyle{block2} =
+[rectangle, draw, fill=white, text width=6em, text centered, rounded
+corners, minimum height=4em, minimum width = 7em] \tikzstyle{line} = [draw, -latex']
+\tikzstyle{onlyText} = [text width =2em, text centered]
+%\setcopyright{rightsretained}
+
+\tikzstyle{block3} =
+[rectangle, draw, fill=white, text width=7em, text centered, rounded
+corners, minimum height=3em] \tikzstyle{line} = [draw, -latex']
+
+%\setcopyright{rightsretained}
+
+
+\tikzstyle{blocks} = [rectangle, draw, fill=white, text width=0.7cm, text height = 4em, text
+centered,  text width=4em, rounded corners, minimum height=0.6cm]
+
+\usepackage[bottom]{footmisc} %putting footnotes below bottom figures
+
+
+\newcommand*{\RNum}[1]{\uppercase\expandafter{\romannumeral #1 \relax}}
+
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+%\makeatletter\if@ACM@journal\makeatother
+%%% Journal information (used by PACMPL format)
+%%% Supplied to authors by publisher for camera-ready submission
+%\acmJournal{PACMPL}
+%\acmVolume{1}
+%\acmNumber{1}
+%\acmArticle{1}
+%\acmYear{2020}
+%\acmMonth{1}
+%\acmDOI{10.1145/nnnnnnn.nnnnnnn}
+%\startPage{1}
+%\acmJournal{PACMPL}
+%\acmVolume{1}
+%\acmNumber{CONF} % CONF = POPL or ICFP or OOPSLA
+%\acmArticle{1}
+%\acmYear{2018}
+%\acmMonth{1}
+%\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
+%\startPage{1}
+%\else\makeatother
+%%% Conference information (used by SIGPLAN proceedings format)
+%%% Supplied to authors by publisher for camera-ready submission
+%\acmConference[PL'20]{ACM SIGPLAN Conference on Programming Languages}{January 01--03, 2020}{New York, NY, USA}
+%\acmYear{2017}
+%\acmISBN{978-x-xxxx-xxxx-x/YY/MM}
+%\acmDOI{10.1145/nnnnnnn.nnnnnnn}
+%\startPage{1}
+%\fi
+
+
+
+
+%% Copyright information
+%% Supplied to authors (based on authors' rights management selection;
+%% see authors.acm.org) by publisher for camera-ready submission
+%\setcopyright{none}
+% \setcopyright{none}             %% For review submission
+%\setcopyright{acmcopyright}
+%\setcopyright{acmlicensed}
+%\setcopyright{rightsretained}
+%\copyrightyear{2017}           %% If different from \acmYear
+
+
+%% Bibliography style
+\bibliographystyle{ACM-Reference-Format}
+%% Citation style
+%% Note: author/year citations are required for papers published as an
+%% issue of PACMPL.
+\citestyle{acmauthoryear}   %% For author/year citations
+
+% \tikzstyle{block} = [rectangle, draw, fill=white, text width=5em,
+% text centered, rounded corners, minimum height=4em]
+
+%\usepackage[bottom]{footmisc} %putting footnotes below bottom figures
+
+%%% The following is specific to POPL '22 and the paper
+%%% 'Return of CFA: Call-Site Sensitivity Can Be Superior to Object Sensitivity Even for Object-Oriented Programs'
+%%% by Minseok Jeon and Hakjoo Oh.
+%%%
+\setcopyright{rightsretained}
+\acmPrice{}
+\acmDOI{10.1145/3498720}
+\acmYear{2022}
+\copyrightyear{2022}
+\acmSubmissionID{popl22main-p586-p}
+\acmJournal{PACMPL}
+\acmVolume{6}
+\acmNumber{POPL}
+\acmArticle{58}
+\acmMonth{1}
+
+
+\begin{document}
+%% Title information
+%\title[Data-driven Points-to Analysis Optimization]{Data-driven Points-to Analysis Optimization for Java}         %% [Short Title] is optional;
+%\title{Return of CFA: Outperforming K-Object Sensitivity with K-CFA via Simulation $\&$ Tuning}         %% [Short Title] is optional;
+%\title{The CFA Supremacy Conjecture for Points-to Analysis}
+%\title{The CFA Supremacy Conjecture for Points-to Analysis}
+%\title{On the Superiority of Call-Site-Sensitivity over Object-Sensitivity in Points-to Analysis}
+% \title{Call-Site-Sensitivity is Superior to Object-Sensitivity in
+% Generalized $k$-Context-Sensitivity Analysis}
+
+
+%\title{Graph Model for Learning Analysis Heuristics of Points-to Analysis}
+%\title{Data-Driven Static Analysis without Hand-Crafted Features}
+%\title{Learning Graph-based Heuristics for Pointer Analysis without  Application-Specific Features}
+%\title{Learning Graph-based Heuristics for Pointer Analysis without Handcrafting Application-Specific Features}
+\title{Return of CFA: Call-Site Sensitivity Can Be Superior to Object Sensitivity Even for Object-Oriented Programs}
+%\title{Reviving Call-Site Sensitivity via Object-Sensitivity-Guided Context Tunneling}
+
+\author{Minseok Jeon}
+\email{minseok_jeon@korea.ac.kr}          %% \email is recommended
+\author{Hakjoo Oh}
+\authornote{Corresponding author}
+\email{hakjoo_oh@korea.ac.kr} %% \email is recommended
+\affiliation{
+  \department{Department of Computer Science and Engineering}              %% \department is recommended
+  \institution{Korea University}            %% \institution is required
+  \streetaddress{145, Anam-ro}
+  \city{Sungbuk-gu}
+  \state{Seoul}
+  \postcode{02841}
+  \country{Republic of Korea}
+}
+
+%% Paper note
+%% The \thanks command may be used to create a "paper note" ---
+%% similar to a title note or an author note, but not explicitly
+%% associated with a particular element.  It will appear immediately
+%% above the permission/copyright statement.
+%%optional
+                                        %% can be repeated if necesary
+                                        %% contents suppressed with 'anonymous'
+
+
+%% Abstract
+%% Note: \begin{abstract}...\end{abstract} environment must come
+%% before \maketitle command
+\input{macros}
+\input{abstract}
+
+
+
+
+
+%% 2012 ACM Computing Classification System (CSS) concepts
+%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
+%\begin{CCSXML}
+%<ccs2012>
+%<concept>
+%<concept_id>10011007</concept_id>
+%<concept_desc>Software and its engineering</concept_desc>
+%<concept_significance>500</concept_significance>
+%</concept>
+%<concept>
+%<concept_id>10011007.10010940.10010992.10010998.10011000</concept_id>
+%<concept_desc>Software and its engineering~Automated static analysis</concept_desc>
+%<concept_significance>500</concept_significance>
+%</concept>
+%</ccs2012>
+%\end{CCSXML}
+
+%\ccsdesc[500]{Software and its engineering}
+%\ccsdesc[500]{Software and its engineering~Automated static analysis}
+
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10011007</concept_id>
+       <concept_desc>Software and its engineering</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Software and its engineering}
+
+%%% 2012 ACM Computing Classification System (CSS) concepts
+%%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
+%\begin{CCSXML}
+%	<ccs2012>
+%	<concept>
+%	<concept_id>10011007.10010940.10010992.10010998.10011000</concept_id>
+%	<concept_desc>Software and its engineering~Automated static
+%	analysis</concept_desc>
+%	<concept_significance>500</concept_significance>
+%	</concept>
+%	<concept>
+%	<concept_id>10010147.10010257.10010293</concept_id>
+%	<concept_desc>Computing methodologies~Machine learning
+%	approaches</concept_desc>
+%	<concept_significance>500</concept_significance>
+%	</concept>
+%	</ccs2012>
+%\end{CCSXML}
+%
+%\ccsdesc[500]{Software and its engineering~Automated static analysis}
+%\ccsdesc[500]{Computing methodologies~Machine learning approaches}
+
+%% End of generated code
+
+
+%% Keywords
+%% comma separated list
+\keywords{Machine learning for program analysis, Pointer analysis, Context sensitivity}  %% \keywords is optional
+
+
+%% \maketitle
+%% Note: \maketitle command must come after title commands, author
+%% commands, abstract environment, Computing Classification System
+%% environment and commands, and keywords command.
+\maketitle
+
+
+
+\input{introduction}
+\input{illustration}
+%\input{analysis}
+\input{analysis_simple}
+\input{framework}
+\input{simulation}
+\input{learn}
+\input{featureEngineering}
+\input{evaluation}
+\input{evaluation_learning}
+\input{related}
+\input{counter_example}
+\input{discussion}
+\input{conclusion}
+
+\begin{acks}
+We thank the anonymous POPL reviewers for their constructive feedback. 
+This work was supported by Samsung Research Funding \& Incubation Center of Samsung Electronics under Project Number SRFC-IT1701-51. 
+This work was partly supported by 
+Institute of Information \& communications Technology Planning \& Evaluation (IITP) grant funded by the Korea government(MSIT) (No.2020-0-01337, (SW STAR LAB) Research on Highly-Practical Automated Software Repair) 
+and by the MSIT(Ministry of Science and ICT), Korea, under the ICT Creative Consilience program(IITP-2021-2020-0-01819) supervised by the IITP(Institute for Information \& communications Technology Planning \& Evaluation), and by the National Research Foundation of Korea(NRF) grant funded by the Korea government(MSIT)(No. 2021R1A5A1021944).
+
+
+
+
+
+
+
+\end{acks}
+
+
+%% Bibliography
+\bibliography{refs}
+
+%% Appendix
+%\input{SupplementaryMaterial/appendix}
+%\appendix
+%\input{appendix}
+%\input{open_problem}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{multirow}
+\end{document}

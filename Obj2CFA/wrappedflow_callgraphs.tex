@@ -1,0 +1,101 @@
+
+
+\begin{figure*}
+\begin{center}
+%\begin{subfigure}[b]{1\columnwidth}
+%\begin{multicols}{2}
+
+%\end{multicols}
+%\end{subfigure}
+\begin{multicols}{2}
+	\begin{subfigure}[b]{\columnwidth}
+	\centering
+		\begin{center}
+			\resizebox{.9\columnwidth}{!}{
+				\begin{tikzpicture}
+                \tikzstyle{every node}=[font=\Large]
+				\node [block] (main) {\tt {main}\\$[\cdot]$};
+				
+				\node [block, left = 1.28cm of main] (add1) {\tt {add}\\$[$C1$]$};
+				\node [block, below = 0.6cm of add1] (add2) {\tt {add}\\$[$C2$]$};
+				
+				\node [block, right = 0.4cm of add2] (next1) {\tt {next}\\$[$C1$]$};
+				\node [block, right = 0.4cm of next1] (next2) {\tt {next}\\$[$C2$]$};
+				
+				\node [block, right=0.4cm of next2] (itr1) {\tt {itr}\\$[$C1$]$};
+				\node [block, above=0.6cm of itr1] (itr2) {\tt {itr}\\$[$C2$]$};
+				
+				\node [block, right=0.4cm of itr1] (Itr1) {\tt {Itr}\\$[$C1$]$};
+				\node [block, right=0.4cm of itr2] (Itr2) {\tt {Itr}\\$[$C2$]$};
+				
+				
+				\path [line] (main) edge node[above] {$19$} (add1);
+				\path [line] (main) edge node[above] {$24$} (add2);
+				
+				\path [line] (main) edge node[left] {$21$} (next1);
+				\path [line] (main) edge node[right] {$26$} (next2);
+				
+				\path [line] (main) edge node[above] {$20$} (itr1);
+				\path [line] (main) edge node[above] {$25$} (itr2);
+				
+				\path [line] (itr1) edge node[above] {$7$} (Itr1);
+				\path [line] (itr2) edge node[above] {$7$} (Itr2);
+				
+				
+				\end{tikzpicture}
+			}
+		\end{center}
+		\caption{$1$-object sensitivity with $T_{\it obj}=\myset{7,21,26}$}
+		\label{fig:wrappedflow:1objTGraph}
+	\end{subfigure}
+	\vfill\null
+	\columnbreak
+	\begin{subfigure}[b]{\columnwidth}
+		\begin{center}
+			\resizebox{.9\columnwidth}{!}{
+				\begin{tikzpicture}
+                \tikzstyle{every node}=[font=\Large]
+				\node [block] (main) {\tt {main}\\$[\cdot]$};
+				
+				\node [block, left = 1.28cm of main] (add1) {\tt {add}\\$[19]$};
+				\node [block, below = 0.6cm of add1] (add2) {\tt {add}\\$[24]$};
+				
+				\node [block, right = 0.4cm of add2] (next1) {\tt {next}\\$[21]$};
+				\node [block, right = 0.4cm of next1] (next2) {\tt {next}\\$[26]$};
+				
+				\node [block, right=0.4cm of next2] (itr1) {\tt {itr}\\$[20]$};
+				\node [block, above=0.6cm of itr1] (itr2) {\tt {itr}\\$[25]$};
+				
+				\node [block, right=0.4cm of itr1] (Itr1) {\tt {Itr}\\$[20]$};
+				\node [block, right=0.4cm of itr2] (Itr2) {\tt {Itr}\\$[25]$};
+				
+				
+				\path [line] (main) edge node[above] {$19$} (add1);
+				\path [line] (main) edge node[above] {$24$} (add2);
+				
+				\path [line] (main) edge node[left] {$21$} (next1);
+				\path [line] (main) edge node[right] {$26$} (next2);
+				
+				\path [line] (main) edge node[above] {$20$} (itr1);
+				\path [line] (main) edge node[above] {$25$} (itr2);
+				
+				\path [line] (itr1) edge node[above] {$7$} (Itr1);
+				\path [line] (itr2) edge node[above] {$7$} (Itr2);
+				
+				
+				\end{tikzpicture}
+			}
+			
+		\end{center}
+		\caption{$1$-call-site sensitivity with $T_{\it call}=\myset{7}$}
+		\label{fig:wrappedflow:1callTGraph}
+	\end{subfigure}
+\end{multicols}
+\vspace{-30pt}
+\caption{call-graphs produced by
+1-object sensitivity with context-tunneling and 1-call-site
+sensitivity}
+\vspace{-12pt}
+\label{fig:wrappedflow}
+\end{center}
+\end{figure*}

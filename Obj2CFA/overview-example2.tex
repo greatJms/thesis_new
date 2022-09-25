@@ -1,0 +1,223 @@
+% !TEX root = ./paper.tex
+
+\begin{figure*}[t]	
+\vspace{20pt}
+\begin{multicols}{2}
+\vfill\null
+\begin{center}
+\begin{subfigure}[b]{1.2\columnwidth}
+\begin{lstlisting}[escapeinside={(*}{*)}, xleftmargin=12pt]
+class C {
+ Object id(*$_0$*)(v) {
+  return v; }
+ Object id(*$_1$*)(v) {
+  return this.id(*$_{0}$*)(v); }
+  ...
+ Object id(*$_k$*)(v) {
+  return this.id(*$_{k-1}$*)(v); }
+}
+main() {
+ C c1 = new C();//C1
+ C c2 = new C();//C2
+ A a = (A)c1.id(*$_k$*)(new A());//A, query1
+ B b = (B)c2.id(*$_k$*)(new B());//B, query2
+}
+\end{lstlisting}
+\caption{Example code}
+\label{background:example1}
+\end{subfigure}
+\end{center}
+\columnbreak~\\~\\~\\
+\vspace{-30pt}
+
+%\scalefont{0.9}
+%\qquad\qquad\qquad\qquad
+%\begin{multicols}{3}
+\begin{subfigure}[b]{0.9\columnwidth}
+\begin{center}
+				\resizebox{\columnwidth}{!}{
+					\begin{tikzpicture}
+					\node [block] (main) {\LARGE{\tt main$_{}$}\\$[\cdot]$};
+					\node [block, above right =
+                                        -0.4cm and 0.4cm of main]
+                                        (idk1) {\LARGE{ {\tt id}$_k$}\\$[13]$};
+					\node [block, below = 0.4cm of idk1] (idk2) {\LARGE{\tt {id}$_k$}\\$[14]$};
+					
+					\node [onlyText, right=0.4cm of idk1] (dots1) {...};
+					\node [onlyText, right=0.4cm of idk2] (dots2) {...};
+					
+					\node [block2, right=0.4cm of
+                                        dots1] (id11) {\LARGE{\tt {id}$_1$}\\$[13,8,...]$};
+					\node [block2, right=0.4cm of
+                                        dots2] (id12) {\LARGE{\tt {id}$_1$}\\$[14,8,...]$};
+					
+					\node [block2, right = 7.2cm of
+                                        main] (id0) {\LARGE{\tt id$_0$}\\$\underbrace{[8,...,5]}_k$};
+					
+					\path [line] (main) -- (idk1);
+					\path [line] (main) -- (idk2);
+					\path [line] (idk1) -- (dots1);
+					\path [line] (idk2) -- (dots2);
+					\path [line] (dots1) -- (id11);
+					\path [line] (dots2) -- (id12);
+					
+					\path [line] (id11) -- (id0);
+					\path [line] (id12) -- (id0);
+					
+					\end{tikzpicture}
+				}
+			\end{center}
+			\vspace{-4pt}
+			\caption{Call-graph by $k$-call-site sensitivity}
+			\label{back:cfa:callgraph}
+\end{subfigure} \vspace{8pt}
+%	\vfill\null
+
+%\qquad\qquad\qquad\qquad
+\begin{subfigure}[b]{0.8\columnwidth}
+\begin{center}
+				\resizebox{\columnwidth}{!}{
+					\begin{tikzpicture}
+					\node [block] (main) {\LARGE{\tt main$_{}$}\\$[\cdot]$};
+					\node [block, above right =
+                                        -0.4cm and 0.4cm of main]
+                                        (idk1) {\LARGE{\tt ${ id}_k$}\\${\tt [C1]}$};
+					\node [block, below = 0.4cm of
+                                        idk1] (idk2) {\LARGE{\tt ${ id}_k$}\\${\tt [C2]}$};
+					
+					\node [onlyText, right=0.4cm of idk1] (dots1) {...};
+					\node [onlyText, right=0.4cm of idk2] (dots2) {...};
+					
+					\node [block, right=0.4cm of
+                                        dots1] (id11) {\LARGE{\tt id$_1$}\\${\tt [C1]}$};
+					\node [block, right=0.4cm of
+                                        dots2] (id12) {\LARGE{\tt id$_1$}\\${\tt [C2]}$};
+					
+					\node [block, right=0.4cm of
+                                        id11] (id01) {\LARGE{\tt id$_0$}\\${\tt [C1]}$};
+					\node [block, right=0.4cm of
+                                        id12] (id02) {\LARGE{\tt id$_0$}\\${\tt [C2]}$};
+					
+					\path [line] (main) -- (idk1);
+					\path [line] (main) -- (idk2);
+					\path [line] (idk1) -- (dots1);
+					\path [line] (idk2) -- (dots2);
+					\path [line] (dots1) -- (id11);
+					\path [line] (dots2) -- (id12);
+					
+					\path [line] (id11) -- (id01);
+					\path [line] (id12) -- (id02);
+					
+					\end{tikzpicture}
+				}
+			\end{center}
+			\vspace{-4pt}
+			\caption[]{Call-graph by 1-object sensitivity}
+			\label{back:obj:callgraph}
+\end{subfigure}
+\vspace{8pt}
+%	\vfill\null
+
+%\qquad\qquad\qquad\qquad
+
+\begin{subfigure}[b]{1.0\columnwidth}
+	\begin{center}
+				\resizebox{0.8\columnwidth}{!}{
+					\begin{tikzpicture}
+					\node [block] (main) {\LARGE{\tt main$_{}$}\\$[\cdot]$};
+					\node [block, above right =
+                                        -0.4cm and 0.4cm of main]
+                                        (idk1) {\LARGE{\tt ${ id}_k$}\\${\tt [13]}$};
+					\node [block, below = 0.4cm of
+                                        idk1] (idk2) {\LARGE{\tt ${ id}_k$}\\${\tt [14]}$};
+					
+					\node [onlyText, right=0.4cm of idk1] (dots1) {...};
+					\node [onlyText, right=0.4cm of idk2] (dots2) {...};
+					
+					\node [block, right=0.4cm of
+                                        dots1] (id11) {\LARGE{\tt id$_1$}\\${\tt [13]}$};
+					\node [block, right=0.4cm of
+                                        dots2] (id12) {\LARGE{\tt id$_1$}\\${\tt [14]}$};
+					
+					\node [block, right=0.4cm of
+                                        id11] (id01) {\LARGE{\tt id$_0$}\\${\tt [13]}$};
+					\node [block, right=0.4cm of
+                                        id12] (id02) {\LARGE{\tt id$_0$}\\${\tt [14]}$};
+					
+					\path [line] (main) -- (idk1);
+					\path [line] (main) -- (idk2);
+					\path [line] (idk1) -- (dots1);
+					\path [line] (idk2) -- (dots2);
+					\path [line] (dots1) -- (id11);
+					\path [line] (dots2) -- (id12);
+					
+					\path [line] (id11) -- (id01);
+					\path [line] (id12) -- (id02);
+					
+					\end{tikzpicture}
+				}
+			\end{center}
+			\vspace{-4pt}
+			\caption[]{1-call-site sensitivity with context tunneling}
+			\label{back:callT:callgraph}
+\end{subfigure}
+
+
+
+
+
+\end{multicols}
+%	\vfill\null
+	%\columnbreak
+% \begin{subfigure}[b]{0.5\columnwidth}
+% \begin{center}
+% 				\resizebox{\columnwidth}{!}{
+% 					\begin{tikzpicture}
+% 					\node [block] (main) {\Large{$\tt main_{}$}\\$[\cdot]$};
+% 					\node [block, above right =
+%                                         -0.4cm and 0.4cm of main]
+%                                         (idk1) {\Large{\tt ${\tt id}_k$}\\$[13]$};
+% 					\node [block, below = 0.4cm of idk1] (idk2) {{\tt $id_k$}\\$[14]$};
+					
+% 					\node [onlyText, right=0.4cm of idk1] (dots1) {...};
+% 					\node [onlyText, right=0.4cm of idk2] (dots2) {...};
+					
+% 					\node [block, right=0.4cm of
+%                                         dots1] (id11) {\Large{\tt ${\tt id}_1$}\\$[13]$};
+% 					\node [block, right=0.4cm of
+%                                         dots2] (id12) {\Large{\tt ${\tt id}_1$}\\$[14]$};
+					
+% 					\node [block, right=0.4cm of
+%                                         id11] (id01) {\Large{\tt ${\tt id}_0$}\\$[13]$};
+% 					\node [block, right=0.4cm of
+%                                         id12] (id02) {\Large{\tt ${\tt id}_0$}\\$[14]$};
+					
+% 					\path [line] (main) -- (idk1);
+% 					\path [line] (main) -- (idk2);
+% 					\path [line] (idk1) -- (dots1);
+% 					\path [line] (idk2) -- (dots2);
+% 					\path [line] (dots1) -- (id11);
+% 					\path [line] (dots2) -- (id12);
+					
+% 					\path [line] (id11) -- (id01);
+% 					\path [line] (id12) -- (id02);
+					
+% 					\end{tikzpicture}
+% 				}
+% 			\end{center}
+% 			\caption{Call-graph by 1-call-site-sensitivity
+%                           with context tunneling}
+% 			\label{back:callT:callgraph}
+%  \end{subfigure}
+%\vspace{-1em}
+\vspace{-14pt}
+	\caption{Typical situation that benefits from object sensitivity}
+	\label{back:a:Fig}
+\vspace{-10pt}
+\end{figure*}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

@@ -1,0 +1,291 @@
+% !TEX root = ./paper.tex
+
+\begin{figure}
+	\centering
+
+	\begin{multicols}{2}
+\begin{subfigure}[t]{1.5\columnwidth}
+	\begin{multicols}{2}
+		\begin{lstlisting}[basicstyle=\small\ttfamily]
+class A{} class B{}
+class C{
+  Object data;
+  void C(){
+    data = new Object;//O
+  }
+  void set(Object e){
+    data = e;
+  }
+  Object get(){
+    return data;
+  }
+}
+class F{
+  void foo(){
+    C c1 = new C();//C1
+    C c2 = new C();//C2
+
+    c1.set(new A());//A1
+    c2.set(new B());//B1
+    A a = (A)c1.get();//query1
+    B b = (B)c2.get();//query2
+    }
+  }
+}
+
+main(){
+  F f1 = new F(); //F1
+  f1.foo();
+  F f2 = new F(); //F2
+  f2.foo();
+}
+
+\end{lstlisting}
+\end{multicols}
+\caption{Example code}
+\label{fig:example}
+\end{subfigure}
+\begin{flushright}
+\begin{subfigure}[t]{0.6\columnwidth}	
+	\begin{center}
+		\resizebox{0.8\columnwidth}{!}{
+			\begin{tikzpicture}
+			\node [shape=circle,draw=black] (f1) {{\tt
+                            F1}};
+			\node [shape=circle,draw=black,right = 0.5cm
+                        of f1] (f2) {{\tt F2}};
+
+			 \node [shape=circle,draw=black, below = 0.4cm of f1] (b1) {{\tt B1}};
+			 \node [shape=circle,draw=black, left =
+                         0.4cm of b1] (a1) {{\tt A1}};
+
+			 \node [shape=circle,draw=black, below =
+                         0.4cm of f2] (c1) {{\tt C1}};				
+			 \node [shape=circle,draw=black, right =
+                         0.4cm of c1] (c2) {{\tt C2}};
+
+			\node [shape=circle,draw=black, below right =
+                        0.4cm and   0.1cm of c1] (o) {{\tt O}};			
+
+			\path [line] (f1) -- (c1);
+			\path [line] (f1) -- (c2);
+
+			\path [line] (f2) -- (c1);
+			\path [line] (f2) -- (c2);
+
+			\path [line] (c1) -- (o);
+			\path [line] (c2) -- (o);
+				
+			\path [line] (f1) -- (a1);
+			\path [line] (f1) -- (b1);
+
+			\path [line] (f2) -- (a1);
+			\path [line] (f2) -- (b1);
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{\centering Object allocation graph}
+        \label{fig:oag}
+\end{subfigure}
+~\\~\\~\\
+\begin{subfigure}[t]{0.6\columnwidth}	
+	\begin{center}
+		\resizebox{0.6\columnwidth}{!}{
+			\begin{tikzpicture}
+				\node [block3] (n1) {{\tt\Large [0,$\infty$],[2,$\infty$]}};
+				\node [block3,fill = gray,below = 0.8cm of n1] (n2) {{\tt\Large [0,$\infty$],[0,$\infty$]}};
+				\node [block3,below = 0.8cm of n2] (n3) {{\tt\Large [2,$\infty$],[0,$\infty$]}};
+				% \node [onlyText,left =0.5cm of n2]
+                                % (lbr) {{\tt \Huge 1obj : \{ }};
+				% \node [onlyText,right = -0.7cm of n2] (rbr) {{\tt\Huge \} }};
+				\path [line] (n1) -> (n2);
+				\path [line] (n2) -> (n3);
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{\centering Object-sensitivity heuristic}
+        \label{fig:oag_heuristic}
+\end{subfigure}
+% \begin{subfigure}[t]{0.6\columnwidth}	
+% 	\begin{center}
+% 		\resizebox{0.8\columnwidth}{!}{
+% 			\begin{tikzpicture}
+% 			\node [shape=circle,draw=black] (f1) {{\tt
+%                             F1}};
+% 			\node [shape=circle,draw=black,below = 0.4cm
+%                         of f1] (f2) {{\tt F2}};
+% 			\node [shape=circle,draw=black, right =
+%                         0.4cm of f1] (c1) {{\tt C1}};				
+% 			\node [shape=circle,draw=black, right =
+%                         0.4cm of f2] (c2) {{\tt C2}};
+% 			\node [shape=circle,draw=black, below right =
+%                         0.1cm and   0.4cm of c1] (o) {{\tt O1}};			
+% 			\node [shape=circle,draw=black, left =
+%                         0.4cm of f1] (a1) {{\tt A1}};
+% 			\node [shape=circle,draw=black, left = 0.4cm of f2] (b1) {{\tt B1}};
+% 			\path [line] (f1) -- (c1);
+% 			\path [line] (f1) -- (c2);
+% 			\path [line] (f2) -- (c1);
+% 			\path [line] (f2) -- (c2);
+% 			\path [line] (c1) -- (o);
+% 			\path [line] (c2) -- (o);
+% 			\path [line] (f1) -- (a1);
+% 			\path [line] (f1) -- (b1);
+% 			\path [line] (f2) -- (a1);
+% 			\path [line] (f2) -- (b1);
+% 			\end{tikzpicture}
+% 		}
+% 	\end{center}
+% 	\caption{\centering Object allocation graph}
+%         \label{fig:oag}
+% \end{subfigure}	
+\end{flushright}
+\end{multicols}
+\caption{Example to illustrate our graph-based object-sensitivity heuristic}
+\end{figure}
+
+
+\section{Overview}
+We illustrate how our graph-based heuristic looks like and works with an example. %graph-based heuristic works with an example program.
+% Figure~\ref{fig:oag_heuristic} presents an example of our graph based
+% object-sensitivity heuristic for object allocation graph.
+
+
+%\subsection{Example program}
+\myparagraph{Example Program}
+%\begin{comment}
+%Figure~\ref{fig:example} shows an example program to illustrates a
+%graph-based object-sensitivity heuristics which can be obtained from our framework.
+%For this example, we use allocation-site based heap abstraction that
+%present each objects with their allocation-site.
+%This example has a class {\tt C} which provides getter and setter method
+%to manipulate its field {\tt data}.
+%A class {\tt F} has a method {\tt foo} which allocates two
+%objects {\tt C1} and {\tt C2} to variable {\tt c1} and {\tt c2}, respectively.
+%The variables {\tt c1} and {\tt c2} call {\tt set} method with newly
+%allocated objects {\tt A1} and {\tt B1}, respectively.
+%There are two queries {\tt query1} and {\tt query2} asking the
+%safety of the down castings at line 18 and 19 are safe.
+%Obviously, the queries are safe in the real execution because {\tt get} method returns objects
+%{\tt A1} and {\tt B1} at line 18 and 19, respectively.
+%\end{comment}
+
+
+
+Figure~\ref{fig:example} is an example program with two queries checking the down-casting safety.
+This example has a main method that calls the method {\tt foo} with two different receiver objects {\tt F1} and {\tt F2}.
+Class {\tt C} provides getter and setter methods to manipulate its field {\tt data}.
+Class {\tt F} has a method {\tt foo} which allocates two
+objects {\tt C1} and {\tt C2} to variables {\tt c1} and {\tt c2}, respectively.
+These variables call the {\tt set} method with newly allocated objects {\tt A1} and {\tt B1}.
+There are two queries {\tt query1} and {\tt query2} asking the down-casting safety at lines 21 and 22.
+The safety holds because the {\tt get} method returns objects {\tt A1} and {\tt B1} at lines 21 and 22, respectively.
+
+
+
+\myparagraph{Goal: Selective Object Sensitivity}
+Our goal is to analyze the program cost-effectively by applying context sensitivity only when it is necessary.
+%selectively to a small subset of method calls.
+To prove the queries, we need an object-sensitive analysis that differentiates the methods called under receiver objects {\tt C1} and {\tt C2}.
+Without object sensitivity, the analysis merges the methods {\tt get} and {\tt set} called on receiver objects {\tt C1} and {\tt C2};
+eventually, the analysis misjudges that the {\tt get} method can return both {\tt A} and {\tt B} at lines 21 and 22, and fails to prove the down-casting safety.
+The context-sensitive analysis, however, is not necessary for the method {\tt foo} called from other objects {\tt F1} and {\tt F2}
+because {\tt foo} is not related to the queries.
+If we apply context sensitivity to this method, it only increases the analysis cost without any precision gain.
+Thus, our heuristic aims to infer the following policy for the main analysis:
+\[
+\mbox{Apply object sensitivity only to method calls whose receiver objects are {\tt C1} or {\tt C2}.}
+\]
+
+
+%\subsection{How Our Heuristic Works}
+
+\myparagraph{Graph-based Heuristics}
+To generate such a policy, graph-based heuristics first run a cheap pre-analysis (e.g. context-insensitive analysis) to
+obtain a graph representation of the program.
+For object-sensitivity heuristics, the object allocation graph (OAG) has been considered as a good program
+representation~\cite{Li2018b,TanLX16}.
+%
+%prior works on graph-based heuristics investigate this graph and figure out the objects that should be analyzed precisely~\cite{Tan2017} or the methods that need coarse analysis~\cite{Li2018b}.
+Nodes in an OAG are heap objects (represented by allocation sites) and edges represent the connections between objects and their allocators. Figure~\ref{fig:oag} shows the OAG of the example program.
+%is a set of graph which connects the objects with their allocators,
+%and Fig~\ref{fig:oag} is that of the example program.
+In Figure~\ref{fig:oag}, for instance, two objects {\tt F1} and {\tt F2} have edges toward the objects {\tt A1}, {\tt B1}, {\tt C1}, and
+{\tt C2} because these four objects are allocated inside the method {\tt foo} that is called on the receiver objects {\tt F1} and {\tt F2}.
+Given the OAG, the goal of graph-based heuristics is to choose a set of nodes in the graph.
+Ideally, a good heuristic would accurately identify the set $\myset{{\tt C1}, {\tt C2}}$ that needs object sensitivity during the main analysis.
+
+
+\myparagraph{How Our Heuristic Works}
+
+Our heuristic consists of a set of {\em features}, where a feature describes a set of nodes in the given graph.
+A feature is of the form $({\it prev}, ([a,b], [c,d]),{\it succ})$, where $[a,b]$ and $[c,d]$ are intervals, and ${\it prev}$ and ${\it succ}$ are sequences of pairs of intervals. A node $n$ in a graph is described by the feature iff the number of incoming edges of $n$ is between $a$ and $b$, the number of outgoing edges is between $c$ and $d$, and the node has a sequence of predecessors satisfying {\it prev}, and the node has a sequence of successors satisfying {\it succ}.
+
+For example, Figure~\ref{fig:oag_heuristic} shows a heuristic comprising of a single feature $({\it prev} , ([0,\infty],[0,\infty]), {\it succ})$, where ${\it prev}$ and ${\it succ}$ are single pair of intervals (i.e. ${\it prev} = ([0,\infty],[2,\infty])$ and ${\it succ} = ([2,\infty], [0,\infty])$). It describes nodes that have at least 0 incoming and 0 outgoing edges, have a predecessor with at least 0 incoming and 2 outgoing edges, and have a successor with at least 2 incoming and 0 outgoing edges.
+In Figure~\ref{fig:oag}, {\tt C1} and {\tt C2} are the only nodes that satisfy these conditions because they have a successor (i.e. {\tt O}) with two incoming edges and a predecessor ({\tt F1} or {\tt F2}) with four outgoing edges.
+From a set of training programs, our learning algorithm in Section~\ref{sec:learning-algorithm} can generate such features automatically.
+
+
+
+%%graph-based object-sensitivity heuristic that our learning algorithm can generate automatically from data.
+%%example for object-allocation-graph (OAG) which our framework can learn.
+%%It is a singleton set of a feature of which elements are a target node (e.g., gray colored node) and its neighbor nodes.
+%Note that a heuristic can contain a number of features; our learned object-sensitivity heuristic used in our evaluation contains 195 features.
+%In each node, the former interval presents the number of incoming edges while the other corresponds to the number of outgoing edges.
+%Fig~\ref{fig:oag_heuristic} presents nodes, which have a predecessor with at least 2 outgoing edges and a successor
+%with at least 2 incoming edges, in OAG.
+%
+%
+%In Figure~\ref{fig:oag}, the nodes {\tt C1} and {\tt C2} are the only nodes which satisfy our example heuristic
+%because they are the nodes having a successor (e.g., {\tt O}) with two incoming edges and a predecessor (e.g., {\tt F1} or {\tt F2}) with four outgoing edges.
+%
+
+
+%Our framework can automatically learn cost-effective heuristics, and
+
+Given a graph and a set of features, %in Figure~\ref{fig:oag} and the feature in Figure~\ref{fig:oag_heuristic},
+our heuristic finds out all the nodes that satisfy one of the features. This information is used by the main analysis to perform a selective object-sensitive analysis;
+the methods called under receiver objects {\tt C1} and {\tt C2} are analyzed with 1-object-sensitivity
+while the others are analyzed context insensitively.
+
+
+%After specifying the nodes which satisfy the heuristic,
+%an analysis strategy for the main analysis is generated;
+%the methods called under receiver objects {\tt C1} and {\tt C2} are analyzed with 1-object-sensitivity
+%while the others are analyzed context insensitively.
+%In this context abstraction, {\tt get} and {\tt set} methods are distinguished as two different contexts (e.g., {\tt get[C1]}, {\tt get[C2]}, {\tt set[C1]}, and {\tt set[C2]});
+%{\tt get[C1]} and {\tt get[C2]} return {\tt A1} and {\tt B1} at line 18 and 19, respectively.
+%This is a desired context abstraction to prove all queries in the example program.
+%It distinguishes all precision critical method calls while merging the others that are not related to the queries.
+
+
+
+Note that the performance of the main analysis heavily depends on the features in learned heuristics.
+For example, assume that a heuristic contains the following feature which takes
+off a predecessor of a target node from the feature in Figure~\ref{fig:oag_heuristic}:
+\begin{center}
+\resizebox{0.4\columnwidth}{!}{
+	\begin{tikzpicture}
+	\node [block3,fill = gray] (n2) {{\tt\Large [0,$\infty$],[0,$\infty$]}};
+	\node [block3,right = 0.8cm of n2] (n3) {{\tt\Large [2,$\infty$],[0,$\infty$]}};
+	\path [line] (n2) -> (n3);
+	\end{tikzpicture}
+	}.
+\end{center}
+Unlike the feature in Figure~\ref{fig:oag_heuristic}, which only {\tt C1} and {\tt C2} satisfy,
+four nodes {\tt C1}, {\tt C2}, {\tt F1}, and {\tt F2} are implied by the above feature.
+Because the feature still includes precision-critical nodes, {\tt C1} and {\tt C2}, the heuristic is able to prove the queries;
+however, it pays additional analysis costs as the set of nodes include {\tt F1} and {\tt F2} which are not related to the queries.
+As such, inappropriately learned heuristics can degrade the performance in costs and even the precision
+of the main analysis.
+Therefore, the goal of our learning algorithm is to find out qualified heuristics that are able to maintain as many precision-critical nodes as possible while excluding others that are not.
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:
+
+

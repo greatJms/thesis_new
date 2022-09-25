@@ -1,0 +1,570 @@
+
+
+\commentout
+{
+\newpage
+\section{Context Tunneling} \label{sec:tunneling}
+
+\subsection{Baseline Context-Sensitive Points-to Analysis}
+
+% To make this paper self-contained, 
+We first describe the baseline points-to analysis
+for Java~\cite{Smaragdakis2015}, which our work builds on. 
+It is a flow-insensitive, context-sensitive, and
+field-sensitive subset-based points-to analysis with on-the-fly
+call-graph construction. 
+The analysis is specified in Datalog, for which we use the same notations and
+rules introduced by~\citet{kastrinis2013hybrid}. 
+
+\paragraph{Program Representation}
+Given a Java program, we define the following sets of program elements: 
+\begin{itemize}
+\item $V$: the set of program variables. 
+\item $H$: the set of allocation-sites (i.e. abstract heaps).
+\item $M$: the set of method names.
+\item $S$: the set of method signatures (method name and type).
+\item $F$: the set of field names.
+\item $I$: the set of instructions.
+\item $T$: the set of class types.
+% \item $\mbn$: the set of natural numbers.
+% \item $C$ is a set of calling contexts.
+% \item $HC$ is a set of heap contexts.
+\end{itemize}
+We assume auxiliary functions $\classof: H \to T$ and $\methof: (H+I) \to M$, which map heaps or instructions to their
+containing classes (types) and methods, respectively.  A Java program is represented
+by a set of the following input relations:
+\begin{itemize}
+\item $\Alloc ({\it var}: V, {\it heap}: H, {\it inMeth}: M)$
+\item $\Move ({\it to}: V, {\it from}: V)$
+\item $\Load ({\it to}: V, {\it base}: V, {\it fld}: F)$
+\item $\Store ({\it base}: V, {\it fld}: F, {\it from}: V)$
+\item
+  $\VCall ({\it base}: V, {\it sig}: S, {\it invo}: I, {\it inMeth}:
+  M)$
+\item $\FormalArg ({\it meth}: M, {\it i}: \mbn, {\it arg}: V)$
+\item $\ActualArg ({\it invo}: I, {\it i}: \mbn, {\it arg}: V)$
+\item $\ThisVar ({\it meth}: M, {\it this}: V)$
+\item $\HeapType ({\it heap}: H, {\it type}: T)$
+\item $\LookUp ({\it type}: T, {\it sig}: S, {\it meth}: M)$
+\end{itemize}
+$\Alloc ({\it var}, {\it heap}, {\it inMeth})$ models object
+allocation. An allocated object is represented by the allocation-site
+{\it heap} and pointed to by the variable {\it var}. The method {\it
+  inMeth} is what encloses the allocation statement.
+$\Move ({\it to}, {\it from})$ assigns the value of {\it from}
+to the variable {\it to}.
+$\Load ({\it to}, {\it base}, {\it fld})$ represents a load
+instruction, i.e., ${\it to} = {\it base}.{\it fld}$.
+$\Store ({\it base}, {\it fld}, {\it from})$ represents a
+store instruction, i.e., ${\it base}.{\it fld} = {\it from}$.
+$\VCall ({\it base}, {\it sig}, {\it invo}, {\it inMeth})$
+represents a virtual call, i.e., ${\it base}.{\it sig}(...)$, where
+{\it invo} denotes the call instruction and {\it inMeth} is the method
+containing the instruction.
+$\FormalArg ({\it meth}, {\it i}, {\it arg})$ and
+$\ActualArg ({\it invo}, {\it i}, {\it arg})$ indicate
+that the variable {\it arg} is the ${\it i}^{\it th}$ formal and
+actual argument of the method {\it meth}, respectively.
+$\ThisVar ({\it meth}, {\it this})$ maps methods to their {\it
+  this} variables.  $\HeapType ({\it heap}, {\it type})$ maps
+allocation-sites to the types of allocated objects.
+$\LookUp ({\it type}, {\it sig}, {\it meth})$ indicates that
+the method {\it meth} has the signature {\it sig} inside the class {\it type}.
+
+% \[
+%   \begin{array}{l}
+% \Alloc ({\it var}: V, {\it heap}: H, {\it inMeth}: M) \\ 
+% \Move ({\it to}: V, {\it from}: V) \\
+% \Load ({\it to}: V, {\it base}: V, {\it fld}: F) \\
+% \Store ({\it base}: V, {\it fld}: F, {\it from}: V) \\
+% \VCall ({\it base}: V, {\it sig}: S, {\it invo}: I, {\it inMeth}: M) \\
+% % \SCall ({\it meth}: M, {\it invo}: I, {\it inMeth}: M) \\
+% \FormalArg ({\it meth}: M, {\it i}: \mbn, {\it arg}: V) \\
+% \ActualArg ({\it invo}: I, {\it i}: \mbn, {\it arg}: V) \\
+% \FormalReturn ({\it meth}: M, {\it ret}: V) \\
+% \ActualReturn ({\it invo}: I, {\it var}: V) \\
+% \ThisVar ({\it meth}: M, {\it this}: V) \\
+% \HeapType ({\it heap}: H, {\it type}: T)\\
+% \LookUp ({\it type}: T, {\it sig}: S, {\it meth}: M)
+% \end{array}
+% \]
+
+\paragraph{Analysis Output}
+Given a set of input relations, 
+the analysis produces output relations defined as follows: 
+\begin{itemize}
+\item $\VarPointsTo({\it var}: V, {\it ctx}: C, {\it heap}: H, {\it hctx}: HC)$
+\item
+  $\CallGraph({\it invo}: I, {\it callerCtx}: C, {\it meth}: M, {\it
+    calleeCtx}: C)$
+\item
+  $\FldPointsTo({\it baseH}: H, {\it baseHCtx}: HC, {\it fld}: F, {\it
+    heap}: H, {\it hctx}: HC)$
+\item
+  $\InterProcAssign({\it to}:V, {\it toCtx}: C, {\it from}: V, {\it
+    fromCtx}: C)$
+\item $\Reachable({\it meth}: M,{\it ctx}: C)$
+\end{itemize}
+Here we assume the sets $C$ and $HC$ of calling and heap contexts
+that will be defined later for each context-sensitivity flavor.  The
+primary outcomes of the analysis are the $\VarPointsTo$ and
+$\CallGraph$ relations.
+$\VarPointsTo({\it var}, {\it ctx}, {\it heap}, {\it hctx})$ means
+that the local variable {\it var} under the calling context {\it ctx}
+may point to the object {\it heap} of the heap context {\it hctx}.
+The $\CallGraph$ relation asserts that the method {\it meth} whose
+context is {\it calleeCtx} can be called from the invocation site {\it
+  invo} under the calling context {\it callerCtx}.  Others are
+intermediate relations necessary for computing $\VarPointsTo$ and
+$\CallGraph$.
+$\FldPointsTo({\it baseH}, {\it baseHCtx}, {\it fld}, {\it heap}, {\it
+  hctx})$ indicates that the field {\it fld} of the object {\it baseH}
+of the heap context {\it baseHCtx} may point to the object {\it heap}
+of the heap context {\it hctx}.  $\InterProcAssign$ is used to handle
+parameter passing and return-value propagation during method calls.
+$\Reachable({\it meth},{\it ctx})$ indicates that the method {\it
+  meth} under the calling context {\it ctx} is reachable from the
+entry of the program.
+
+% \[
+%   \begin{array}{l}
+% \VarPointsTo({\it var}: V, {\it ctx}: C, {\it heap}: H, {\it hctx}: HC)\\
+% \CallGraph({\it invo}: I, {\it callerCtx}: C, {\it meth}: M, {\it calleeCtx}: C)\\
+% \FldPointsTo({\it baseH}: H, {\it baseHCtx}: HC, {\it fld}: F, {\it heap}: H, {\it hctx}: HC)\\
+% \InterProcAssign({\it to}:V, {\it toCtx}: C, {\it from}: V, {\it fromCtx}: C)\\
+% \Reachable({\it meth}: M,{\it ctx}: C)
+% \end{array}
+% \]
+
+\paragraph{Analysis Rules}
+Figure~\ref{fig:baseline-rules} presents the analysis rules for
+computing the output relations from input relations.  The analysis is
+generic in terms of context-sensitivity, where various flavors of
+context-sensitivity can be obtained by defining constructor functions
+$\Record$ and $\Merge$ appropriately. $\Record$ and $\Merge$ are
+responsible for generating new heap and calling contexts,
+respectively. Given a heap ({\it heap}) and a calling context ({\it
+  ctx}), $\Record({\it heap}, {\it ctx})$ creates a heap context ({\it
+  hctx}). $\Merge$ takes information available at method calls
+(i.e. the base object {\it heap}, its heap context {\it hctx}, the
+invocation site {\it invo}, and the calling context {\it callerCtx}
+under which the method call is being made), and creates the calling
+context {\it calleeCtx} for the called method. Shortly, we will
+provide their definitions for a number of existing context-sensitive
+analyses.
+
+Most of the rules are intuitive. For example, the first rule is
+responsible for allocation statements; if {\it heap} is allocated and
+assigned to {\it var} in {\it meth} and {\it meth} is reachable under
+the context {\it ctx}, the variable {\it var} under {\it ctx} points
+to {\it heap} with the heap context {\it hctx}. Note that the heap
+context is generated by \Record. The most complex rule is for
+$\VCall$. When the current method {\it inMeth} is reachable
+($\Reachable({\it inMeth}, {\it callerCtx})$), we find the heap {\it
+  heap} that the variable {\it base} refers to, the type {\it heapT}
+of the heap, the called method {\it toMeth}, and its {\it this}
+variable. Then, we update the $\Reachable$, $\VarPointsTo$, and
+$\CallGraph$ relations. The context {\it calleeCtx} of the callee
+method is generated by the \Merge~constructor. The last three rules
+are responsible for interprocedural assignments. 
+
+\begin{figure}[t]
+\[
+  \begin{array}{l}
+    \Record({\it heap}, {\it ctx}) = {\it hctx}, \\
+    \VarPointsTo({\it var}, {\it ctx}, {\it heap}, {\it hctx}) \leftarrow \\
+    \quad  \Reachable({\it meth}, {\it ctx}),
+    \Alloc({\it var}, {\it heap}, {\it meth}). \\[1em]
+
+  \VarPointsTo({\it to}, {\it ctx}, {\it heap}, {\it hctx}) \leftarrow \\
+   \quad \Move({\it to}, {\it from}),
+    \VarPointsTo({\it from}, {\it ctx},{\it heap},{\it hctx}). \\[1em]
+
+  \VarPointsTo({\it to}, {\it ctx}, {\it heap}, {\it hctx}) \leftarrow\\
+  \quad \Load({\it to}, {\it base}, {\it fld}), \VarPointsTo({\it base}, {\it ctx}, {\it baseH}, {\it baseHCtx}), \\
+  \quad \FldPointsTo({\it baseH}, {\it baseHCtx}, {\it fld}, {\it heap},
+   {\it hctx}). \\[1em]
+
+
+  \FldPointsTo({\it baseH}, {\it baseHCtx}, {\it fld},
+   {\it heap}, {\it hctx}) \leftarrow \\
+  \quad \Store({\it base}, {\it fld}, {\it from}),
+  \VarPointsTo({\it from}, {\it ctx}, {\it heap}, {\it hctx}), \\
+    \quad \VarPointsTo({\it base}, {\it ctx}, {\it baseH}, {\it baseHCtx}).\\[1em]
+
+  \Merge ({\it heap}, {\it hctx}, {\it invo}, {\it callerCtx}) = {\it calleeCtx}, \\
+  \Reachable ({\it toMeth}, {\it calleeCtx}), \\
+  \VarPointsTo ({\it this}, {\it calleeCtx}, {\it heap}, {\it hctx}), \\
+  \CallGraph ({\it invo}, {\it callerCtx}, {\it toMeth}, {\it calleeCtx})
+  \leftarrow \\
+    \quad \VCall ({\it base}, {\it sig}, {\it invo}, {\it inMeth}), 
+     \Reachable ({\it inMeth}, {\it callerCtx}), \\
+   \quad \VarPointsTo ({\it base}, {\it callerCtx}, {\it heap}, {\it hctx}), 
+  \HeapType({\it heap}, {\it heapT}), \\
+  \quad \LookUp ({\it heapT}, {\it sig}, {\it toMeth}),
+  \ThisVar ({\it toMeth}, {\it this}).\\[1em]
+
+  \InterProcAssign({\it to}, {\it calleeCtx}, {\it from}, {\it callerCtx}) \leftarrow\\
+  \quad \CallGraph({\it invo}, {\it callerCtx}, {\it meth}, {\it calleeCtx}), \\
+  \quad \FormalArg({\it meth}, {\it i}, {\it to}),
+  \ActualArg({\it invo}, {\it i}, {\it from}).\\[1em]
+  
+  \InterProcAssign({\it to}, {\it callerCtx}, {\it from}, {\it calleeCtx})
+  \leftarrow\\
+  \quad \CallGraph({\it invo}, {\it callerCtx}, {\it meth}, {\it calleeCtx}), \\
+  \quad \FormalReturn({\it meth}, {\it from}),
+  \ActualReturn({\it invo}, {\it to}). \\[1em]
+
+    \VarPointsTo({\it to}, {\it toCtx}, {\it heap}, {\it hctx}) \leftarrow \\
+    \quad \InterProcAssign({\it to}, {\it toCtx}, {\it from}, {\it fromCtx}), \\
+    \quad \VarPointsTo({\it from}, {\it fromCtx}, {\it heap}, {\it hctx}). 
+
+  \end{array}
+\]
+\caption{Datalog rules for context-sensitive points-to analysis}
+\label{fig:baseline-rules}
+\end{figure}
+
+
+\paragraph{Instances}
+
+\begin{itemize}
+
+\item \onecall~(1-call-site-sensitive): In a 1-call-site-sensitive
+  analysis, a calling context of a method consists of a single invocation-site
+  ($C = I$) where the method is called and the analysis does not distinguish different heap
+  contexts ($HC = \myset{\star}$). Thus, the constructor functions are
+  defined as follows: 
+\[
+\begin{array}{l}
+\Record ({\it heap}, {\it ctx}) = \star\\
+\Merge ({\it heap, hctx, invo, ctx}) = {\it invo} \\
+\end{array}
+\]
+
+\item {\onecallH~(1-call-site-sensitive with a context-sensitive
+    heap)}. $\onecallH$ is equivalent to $\onecall$ except that 
+every heap object is qualified with the calling context of the method
+that allocates the object: 
+\[
+\begin{array}{l}
+\Record ({\it heap}, {\it ctx}) = {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) = {\it invo} \\
+\end{array}
+\]
+
+\item {\twocallH~(2-call-site-sensitive with a context-sensitive
+    heap)}. A calling context of \twocallH~consists of a pair of
+  invocation-sites ($C = I\times I$) while a heap context is a single
+  instruction ($H = I$).  The heap context is the invocation-site where
+  the method containing the heap is called. The first element of a calling
+  context is the invocation-site and the second is the invocation-site
+  where the caller is called, thus maintaining two most recent
+  call-sites as calling contexts: 
+\[
+\begin{array}{l}
+% C = I \times I, \qquad HC = I\\
+ \Record ({\it heap}, {\it ctx}) = \first({\it ctx})\\
+ \Merge ({\it heap, hctx, invo, ctx}) = \pair({\it invo}, \first({\it ctx})) \\
+\end{array}
+\]
+
+\item {\oneobjH~(1-object-sensitive with a context-sensitive heap)}.
+The idea of object-sensitivity is to use base objects (receiver
+objects) as calling contexts~\cite{Milanova2005}. $\oneobjH$ uses the allocation-site of the
+base object as the context of the called method  ($C = H$) and, for
+heap contexts ($HC = H$), it uses
+the calling context of the allocating method (the allocation-site of the object on which the method
+containing the heap is called): 
+\[
+\begin{array}{l}
+%C = H, \qquad HC = H \\
+\Record ({\it heap}, {\it ctx}) = {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) = {\it heap} \\
+\end{array}
+\]
+
+\item {\twoobjH~(2-object-sensitive with a context-sensitive
+    heap)}. $\twoobjH$ abstracts the base object as a pair of its
+  allocation-site and heap context ($C = H \times H$). For the heap
+  context, it uses the allocation-site of the base object of the
+  allocating method ($HC = H$).
+\[
+\begin{array}{l}
+%C = H \times H, \qquad HC = H\\
+\Record ({\it heap}, {\it ctx}) = \first({\it ctx})\\
+\Merge ({\it heap, hctx, invo, ctx}) = \pair({\it heap}, {\it hctx}) \\
+\end{array}
+\]
+
+\item {\onetypeH~(1-type-sensitive with a context-sensitive heap)}. 
+$\onetypeH$ is an abstraction of $\oneobjH$ in that an allocation-site
+is abstracted to the class containing the
+allocation-site ($C =T$, $HC=T$): 
+\[
+\begin{array}{l}
+%C = T, \qquad HC = T \\
+\Record ({\it heap}, {\it ctx}) = {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) = \classof({\it heap}) \\
+\end{array}
+\]
+
+
+\item {\twotypeH~(2-type-sensitive with a context-sensitive heap)}
+Similarly, $\twotypeH$ is an abstraction of $\twoobjH$ ($C = T$, $HC=T$): 
+\[
+\begin{array}{l}
+%C = T \times T, \qquad HC = T \\
+\Record ({\it heap}, {\it ctx}) = \first({\it ctx})\\
+\Merge ({\it heap, hctx, invo, ctx}) = \pair(\classof({\it heap}), {\it hctx}) \\
+\end{array}
+\]
+\end{itemize}
+
+
+
+
+%\newpage
+\subsection{Context-Sensitive Analysis with Tunneling}
+\begin{figure}[t]
+\[
+\begin{array}{l}
+
+  \Merge ({\it heap}, {\it hctx}, {\it invo}, {\it callerCtx}) = {\it calleeCtx}, \\
+  \ContextMadeIn ({\it heap}, {\it hctx}, {\it invo}, {\it callerCtx}) = {\it parentMeth}, \\
+  \Reachable ({\it toMeth}, {\it calleeCtx}), \\
+  \VarPointsTo ({\it this}, {\it calleeCtx}, {\it heap}, {\it hctx}), \\
+  \CallGraph ({\it invo}, {\it callerCtx}, {\it toMeth}, {\it calleeCtx})
+  \leftarrow \\
+    \quad \VCall ({\it base}, {\it sig}, {\it invo}, {\it inMeth}), 
+     \Reachable ({\it inMeth}, {\it callerCtx}), \\
+   \quad \VarPointsTo ({\it base}, {\it callerCtx}, {\it heap}, {\it hctx}), 
+  \HeapType({\it heap}, {\it heapT}), \\
+  \quad \LookUp ({\it heapT}, {\it sig}, {\it toMeth}),
+  \ThisVar ({\it toMeth}, {\it this}),  \\
+\quad  !\Tunneling({\it parentMeth}, {\it toMeth}).\\[1em]
+
+
+  \MergeTunneled ({\it heap}, {\it hctx}, {\it invo}, {\it callerCtx}) = {\it parentCtx}, \\
+  \ContextMadeIn ({\it heap}, {\it hctx}, {\it invo}, {\it callerCtx}) = {\it parentMeth}, \\
+  \Reachable ({\it toMeth}, {\it parentCtx}), \\
+  \VarPointsTo ({\it this}, {\it parentCtx}, {\it heap}, {\it hctx}), \\
+  \CallGraph ({\it invo}, {\it callerCtx}, {\it toMeth}, {\it parentCtx})
+  \leftarrow \\
+    \quad \VCall ({\it base}, {\it sig}, {\it invo}, {\it inMeth}), 
+     \Reachable ({\it inMeth}, {\it callerCtx}), \\
+   \quad \VarPointsTo ({\it base}, {\it callerCtx}, {\it heap}, {\it hctx}), 
+  \HeapType({\it heap}, {\it heapT}), \\
+  \quad \LookUp ({\it heapT}, {\it sig}, {\it toMeth}),
+  \ThisVar ({\it toMeth}, {\it this}),  \\
+\quad  \Tunneling({\it parentMeth}, {\it toMeth}).
+\end{array}
+\]
+\caption{Modified rules for tunneling}
+\label{fig:tunneling-rules}
+\end{figure}
+
+% Figure~\ref{fig:tunneling-rules} presents the analysis rules for
+% tunneling. 
+
+
+% \[
+% \begin{array}{ccc}
+% {\it fromCtx} & \Rightarrow & {\it toCtx} \\
+% \vdots & & \vdots \\
+% {\it fromMeth} & & {\it toMeth}
+% \end{array}
+% \]
+
+Now we extend the analysis rules in Figure~\ref{fig:baseline-rules} to
+enable context tunneling. 
+
+\paragraph{Analysis Rules}
+The idea of tunneling is to compare the parent and child contexts and
+use the more important one for the called method.  In Datalog, we make
+such a decision with the $\Tunneling$ relations of the following form:
+\[
+\Tunneling({\parentMeth}: M, {\childMeth}: M).
+\]
+Given two methods {\parentMeth} and {\childMeth},
+$\Tunneling ({\parentMeth}, {\childMeth})$ means that the calling
+context of {\it parentMeth} is more important than that of
+{\childMeth} and therefore should be reused for {\childMeth} without
+creating a new context. In other words, we apply context tunneling for
+$\childMeth$ when it is related with some {\parentMeth} via the
+$\Tunneling$ relation.  For the moment, we assume that a set of the relations is given
+prior to the analysis.  In Section~\ref{sec:learning}, we present a
+machine-learning approach, where the relations will be automatically generated by a
+heuristic rule learned from training programs.
+
+
+Given the $\Tunneling$ relations, the analysis rules are defined as
+presented in Figure~\ref{fig:tunneling-rules}. All the existing rules
+except for method calls carry over to the new analysis without any
+modifications.  The rule for method calls in
+Figure~\ref{fig:baseline-rules} is replaced by the two rules in
+Figure~\ref{fig:tunneling-rules}.  The first rule describes the
+conventional context-sensitive analysis without tunneling.  When the
+called method ${\it toMeth}$ does not have the $\Tunneling$ relation
+with the parent method ${\parentMeth}$ (i.e.
+$!\Tunneling({\parentMeth}, {\it toMeth})$), we create the new context
+${\it calleeCtx}$ for the called method ${\it toMeth}$ by using the
+ordinary $\Merge$ function. Otherwise, when ${\it toMeth}$ is related
+with ${\parentMeth}$ (i.e. $\Tunneling({\parentMeth}, {\it childMeth})$), the analysis uses
+the second rule, where we just pass the parent context ${\it parentCtx}$
+to the child method ${\it toMeth}$ instead of creating a child context. The
+functions $\ContextMadeIn$ and $\MergeTunneled$ of the form
+\[
+  \begin{array}{l}
+    \MergeTunneled ({\it heap}: H, {\it hctx}: HC, {\it invo}: I, {\it
+    ctx}: C) = {\it parentCtx}: C \\
+    \ContextMadeIn ({\it heap}: H, {\it hctx}: HC, {\it invo}: I, {\it
+    ctx}: C) = {\parentMeth}:M
+  \end{array}
+\]
+are responsible
+for finding out the parent method and context, respectively, which
+should be defined for each flavor of context-sensitivity. 
+
+\paragraph{Instances}
+
+The notions of the parent context and parent method are different for each
+flavor of baseline analysis. Below, we present a number of
+tunneled variants of the existing context-sensitive analyses, which
+are obtained by
+defining $\ContextMadeIn$ and $\MergeTunneled$ appropriately. 
+
+\begin{itemize}
+\item {\it \onecallHT~(Tunneled 1-call-site sensitive with
+    1-context-sensitive heap)}. The tunneled variant of
+  \onecallH~is obtained by defining the functions as follows: 
+\[
+\begin{array}{l}
+\MergeTunneled ({\it heap, hctx, invo, ctx}) = {\it ctx} \\
+\ContextMadeIn ({\it heap}, {\it invo}) = \methof({\it invo})
+\end{array}
+\]
+In call-site-sensitivity, the calling context of a callee method is
+created by appending (with truncation) the current invocation site to the context of the
+caller method. Thus, the parent method corresponds to the caller (i.e. the method
+containing the invocation site) and the parent context is the calling
+context of the caller method.
+
+\item {\it \oneobjHT (Tunneled 1-object-sensitive with
+    1-context-sensitive heap)}. 
+In object-sensitivity, a new context is created by appending the
+allocation-site of the receiver object to the calling context of the
+allocating method of the object. Thus, the parent method and context
+are the method containing the allocation-site and the receiver object's heap
+context, respectively. The definitions are as follows: 
+\[
+\begin{array}{l}
+\MergeTunneled ({\it heap, hctx, invo, ctx}) = {\it hctx} \\
+\ContextMadeIn ({\it heap}, {\it invo}) = \methof({\it heap})
+\end{array}
+\]
+
+\item {\it \onetypeHT (Tunneled 1-type-sensitive with
+    1-context-sensitive heap)}
+As type-sensitivity is an abstraction of object-sensitivity, the
+definitions are the same: 
+\[
+\begin{array}{l}
+% C = T, \qquad HC = T \\
+% \Merge ({\it heap, hctx, invo, ctx}) = \classof({\it heap}) \\
+\MergeTunneled ({\it heap, hctx, invo, ctx}) = {\it hctx} \\
+\ContextMadeIn ({\it heap}, {\it invo}) = \methof({\it heap})
+\end{array}
+\]
+
+\end{itemize}
+
+\newpage
+\paragraph{Principle}
+
+Notation:
+\[
+\truncateCtx{l}{k} = \mbox{the first $k$ elements of $l$ }
+\]
+
+General $k$-limiting context-sensitive analysis with
+$h$-context-sensitive heap: 
+\[
+\begin{array}{l}
+\Record ({\it heap}, {\it ctx}) =  \truncateCtx{{\it ctx}}{h} \\
+\Merge ({\it heap, hctx, invo, ctx}) =
+  \truncateCtx{\appendCtx{{\ctxElem({\it heap},{\it
+  invo})}}{{ \parentCtx({\it hctx},{\it ctx})}}}{k} \\
+\MergeTunneled ({\it heap, hctx, invo, ctx}) = {\it ctx} \\
+\ContextMadeIn ({\it heap}, {\it invo}) = \methof({\it invo})
+\end{array}
+\]
+
+\begin{itemize}
+
+\item $k$-call-site-sensitive:
+\[
+\begin{array}{l}
+C = I^k, \qquad HC = I^{k}\\
+\Record ({\it heap}, {\it ctx}) =  {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) = \truncateCtx{\appendCtx{{\it invo}}{{\it ctx}}}{k} \\
+\end{array}
+\]
+
+\item $k$-call-site-sensitive with tunneling:
+\[
+\begin{array}{l}
+C = I^k, \qquad HC = I^{k}\\
+\Record ({\it heap}, {\it ctx}) =  {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) = \truncateCtx{\appendCtx{{\it invo}}{{\it ctx}}}{k} \\
+\MergeTunneled ({\it heap, hctx, invo, ctx}) = {\it ctx} \\
+\ContextMadeIn ({\it heap}, {\it invo}) = \methof({\it invo})
+\end{array}
+\]
+
+
+\item $k$-object-sensitive:
+\[
+\begin{array}{l}
+C = H^k, \qquad HC = H^{k}\\
+\Record ({\it heap}, {\it ctx}) =  {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) = \truncateCtx{\appendCtx{{\it heap}}{{\it hctx}}}{k} \\
+\end{array}
+\]
+\item $k$-object-sensitive with tunneling:
+\[
+\begin{array}{l}
+C = H^k, \qquad HC = H^{k}\\
+\Record ({\it heap}, {\it ctx}) =  {{\it ctx}}\\
+\Merge ({\it heap, hctx, invo, ctx}) = \truncateCtx{\appendCtx{{\it heap}}{{\it hctx}}}{k} \\
+\MergeTunneled ({\it heap, hctx, invo, ctx}) = {\it hctx} \\
+\ContextMadeIn ({\it heap}, {\it invo}) = \methof({\it heap})
+\end{array}
+\]
+
+\item $k$-type-sensitive:
+\[
+\begin{array}{l}
+C = T^k, \qquad HC = T^k \\
+\Record ({\it heap}, {\it ctx}) = {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) = \truncateCtx{\appendCtx{\classof({\it heap})}{{\it hctx}}}{k} \\
+\end{array}
+\]
+
+\item $k$-type-sensitive with tunneling:
+\[
+\begin{array}{l}
+C = T^k, \qquad HC = T^k \\
+\Record ({\it heap}, {\it ctx}) = {\it ctx}\\
+\Merge ({\it heap, hctx, invo, ctx}) =
+  \truncateCtx{\appendCtx{\classof({\it heap})}{{\it hctx}}}{k} \\
+\MergeTunneled ({\it heap, hctx, invo, ctx}) = {\it hctx} \\
+\ContextMadeIn ({\it heap}, {\it invo}) = \methof({\it heap})
+\end{array}
+\]
+
+
+\end{itemize}
+}
+
+

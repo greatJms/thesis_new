@@ -1,0 +1,203 @@
+% !TEX root = ./paper.tex
+%\vspace{-1pt}
+\section{Our Claim}\label{sec:insight}
+%\noindent
+In this section, we illustrate the main message of this paper with examples. 
+
+
+
+\subsection{The Previously Known Superiority}\label{sec:call-vs-obj}
+%\noindent
+
+First of all, we note that traditional call-site sensitivity and
+object sensitivity can complement each other~\cite{liang2005evaluating}.
+
+%For any $k$, we can always find a program
+%for which $k$-call-site sensitivity is more precise than
+%$k$-object sensitivity, and vice versa.
+\input{Obj2CFA/overview-example1}
+
+\myparagraph{Benefit of Call-Site Sensitivity}
+Figure~\ref{back:b:Fig} describes a typical situation where
+call-site sensitivity has better precision than object sensitivity.
+The example program has class {\tt D} that includes the identity
+function {\tt id}. The {\tt main} method allocates an object of class
+{\tt D} at line 6
+and calls method {\tt id} on it in three places
+at lines 7, 8, and 9 with different objects of type {\tt A}, {\tt B},
+and {\tt C}, respectively.  Suppose pointer analysis aims to prove
+that the three type-casting operations at lines 7, 8, and 9 are safe.
+%(i.e. no down-casting violations occur).
+Figure~\ref{back:cfa:callgraph2} shows the call-graph from
+1-call-site-sensitive analysis. Note that the analysis analyzes the
+method {\tt id} separately for the different call-sites at lines 
+7, 8, and 9, and therefore is able to prove the safety of the queries. 
+
+
+By contrast, $k$-object sensitivity is unable to prove any of the
+queries in the program no matter what $k$ value is
+used. Object sensitivity uses allocation-sites of receiver objects as
+calling contexts. In this example, because the three method calls
+share the same receiver object (i.e. the object pointed to by variable
+{\tt d}), object sensitivity analyzes the method {\tt id}
+with a single context element, namely the allocation-site {\tt D},
+merging the three method calls (Figure~\ref{back:obj:callgraph2}).
+
+
+
+\myparagraph{Benefit of Object Sensitivity}
+Figure~\ref{back:a:Fig} %describes a major weakness of call-site sensitivity. 
+describes a representative scenario where
+object sensitivity is more precise than call-site sensitivity.
+The example code in Figure~\ref{background:example1} has class {\tt C}
+that contains $k+1$ methods
+(${\tt id}_0, {\tt id}_1, \dots {\tt id}_k$), where each method
+${\tt id}_i$ is semantically equivalent to the identity function
+because ${\tt id}_0$ is the identity function and ${\tt id}_i$
+%$(0< i \le k+1)$ 
+{$(0< i \le k)$} calls ${\tt id}_{i-1}$ without modifying the formal
+parameter {\tt v}.  The {\tt main} method has four heap allocation-sites:
+namely, \texttt{C1}, \texttt{C2}, \texttt{A}, and \texttt{B}.  At line
+13, {\tt main} calls ${\tt id}_k$ with the base variable {\tt c1} and
+parameter \texttt{new A()}. At line {14}, ${\tt id}_k$ is called with
+the base variable {\tt c2} and argument \texttt{new B()}.  Again, the goal
+of pointer analysis is to prove the safety of the casting
+operations at lines 13 and 14. For this program, a
+$k$-call-site-sensitive analysis produces the call-graph in
+Figure~\ref{back:cfa:callgraph}. Note that the method ${\tt id}_0$ is analyzed
+under the single context ${[8,\dots,5]}$, where the critical information where
+${\tt id}_k$ was originally called from is lost due to the truncation of
+context strings to keep their last $k$ elements. 
+
+Object sensitivity nicely addresses this shortcoming of call-site sensitivity. It uses the
+allocation-sites, {\tt C1} and {\tt C2}, to represent the contexts of the
+method calls to ${\tt id}_k$ at lines 13 and {14}, respectively. Note that the
+receiver object remains the same in the subsequent calls to ${\tt id}_{k-1},
+\dots {\tt id}_0$, propagating the initial contexts down to ${\tt id}_0$ and
+producing the call-graph in Figure~\ref{back:obj:callgraph}. The
+analysis is able to distinguish the two call chains and therefore proves the
+queries.
+
+%\textcolor{red}{Note that the shortcoming in handling nested method calls is the only weakness of call-site sensitivity; if there is no nested method call in a program, 1-call-site sensitivity becomes the most precise context abstraction. Suppose a program consists of methods that do not have any method call in their body except the main method. When analyzing the program, 1-call-site sensitivity will have the same precision with $\infty$-call-site sensitivity which is concrete context (the most precise context abstraction).}
+
+\input{Obj2CFA/overview-example2}
+
+
+\myparagraph{Known Superiority} 
+ Though call-site sensitivity and object sensitivity have their own
+ strengths and weaknesses, object
+  sensitivity is widely known to be superior to call-site sensitivity 
+  because real-world programs involve code patterns such as one in
+  Figure~\ref{back:a:Fig} more often. 
+  Note that the existing superiority holds empirically, rather than theoretically, based on the experimental results of prior work~(e.g., \cite{Lhotak2008,BravenboerS09}).  
+  
+
+%\textcolor{red}{
+%Though call-site sensitivity and object sensitivity have their own
+%strengths and weaknesses, object sensitivity has been known to be
+%superior to call-site sensitivity based on prior works' empirical evaluation
+%result~\cite{Lhotak2008,BravenboerS09}.  
+%Object sensitivity has shown a better performance than call-site
+%sensitivity because real-world object-oriented programs involve code
+%patterns such as one in Figure~\ref{back:a:Fig} more often. 
+%}
+
+
+%\vspace{-20pt}
+\subsection{Revisiting the Superiority in Generalized $k$-Limited Setting}\label{sec:overview-result}
+%\noindent
+Our new claim is that the known superiority of object sensitivity over call-site sensitivity no longer holds when the notion of $k$-limiting is generalized with context tunneling. 
+
+%In this paper, we show that 
+%the existing 
+%superiority of object sensitivity over call-site sensitivity holds only in the traditional $k$-limited setting, where the
+%analysis is enforced to keep the most recent $k$ context elements, but no longer holds in a more general setting with context tunneling. 
+
+\myparagraph{Context Tunneling}
+Context tunneling~\cite{JeJeOh18} allows an analysis to maintain an arbitrary $k$-length subsequence of context strings.
+For example, when $s = [C_1, C_2, C_3, C_4, C_5]$ is a sequence of
+context elements that may appear in an unbounded ($k=\infty$)
+context-sensitive analysis, the traditional $3$-limited analysis
+abstracts the context string into its suffix $[C_3,C_4,C_5]$. 
+With context tunneling, however, the analysis is free to use any
+subsequence of $s$ such as $[C_1, C_3, C_5]$ and $[C_2, C_4, C_5]$, as
+a $k$-limited abstraction of the original context string. 
+Note that the traditional $k$-limited approach is a special case of the
+generalized approach with context tunneling. 
+
+
+\myparagraph{Key Insight}
+Our key insight is summarized as follows: 
+%that call-site sensitivity is superior to
+%object sensitivity when they are generalized
+%with context tunneling: 
+\begin{itemize}[leftmargin=1.3em]
+\item The major weakness of call-site sensitivity
+in the traditional setting is no longer a weakness in the generalized
+$k$-limited setting with context tunneling.%~\minseok{conflict. Need revision??} 
+\item By contrast, object sensitivity still suffers from its
+limitation even with the generalization. 
+\end{itemize}
+
+%For example, 
+With context tunneling, call-site sensitivity does not
+suffer from its shortcoming and can now prove the queries in
+Figure~\ref{background:example1}. Suppose that we use a
+context-tunneling policy that chooses the first $k$ elements of a
+context string rather than the last $k$ ones.
+%\textcolor{red}{Context tunneling achieves this by selectively updating contexts. 
+%When {\tt id$_i$} (i<k) is called, the context-tunneling policy makes the callee method inherit the context of the caller method instead of updating context with the invocation site.} 
+Then, the resulting
+1-call-site-sensitive analysis produces the call-graph in Figure~\ref{back:callT:callgraph},
+which is exactly the same as the
+call-graph of the 1-object-sensitive analysis in
+Figure~\ref{back:obj:callgraph}. Because the call-graphs are
+equivalent, the call-site-sensitive analysis is as precise as the
+object-sensitive analysis, successfully proving the queries. 
+
+
+
+On the other hand, object sensitivity fails to simulate call-site
+sensitivity even with context tunneling.  Consider the program in
+Figure~\ref{back:b:Fig} where call-site sensitivity is
+typically more precise than object sensitivity. For this program,
+object sensitivity cannot prove all of the queries no matter what
+context-tunneling policy and $k$ value are used. 
+%\minseok{$k$-object-sensitivity with context tunneling can prove only one query among them.}
+In
+Figure~\ref{back:b:Fig}, object sensitivity can use the
+allocation-site {\tt D} as context elements. Thus, only the two
+context subsequences, i.e., \texttt{[D]} and \texttt{[$\cdot$]}, are
+possible for the method {\tt id} with context tunneling, all of which
+fail to analyze {\tt id} separately for the three different
+call-sites.  % In this sense, object sensitivity is 
+% inevitably less precise than call-site sensitivity in the generalized $k$-limited setting. 
+
+%\myparagraph{Incompleteness}
+
+We clarify that, like the previously known superiority, our claim in this paper is empirical. 
+On the theoretical side, we do not know yet whether or not call-site sensitivity can always simulate object sensitivity in the general setting with context tunneling, which we leave as an open question for future work. We discuss this issue in more detail in Section~\ref{sec:counter_example}.
+%not theoretical.  
+%We can construct a counter-example such that
+%context-tunneled call-site sensitivity is unable to simulate object
+%sensitivity (Section~\ref{sec:counter_example}).  
+%However,  such a counter-example is uncommon in practice, allowing the simulation to be almost complete for real-world programs. 
+%(Sections \RNum{1} and \RNum{2} of the supplementary
+%material and Section~\ref{sec:eval_learning}).
+
+
+\myparagraph{\ourtechnique}
+Based on the insight, 
+%To support the claim, 
+we develop \ourtechnique, a practical technique for transforming a given $k$-object-sensitive analysis 
+into a more precise, context-tunneled $k$-call-site-sensitive analysis (Section~\ref{sec:technique}).  The
+resulting analysis is (empirically) more precise than the baseline
+object sensitivity, as it enjoys the benefits of both object
+sensitivity and call-site sensitivity. For example, it
+produces precise results for both cases in Figure~\ref{back:b:Fig} and~\ref{back:a:Fig}.
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

@@ -1,0 +1,174 @@
+% !TEX root = ./paper.tex
+
+\section{Related Work}
+
+%Context-sensitive analysis has a huge body of past research;
+%\begin{comment}
+%In this section,
+%\end{comment} 
+%we discuss relatively recent works closely related to ours. 
+
+
+
+
+\myparagraph{Context Tunneling}
+Our work builds on the prior work by~\citet{JeJeOh18}, where the ideas
+of context tunneling and learning tunneling policies were first
+proposed.  
+However, our main message (call-site sensitivity can be superior to object sensitivity) as well as the simulation and simulation-guided learning techniques are entirely original in this work. 
+%In this paper, we leverage the idea of context tunneling and provide a
+%new insight into object sensitivity and call-site sensitivity
+%(i.e. object sensitivity can be transformed into more precise,
+%context-tunneled call-site sensitivity). This insight as well as the
+%technique for transforming object sensitivity into call-site
+%sensitivity are entirely original in this work.
+
+
+%\textcolor{red}{
+%\myparagraph{Delta over~\citet{JeJeOh18}}
+%\citet{JeJeOh18} introduced the notion of context tunneling and a data-driven technique for learning context-tunneling strategies. Our work leverages the idea of context tunneling~\cite{JeJeOh18} and shows that call-site-sensitivity is superior to object-sensitivity in the generalized k-limited analysis, which is an entirely new perspective provided by our work. Also, we provide our technique \ourtechnique~to support this claim, which is also new in our work.}
+
+
+% We show that call-site-sensitivity is superior to object sensitivity in the generalized k-limited analysis, which is an entirely new perspective provided by our work. 
+% To support the claim, we design a framework that transforms an object sensitivity into a more precise call-site sensitivity. %\minseok{Reviewer 2 wanted us to show the delta in the overview section.}
+
+
+
+
+
+\myparagraph{Object Sensitivity}
+Our work deviates significantly from past works on improving context-sensitive analyses for object-oriented programs. 
+While almost all past works took the ``safe'' direction of building upon object 
+sensitivity~\cite{Smaragdakis2011,SridharanDCST12,TanLX16,Li2018b,Smaragdakis2014,Li2018a,JeJeChOh17,Liang2011,Liang2011learning,Lu:2019:PYF}, our
+work calls for attention to call-site sensitivity.
+
+
+%Since the introduction~\cite{Milanova2002,Milanova2005}, 
+Over the past decades, a large amount of  research
+ has been devoted to improving object sensitivity.
+For example, \citet{Smaragdakis2011} proposed a variant of object sensitivity, called type sensitivity, which is more scalable than object sensitivity with little compromise on precision.
+\citet{SridharanDCST12} proposed parameter sensitivity that uses parameter values as contexts rather than the values of receiver objects.
+\begin{comment}
+Kastrinis and Smaragdakis \cite{KastrinisS13a} observed weaknesses of object sensitivity in static calls and developed a hybrid method that combines object sensitivity and call-site sensitivity.
+\end{comment}
+\citet{TanLX16} presented a technique to make $k$-object-sensitive analyses more precise 
+without increasing $k$.
+\citet{Thiessen2017} proposed a new variation of object sensitivity
+that combines CFL-reachability and $k$-limited approach. 
+%to take advantage of both approaches. 
+%Li et al.~\cite{Li2018b} proposed a method for improving the scalability of object sensitivity.
+\citet{Xu2008} improved scalability of object sensitivity by identifying and merging equivalent contexts.
+
+% Although we applied our framework to conventional object sensitivity only,
+% our framework is also applicable to other context variations of object sensitivity.
+
+Selective object sensitivity has been particularly popular for boosting object 
+sensitivity~\cite{Smaragdakis2014,Li2018a,Li2018b,JeJeChOh17,WeiR15,Liang2011,Liang2011learning,Lu:2019:PYF}.  As 
+applying deep object sensitivity to
+all methods does not scale to large programs, several techniques have
+been proposed to apply deeper contexts only to a set of methods
+that are likely to benefit.
+For example, \citet{Smaragdakis2014} proposed a technique that runs a
+pre-analysis and identifies the methods that should not receive
+context sensitivity. \citet{JeJeChOh17} developed a machine learning
+algorithm that can produce method-selection heuristics automatically
+and showed that the data-driven approach outperforms existing
+hand-crafted approaches. 
+\begin{comment}
+Li et al.~\cite{Li2018a} identified representative
+cases that require object sensitivity and proposed a technique to
+accurately apply object sensitivity to those cases only.
+\end{comment}
+%Lu and Xue~\cite{Lu:2019:PYF} used a lightweight CFL-reachability analysis to
+%obtain a precision-preserving selective object sensitivity.
+%Note the idea of selective context sensitivity is orthogonal to
+%ours. 
+As we showed in Section~\ref{sec:SelectiveCtx}, selective context sensitivity is
+%has proven 
+effective at improving the scalability of call-site sensitivity as
+well~\cite{Smaragdakis2014,Oh2014,ZipperJournal20}, which would make our 
+technique more practical. 
+
+
+
+
+
+
+\myparagraph{Call-Site Sensitivity}
+Call-site sensitivity has received little attention in static analysis of object-oriented languages. 
+However, call-site sensitivity has been studied extensively in other contexts~\cite{Thakur2019,Oh2014, Khedker2008,Khedker2012,Zhang2014, Sridharan2006,Sridharan2005,Dan17,Tripp2009}.
+For example, several works developed techniques to run the most precise, 
+$\infty$-call-site-sensitive analysis.
+\citet{Khedker2008} used value contexts to identify 
+redundant contexts that are worthless to maintain and remove them
+to scale up the full call strings analysis without precision loss.
+In a similar context, \citet{Thakur2019} proposed a way to handle the scalability issue by reducing
+comparison costs involved in value contexts.
+%Zhang et al.~\cite{Zhang2014} developed a technique for iteratively refining call-site sensitivity from  coarse to precise abstractions. % This approach guarantees that all the provable queries by call-site sensitivity are eventually proved.
+Another line of works aimed to improve scalability of call-site
+sensitivity~\cite{Whaley2004,Sridharan2006,Sridharan2005,Dan17,Xu2009}.
+%\textcolor{red}{
+For example, \citet{Whaley2004} used binary decision diagrams to represent context strings efficiently, and 
+\citet{Sridharan2006} proposed a refinement-based demand-driven
+analysis based on CFL-reachability, where the idea is to remove client-irrelevant part of the program.
+%}
+It is challenging to compare ours with the demand-driven approaches~\cite{Sridharan2006,Boomerang16} because our technique is currently formulated on top of a whole-program analysis and does not consider the CFL-reachability formulation. 
+% \textcolor{red}{
+% Summary-based approach, conceptually orthogonal to our work, is another stream that deals with context sensitivity~\cite{Boomerang16,ideal17}.
+% Our technique, i.e., a context-tunneling heuristic for call-site sensitivity, 
+% can be combined with those existing techniques;
+% for example, our technique can be used to generate qualified heap contexts.
+% }
+
+\myparagraph{Data-Driven Static Analysis}
+Learning analysis policies has been popular in recent 
+works~\cite{Bielik2017,Peleg2016,Oh2015,JeJeChOh17,Jeon2019,Singh2018cav,heo2017unsound,Heo2019resource,Grigore2016,He2020,WeiR15,Graphick20}.
+%For example,~\citet{Oh2015} used a linear
+%model with Bayesian optimization to learn policies for flow and
+%context sensitivity.~\citet{JeJeChOh17} proposed a disjunctive, hence
+%expressive, model and an algorithm to learn its parameters.
+%~\citet{JeJeOh18} used a similar idea to learn context-tunneling
+%policies.  
+At a high-level, our work is in this line of research, but we apply learning to a new application, i.e., transforming object sensitivity to call-site sensitivity. 
+To do so, we adapt the existing
+ideas~\cite{JeJeChOh17,JeJeOh18} to learn the behavior of the simulated
+policy.  Technically, the main difference is that ours is a supervised learning
+algorithm (in that the search process is guided by the simulated policy) while the existing
+algorithms~\cite{JeJeChOh17,JeJeOh18} are unsupervised.
+
+
+%\myparagraph{Graph-based Heuristics}
+%\textcolor{red}{
+%Recently, various graph-based analysis heuristics, exploiting graph
+%structure (e.g., call-graph) of programs to produces analysis strategy
+%(e.g.,  whether to apply context sensitivity), have been proposed to develop cost-effective pointer analysis~\cite{Li2018a,Tan2017,TanLX16,Lu:2019:PYF,Li2018b,Graphick20}.
+%Our simulation technique $\simheuristic$ also belongs to graph-based
+%heuristics as it exploits the graph representations (call-graph of
+%object sensitivity) of programs and produces analysis strategies
+%(determine whether to apply context tunneling for each method call). 
+%However, our graph-based heuristic $\simheuristic$ is different from the others as it produces context tunneling strategies that determine whether to apply context tunneling to each method call. 
+%Existing graph-based heuristics produce context sensitivity strategies~\cite{Li2018a,Li2018b,Graphick20,Lu:2019:PYF} that determine suitable context flavor (e.g., context insensitivity, type-sensitivity, or object-sensitivity) to each method call or heap abstraction strategies~\cite{Tan2017,TanLX16}.
+%}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

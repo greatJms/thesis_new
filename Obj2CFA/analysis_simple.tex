@@ -1,0 +1,78 @@
+% !TEX root = ./paper.tex
+\begin{figure}[t]
+  \[
+    \begin{array}{c}
+      \infer[]
+      {
+      \begin{array}{c}
+        \ctx' \in \Reachable ({m}) \quad
+        ({\heap}, {\hctx}) \in  \VarPointsTo ({m_{\this}}, {\ctx'}) \\
+        \VarPointsTo({\it arg}, \ctx) \subseteq \VarPointsTo(m_{\it param}, \ctx')
+        \quad
+        \VarPointsTo(m_{\it return}, \ctx') \subseteq \VarPointsTo(x, \ctx)\\
+        (\invo, \ctx, m, \ctx') \in \CallGraph
+      \end{array}
+      }{
+      \begin{array}{c}
+        {\it \invo : x = y.\sig({\it arg})} \quad
+        \ctx \in    \Reachable ({\methof(\invo)}) \\
+        ({\heap}, {\hctx})\in  \VarPointsTo ({\it y},\ctx) \quad
+        t = {\typeof}(\heap)  \quad m = {\lookup}(t, \sig) \\
+(e, {\pctx}, p) = \parent(\heap,\hctx, \invo, \ctx) \quad
+        \ctx' = \left\{
+        \begin{array}{l@{\quad}l}
+          \truncateCtx{\appendCtx{{ \pctx}}{{e}}}{\CallDepth}
+          & \mbox{if}~\invo\not\in T \\
+          \truncateCtx{\pctx}{\CallDepth}     & \mbox{if}~\invo                       \in T
+        \end{array}
+                                                          \right.
+      \end{array}
+                                                          }
+    \end{array}
+  \]
+  \caption{Context-sensitive pointer analysis using sets of invocation sites as tunneling abstractions}
+\label{obj2cfa:fig:tunneling-rules}
+\end{figure}
+
+\section{Setup: Pointer Analysis with Context Tunneling}\label{sec:setting}
+
+Unlike Section~{\ref{sec:tunneling}} that uses relations between methods as tunneling a abstraction ($\TunnelingRelation \subseteq \Methods \times \Methods$) for describing when to apply context tunneling, in this chapter we use a set of invocation sites as a tunenling abstraction $T$ as follows:
+\[
+  T \subseteq \mbi
+\]
+Then, the rule for method call in Figure~\ref{pre:baseline-rules} is replaced by the rule defined in Figure~\ref{obj2cfa:fig:tunneling-rules}.
+
+
+
+
+
+
+
+\myparagraph{Instance Analyses}
+Given  a program $P$ and 
+its tunneling abstraction $T \subseteq \mbi_P$, 
+we write $\call_k(P, T)$ and
+$\obj_k(P, T)$ for the $k$-call-site- and
+$k$-object-sensitive analyses, respectively. In the rest of the paper, we fix $k$ and omit the subscript $k$ from $\call_k$ and $\obj_k$. 
+%We assume that $\call(P, T)$ and $\obj(P, T)$ report as output some
+%precision metric (e.g. the number of may-fail casts, where lower means better precision). 
+%
+%
+%%\subsection{Context-Tunneling Policy}\label{sec:tunnelingpolicy}
+%
+These instance analyses are used with a {\em context-tunneling policy}. 
+A context-tunneling policy $\heuristic$ is a function that maps a program $P$ into
+a tunneling abstraction for $P$: 
+\[
+  \heuristic(P) \subseteq \mbi_P.
+\]
+With a policy $\heuristic$, 
+we  perform the analysis for a program $P$ as follows: $\call(P, \heuristic(P))$ or $\obj(P, \heuristic(P))$. 
+
+
+ % which first uses $\heuristic$ to produce a tunneling abstraction $\heuristic(P)$ and analyzes the program with the abstraction. 
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

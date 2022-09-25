@@ -1,0 +1,269 @@
+\listoftodos
+\chapter{Overview}
+\section{Problems}
+Pointer analysis is one of the most important program analysis techniques that approximates memory locations that each pointer variable may points to at runtime.
+The pointer analysis results play key roles in diverse software engineering tools such as
+bug finder~\cite{Naik2006,NaikPSG09,Blackshear2015,Sui2014,Livshits2003}, security analyzers~\cite{Avots2005,Arzt2014,Tripp2009,Yan2017,Grech17},
+program verifiers~\cite{Fink2008}, symbolic executors~\cite{Kapus2019}, and program repair tools~\cite{memfix,Gao2015,vfix2019,saver2020}. 
+The success of these tools eventually depends on the performance (e.g., precision and scalability) of the underlying pointer analysis.
+
+Developing a cost-effective pointer analyzer, however, is challenging.
+To become practical, pointer analyers need good analysis heuristics. 
+For example, suitable context~\cite{KastrinisS13a,Li2018b,Li2018a,Smaragdakis2014,Tan2020,Lu:2019:PYF,JeJeChOh17} and heap abstraction~\cite{Tan2017,TanLX16} strategies are essential for accurately and efficiently analyzing object-oriented programs. 
+Context abstraction strategies determine contexts for each method call to distinguish variables and objects in different calling contexts for precision and merge variables and objects in the same contexts for efficiency. 
+Heap abstraction strategies determine how to model each heap object where a representative strategy is modeling the object with their allocation sites~\cite{Tan2017}.
+Developing such analysis heuristics, however, is challenging and needs laborious tasks. Further, the manually designed analysis heuristics often show suboptimal performance in practice.
+
+
+
+\section{Contributions}
+To mitigate this problem, we present {\em data-driven pointer analysis} that automatically generates qualified analysis heuristics.
+From a given pointer analyzer, training set (e.g., small training programs), {\em data-driven pointer analysis} learns context tunneling, selective context sensitivitiy, and heap abstraction heuristics that make the pointer analysis cost-effective.
+The training process searches models, describing heuristics, that perform well for the training programs. The learnt ones will be used for analyzing other unknown programs in practice.
+This thesis makes the following three key contributions:
+
+
+
+\begin{itemize}
+\item {\bf Data-driven context tunneling~\cite{JeJeOh18}:}
+  We present data-driven context tunneling, a new approach for making $k$-limited context-sensitive pointer analysis precise and scalable.
+  Unlike, conventional $k$-limited context sensitivity that always updates contexts that the method calls keep the most recent $k$ context elements, context tunneling makes the method calls keep the most important $k$ context elements by selectively updating contexts.
+  The main challeng when applying context tunneling is to develop tunneling strategy that determine whether to update contexts. We present data-driven approach for automatically generating this tunneling strategies. The evaluation results show that the learned tunneling heuristics successfully keep important context elements that make the pointer analysis precise and scalable.
+
+
+\item {\bf Learning a precise call-site sensitivity from given object sensitivity~\cite{JeOh22}:}
+We present \ourtechnique~that automatically transforms a given object sensitivity with tunneling into a more precise call-site sensitivity with tunneling. \minseok{ToDo}
+\ourtechnique~consists of the simulation and
+simulation-guided learning.  
+Simulation procedure investigate an analysis result of the given object sensitivity and infers a context-tunneling policy
+with which call-site sensitivity can become more precise than the given object sensitivity.
+The scalability of simulated call-site sensitivity, however, is 
+limited as it requires running the baseline object-sensitive
+analysis beforehand; call-site sensitivity is unable to be more scalable than the given object sensitivity.
+The learning procedure aims to remove
+this overhead by learning the behavior of the simulated call-site sensitivity using
+a dataset of programs. 
+The learnt model produces tunneling policies for call-site sensitivity without running the given object sensitivity.
+
+
+
+\item {\bf Learning graph-based analysis techniques without features~\cite{Graphick20}:}
+We present \ourtool~for automatically learning graph-based analysis techniques without application specific features.
+The success of {\em data-driven pointer analysis} heavily depends on the quality of features used in the training procedure~\cite{JeJeChOh17,ChOhHeYa17}; 
+employing good features is essential for learning cost-effective analysis techniques.
+Developing qualified features, however, is also a challenging and requires laborious tasks.
+To reduce this burden, we designed a feature language and a learning algorithm that learns analysis heuristics. 
+Instead of using given features, \ourtool~automatically generates qualified features with the feature language during the training phase; the learnt analysis techniques are combinations of the generated features. 
+
+
+
+\end{itemize}
+
+
+\section{Out line}
+The remainder of this thesis is organized as follows.
+Chapter~{\ref{sec:Preliminaries}} provides preliminaries illustrating pointer analysis that will be used through this thesis.
+Chapter~{\ref{sec:Tunneling}} presents our new analysis technique context tunneling. 
+Chapter~{\ref{sec:Obj2CFA}} presents our method for transforming an object sensitivity into a more precise call-site sensitivity.
+Chapter~{\ref{sec:Graphick}} presents our method for learning graph-based analysis techniques without features.
+Chapter~{} discusses closed related works and
+Chapter~{} concludes.
+%
+%
+%In static analysis of object-oriented programs, object sensitivity
+%has been established as the dominant flavor of context sensitivity
+%thanks to its outstanding precision. On the other hand, call-site
+%sensitivity has been regarded as unsuitable and its use in practice has been 
+%constantly discouraged for object-oriented programs. 
+%
+%
+%We claim that call-site sensitivity is generally 
+%a superior context abstraction because it is practically possible to transform 
+%object sensitivity into more precise call-site sensitivity. 
+%
+%
+%
+%Our key
+%insight is that the previously known superiority of object sensitivity holds only
+%in the traditional $k$-limited setting, where the analysis is enforced
+%to keep the most recent $k$ context elements. However, it no longer holds
+%in a recently-proposed, more general setting with context tunneling.
+%
+%
+%With context tunneling, however, where the analysis is free to choose an
+%arbitrary $k$-length subsequence of context strings, we show that
+%call-site sensitivity can simulate object sensitivity almost
+%completely, but not vice versa. To support the claim, we present a
+%technique, called \ourtechnique, for transforming 
+%arbitrary context-tunneled object sensitivity into
+%more precise, context-tunneled call-site-sensitivity.
+%We implemented \ourtechnique~in Doop and used it to derive a
+%new call-site-sensitive analysis from a state-of-the-art object-sensitive pointer analysis. 
+%Experimental results
+% confirm that the resulting call-site sensitivity outperforms 
+% object sensitivity in precision and scalability for real-world Java programs. 
+%Remarkably, our results show that even 1-call-site sensitivity can be more precise than the
+%conventional 3-object-sensitive analysis.
+
+
+
+
+
+%Past research~\cite{Li2018a,Li2018b,Lu2019,TanLX16} has shown that exploiting the program's graph structure is a promising way of developing cost-effective analysis heuristics, promoting the recent trend of ``graph-based heuristics'' that work on the graph representations of programs obtained from a pre-analysis. 
+%Although promising, manually developing such heuristics remains challenging, requiring a great deal of expertise and laborious effort.
+%
+%
+%We aim to reduce this burden by learning graph-based heuristics automatically, in particular without hand-crafted application-specific features. To do so, we present a feature language to describe graph structures and an algorithm for learning analysis heuristics within the language.
+
+%The performance of learnt analysis techniques heavily depends on features used in the training process. 
+%Designing good features, however, is also challenging and requires laborious tasks.
+
+
+
+
+
+
+
+
+
+
+
+
+%
+%Symbolic execution~\cite{Cadar2005,Sen2005} is a powerful software testing method that
+%effectively achieves high code coverage and finds bugs.
+%The key idea of this
+%method is to systematically explore program's diverse paths by substituting
+%program inputs with symbolic ones to execute the program symbolically. Since
+%its inception~\cite{King1976,Boyer1975,Howden1977} in 1970s, symbolic
+%execution has become an active research field~\cite{baldoni2018}. In particular,
+%to address its main challenges such as path-explosion and constraint solving,
+%many different techniques have been manually designed by domain experts.
+%It is well-known that the effectiveness of symbolic execution depends
+%heavily on these diverse techniques: search heuristic~\cite{Seo2014,Li2013}, path-pruning~\cite{Jaffar2013,Yi2018}, and so on~\cite{Dustmann2018,nowack2019}.
+%
+%However, manually designing such techniques is challenging. It is not only
+%nontrivial but also likely to deliver sub-optimal and unstable results. For
+%instance, for a key component of symbolic execution, search heuristic, we
+%observed that no manually-designed existing heuristics consistently achieve
+%good code coverage in practice; the CGS heuristic~\cite{Seo2014} is arguably
+%a state-of-the-art heuristic, but is sometimes inferior even to a random heuristic.
+%In addition, these existing techniques came from a huge amount of engineering effort and high domain expertise.
+%
+%\section{Solutions}
+%In this dissertation, we explore {\em data-driven symbolic execution} to
+%automatically generate diverse techniques of symbolic execution. The key idea
+%is to learn how to design each technique online or offline based on data
+%accumulated while performing symbolic execution.
+%More specifically, we automatically generate four critical solutions for symbolic execution as follows:
+%\begin{itemize}
+%  \item {\bf Automatically generating search heuristics~\cite{paradyse}:}
+%We design $\paradyse$, a novel approach that automates the process of
+%generating a search heuristic for a given program. To achieve
+%this, we use two key ideas. First, we define a {\em parametric search
+%heuristic}, which creates a large class of search heuristics. Our parametric
+%heuristic is to reduce the problem of designing a good search heuristic into
+%a problem of finding a good parameter value. Second, we present a specialized
+%algorithm that effectively guides the search by iteratively refining the
+%search space of the parametric heuristic based on the feedback from previous runs of symbolic execution.
+%
+%  \item {\bf Adaptively switching search heuristics~\cite{chameleon}:}
+%We propose a new approach, $\conmeleon$, for {\em adaptively} changing
+%search heuristics on the fly during symbolic execution. To do so, we first
+%define the space of possible search heuristics using the idea of parametric
+%search heuristic. Second, we propose a new learning algorithm that
+%(1) accumulates the knowledge about the previously evaluated
+%search heuristics, (2) learns the probabilistic distributions of the
+%effective and ineffective search heuristics from the accumulated knowledge,
+%and (3) samples a new set of search heuristics from the distributions.
+%
+%  \item {\bf Automatically reducing input search space~\cite{contest}:}
+%We present $\contest$, a new technique for adaptively reducing the search space of
+%symbolic execution. The main idea is to guide symbolic execution with
+%templates, which restrict the input space by selectively generating symbolic
+%variables. Then, we develop an
+%algorithm that performs symbolic execution while automatically generating,
+%using, and refining templates. The algorithm is based on two key ideas.
+%First, by using the sequential pattern mining~\cite{clofast2016}, we generate
+%the candidate templates from a set of effective test-cases in terms of code
+%coverage during symbolic execution.  Second, we iteratively rank the
+%candidates based on the effectiveness of templates that were evaluated in the previous runs.
+%
+%  \item {\bf Automatically pruning candidate states~\cite{homi}:}
+%We present a new technique, $\ourtool$, to minimize the total number of states but to keep
+%{\em promising} states during symbolic execution. To achieve our goal, we
+%introduce two key ideas: a $\it probabilistic$ pruning strategy and a
+%learning algorithm. First, we define the probabilistic pruning strategy that
+%contains both continuous and discrete probability distributions. We use the
+%former distribution to score how promising each state is, and the latter one
+%to decide how many states are pruned. Second, we present a learning algorithm that
+%continuously updates the two probabilistic distributions
+%online based on data accumulated during symbolic execution.
+%
+%%  \item {\bf Automatically tuning external parameters:}
+%%We present $\tuner$, a novel technique for automatic configuration of
+%%symbolic execution parameters. With $\tuner$, symbolic execution tools such
+%%as KLEE can be run without manually-provided parameters; appropriate
+%%parameter values are automatically adjusted by $\tuner$ during symbolic
+%%execution. $\tuner$ first takes as input a set of parameters to be tuned and
+%%creates an initial probability distribution whose sample space consists of
+%%all the possible parameter values. Along the symbolic execution process,
+%%$\tuner$ uses an online learning algorithm that repeatedly samples a
+%%parameter from the space, evaluates the performance of symbolic execution
+%%with the parameter, and refines the probability distribution of the
+%%sample space based on the evaluation result.
+%\end{itemize}
+%
+%\section{Contributions}
+%The main contribution of this dissertation is to automatically generate a variety of techniques for enhancing the effectiveness of symbolic execution. Specifically, we make the following contributions:
+%\begin{itemize}
+%\item{\bf Data-driven search heuristic generation:}
+%We present a new approach for automatically generating search heuristics for
+%symbolic execution. Our work represents a significant departure from prior
+%work; while existing work (e.g.~\cite{Seo2014,Burnim2008,Park2012,cabfuzz})
+%focuses on manually developing a particular search heuristic,
+%our goal is to automate the very process of generating such a heuristic.
+%
+%\item{\bf Data-driven search heuristic adaptation:}
+%To our knowledge, our work is the first that raises the need for adapting search
+%  heuristics. Existing works have focused on coming up with new but non-adaptive search heuristics~\cite{Seo2014,Burnim2008,Park2012,cabfuzz,paradyse,
+%  Kim2012,Cadar2008}.
+%We present a new approach for performing symbolic execution,
+%  which adaptively learns and changes search heuristics online.
+%
+%\item{\bf Data-driven input space reduction:}
+%Unlike conventional symbolic execution that tracks all input values
+%symbolically, we present a new technique for reducing the input space by
+%selectively generating symbolic values without any prior domain knowledge.
+%
+%\item{\bf Data-driven state pruning:}
+%Most previous approaches are to {\em conservatively} prune redundant states based on some {\em predefined} criteria
+%~\cite{Boonstoppel2008,Bugrara2013,Jaffar2013,Yi2015,Trabish2018,Yi2018}.
+%On the other hand, our approach aims to {\em aggressively} prune the states based on {\em adaptive} criteria learned online during symbolic execution. To achieve this, we present a learning algorithm that continuously updates the probabilistic pruning strategy online during symbolic execution.
+%
+%%\item{\bf Data-driven extern parameter tuning:}
+%%We present a new technique for automatically tuning parameters of symbolic execution.
+%%The key technical contribution is the domain-specific learning algorithm for symbolic execution, which observes the %behavior of symbolic execution with randomly sampled parameters and gradually learns to sample effective parameter %values.
+%
+%
+%\end{itemize}
+%
+%\section{Outline}
+%The rest of this dissertation is organized as follows:
+%\begin{itemize}
+%  \item Chapter~\ref{sec:TSEpreliminaries} describes two major approaches to symbolic execution, namely concolic testing and execution-generated testing.
+%  \item Chapter~\ref{sec:icse18} presents a data-driven search heuristic generation method.
+%  \item Chapter~\ref{sec:fse19} presents a data-driven search heuristic adaptation method.
+%  \item Chapter~\ref{sec:ase18} presents a data-driven input space reduction method.
+%  \item Chapter~\ref{sec:fse20} presents a data-driven state-pruning method.
+%  \item Chapter~\ref{sec:relatedwork} discusses related work and Chapter~\ref{sec:conclusion} concludes the dissertation.
+%
+%\end{itemize}
+
+
+
+
+
+
+
+

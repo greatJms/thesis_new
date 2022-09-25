@@ -1,0 +1,122 @@
+% !TEX root = ./paper.tex
+
+\section{Related Work}
+In this section, we discuss the prior works related to ours.
+%~\cite{Lhotak2006,Smaragdakis2015,hind2001pointer,Lhotak2008,
+%liang2005evaluating, Whaley2004, Milanova2005, Milanova2002, Smaragdakis2011, kastrinis2013hybrid, Xu2009,Rama18,Liang2011,Naik12}.
+%We classify them into three categories according to their approach.
+
+
+\myparagraph{Heuristics for Static Analysis}
+%Recently, numerous researches on program analysis have proposed various analysis heuristics for diverse instances.
+
+Designing heuristics for precise and scalable static analysis has been an active research area.
+%Recently, various analysis heuristics have been proposed to find an appropriate compromise between precision and scalability of program analyses.
+%Parametric program analysis, in particular, has been widely used for pointer analyses~\cite{Smaragdakis2014,Hassanshahi2017,Xu2008,kastrinis2013hybrid}.
+%The goal of parametric pointer analyses is to figure out a specific parameter, so-called analysis heuristic,
+%which makes analysis scalable yet precise as much as possible.
+For example,~\citet{Smaragdakis2014} proposed a context-sensitivity heuristic that runs pre-analysis (e.g., context-insensitive analysis) to identify scalability-detrimental method calls if context-sensitive analysis is applied;
+it analyzes those methods context-insensitively to obtain tractable scalability while sacrificing precision a bit.
+\citet{Oh2014} presented the idea of impact pre-analysis, which first estimates the impact of applying context sensitivity with a fully context-sensitive yet coarse pre-analysis and then performs selective context sensitivity during the main analysis.
+\citet{Hassanshahi2017} aimed to find a parameter which determines context depths for each heap.
+They performed context-insensitive analysis as a pre-analysis, and from the analysis results,
+determined the heap context depths for each object to achieve reasonable scalability without losing too much precision.
+\citet{kastrinis2013hybrid} introduced a hybrid context-sensitivity heuristic that applies object-sensitivity for the virtual
+calls while applying call-site-sensitivity to the static calls.
+\citet{Xu2008} proposed a technique to identify the equivalence classes;
+it merges the contexts in the same class in order to improve the scalability without any precision loss.
+Recently, to design cost-effective analysis policies, graph-based heuristics have arisen as a trending technique~\cite{TanLX16,Tan2017,Li2018a,Li2018b,Lu2019};
+our work lies in this line of research and aims to generate such graph-based heuristics automatically.
+%which uses a cheap pre-analysis to obtain a graph of a given program and
+%produces a program-specific heuristic for the main analysis from the obtained graph.
+
+
+%For example,~\citet{TanLX16} uses a context-insensitive analysis as a pre-analysis to construct an object allocation graph (OAG)
+%and generates an analysis policy to improve the precision of $k$-object-sensitive analysis.
+%With the same graph,~\citet{Li2018b} developed~\Scaler~to specify the method calls which are likely to increase the analysis cost when applying 2-object-sensitive analysis.
+%From a precision flow graph (PFG),~\citet{Li2018a} derives an analysis policy which analyzes method calls context-selectively
+%by identifying precision-critical method calls on which context sensitive analysis can degrade the performance in precision.
+%\citet{Lu2019} proposed other type of graph-based heuristics, called~\Eagle~using a CFL-reachability-based pre-analysis
+%to figure out variables and objects which require context sensitivity.
+%\citet{Tan2017} presented~\Mahjong, a graph-based heap abstraction heuristic using a field points-to graph (FPG), which makes a decision on when to merge and to differentiate heap objects.
+%All existing works on graph-based heuristics have been designed manually, and these tasks require a high degree of expertise and lots of labours.
+
+% Our approach is based on the key insight
+%that sequences of abstract elements produced by the analyzer
+%contain redundancy which can be exploited to increase
+%performance without compromising precision significantly.
+%Concretely, we present an iterative learning algorithm that
+%learns a neural policy that identifies and removes redundant
+%constraints at various points in the sequence
+
+
+\myparagraph{Data-driven Static Analysis}
+
+Our work also belongs to the family of techniques known as data-driven static analysis~\cite{Oh2015, CHA20181,cha2016learning,JeJeChOh17,heo2016unsound,He20pldi}.
+Data-driven static analysis leverages machine learning to produce favorable program analysis heuristics automatically.
+%~\cite{CHA20181,cha2016learning,JeJeChOh17,heo2016unsound}, which employs machine learning techniques.
+%~\cite{cha2016learning,JeJeChOh17,heo2016unsound}, which employs machine learning techniques to produce cost-effective analysis.
+\citet{Oh2015}~proposed a data-driven technique based on Bayesian optimization to learn flow- and context-sensitivity heuristics.
+They designed features for variables and functions in C programs to learn flow- and context-sensitivity heuristics which are presented as linear combinations of the features.
+Later, the linear-model approach was extended to capture disjunctive program properties~\cite{JeJeChOh17,10.1145/3293607}
+\citet{JeJeOh18}~introduced an approach, called data-driven context tunneling, which constructs contexts with the most important $k$ context elements
+instead of using the most recent $k$ context elements as the conventional $k$ context abstraction does.
+To learn context tunneling heuristics, they designed features for methods of Java programs to present which method calls require context tunneling for better performance in both precision and scalability.
+%They used features of methods over Java programs to learn context tunneling heuristics.
+%Although we showed that our algorithm is general to be applicable to learn any heuristics,
+%our framework is inappropriate to learn context-tunneling heuristics because the algorithm~\LearnMinimalAbstraction~extensively uses the monotonicity of analysis;
+%it would fail to produce desirable abstractions for the training programs as the context abstractions used in context tunneling violate the monotonicity we assumed.
+\citet{Heo2016learning} proposed a supervised learning algorithm to learn variable clustering strategy in the Octagon domain
+where the learned heuristics determine whether to keep relation between variables during analysis.
+%It learned the heuristics with manually designed features presenting properties of relations between variables.
+\citet{He20pldi} introduced a data-driven approach \Lait~that learns neural policies for removing substantially redundant constraints that need not be computed in numeric program analysis.
+\citet{Singh2018cav}~leveraged reinforcement learning to speed up numeric analysis with the Polyhedra domain.
+The prior works above require manually designed features to learn suitable heuristics.
+By contrast, our technique proposes to use a feature language to reduce the burden of manual effort on designing features.
+%To learn cost-effective analysis heuristics, they designed features for join operations in numeric analysis.
+%\citet{Anderson19} also designed features representing the behaviors of neural networks on generated counter-example inputs,
+%and proposed a data-driven approach to learn such features for the robustness property verification of neural networks.
+%\citet{Anderson19} also proposed a data-driven approach with manually-designed features to verify the robustness property of neural network.
+%They designed high level features describing key properties of abstract program states and learned a policy that determines the actions (e.g., transfers) during analysis.
+
+
+%\citet{WeiR15} figure out 8 high-level characteristics of functions
+%in JavaScript which are relevant to precision or scalability of the analysis.
+%\citet{cha2016learning} proposed a white box learning algorithm to generate analysis heuristics, which determine widening thresholds, without running analyzers.
+
+Closely related to our work, \citet{ChOhHeYa17}~also automatically generated features for data-driven static analysis.
+Given programs, it runs a program reducer to convert the programs into small feature programs which only maintain the query-related program components,
+and generates features for data-driven static analysis from data-flow graphs obtained from the feature programs.
+Not to mention that the technique is specialized for C programs, it is hardly applicable to learning context-sensitivity heuristics because reducing programs spanning multiple procedures into reasonably small feature programs while maintaining the query-related components is challenging~\cite{ChOhHeYa17} . In this paper, we present a new technique based on  a feature language, which does not have such a limitation and is effectively applicable to context-sensitive analysis for Java.
+%it is hard to reduce the program components which require context sensitive analysis.
+%Moreover, this approach is currently inapplicable for Java pointer analyses as there are no suitable program reducers for Java programs.
+
+
+
+\myparagraph{Finding Optimal Abstractions}
+Various techniques have been proposed to find optimal abstractions efficiently that precisely analyze the query-related program parts only~\cite{Zhang13,Zhang2014,Liang2011learning}.
+Our work is different from them as we aim for good-enough abstractions with much smaller overheads.
+%various techniques have been proposed to search the abstractions efficiently~\cite{Zhang13,Zhang2014,Liang2011learning}.
+%Abstraction refinement technique is to find a desirable minimal abstraction which only maintains the information related to the targeted queries
+%by iteratively refining abstractions~\cite{Zhang13,Zhang2014}.
+\citet{Zhang13} suggested a counterexample-guided abstraction refinement technique that iteratively refines an abstraction toward a desirable one in dataflow analysis.
+%;
+%if an abstraction fails to prove a query, it uses the counterexamples to prune the abstractions which are likely to fail.
+This approach was improved further by~\citet{Zhang2014}, which can find desirable abstractions in parametric program analysis written in Datalog.
+\citet{Liang2011learning} proposed an efficient algorithm to find minimal abstractions that precisely analyze the components related to queries only.
+In our work, we improved the algorithm by~\citet{Liang2011learning} in terms of the size of search space  (Section~\ref{sec:learning-algorithm}).
+%;
+%we exploit high-level structure of $k$-limited abstraction to reduce the search space drastically while the prior algorithm~\cite{Liang2011learning} searches all the space without any reduction.
+
+
+
+
+%Heo2019
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:
+
+

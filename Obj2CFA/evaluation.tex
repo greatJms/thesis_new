@@ -1,0 +1,237 @@
+% !TEX root = ./paper.tex
+
+\section{Experimental Results}\label{sec:evaluation}\label{sec:result}
+We experimentally prove our claim by evaluating \ourtechnique~on real-world programs. 
+Main research questions are as follows: 
+%We aim to
+%answer the following research questions: 
+\begin{itemize}[leftmargin=1.3em]
+\item \textbf{Does our claim hold in the real-world?} 
+Can call-site sensitivity be significantly superior to object sensitivity for real-world programs? 
+How precise and scalable can the
+  context-tunneled call-site-sensitive analysis be in practice? 
+%  obtained from our
+%  technique?
+  % effective is out technique that transforms object sensitivity into
+  % a context-tunneled call-site sensitivity?
+%  How far does it advance the state-of-the-art
+%object-sensitive analyses?
+
+%\item \textbf{Effectiveness of simulation and learning:} How
+%  accurately can our technique simulate object sensitivity?  Does
+%  learning effectively capture the behavior of the simulated policy?
+%  Is our learning algorithm essential? How
+%  does it compare to simpler approaches?
+\item \textbf{Impact of simulation and learning}: 
+Is simulation necessary? 
+How accurately can our technique simulate object sensitivity?  Is the simulation-guided learning necessary to capture the behavior of the simulated policy? How important are the features in learning?
+
+
+\end{itemize}
+
+
+%\input{table_sobj}
+%\input{table_2call}
+
+\myparagraph{Experimental Setting}
+We implemented \ourtechnique~on top of Doop~\cite{BravenboerS09}, a
+popular pointer analysis framework for Java~\cite{JeJeOh18, Li2018b,
+  JeJeChOh17, TanLX16, Smaragdakis2014}.  
+%\textcolor{red}{Note that superiority of object sensitivity over call-site sensitivity has been consistently demonstrated on Doop~\cite{BravenboerS09,TanLX16,KastrinisS13a,Smaragdakis2014}.}
+%To implement our
+%popular pointer analysis framework for Java~\cite{JeJeOh18, Li2018b,
+%  JeJeChOh17, Tan2017, TanLX16, Smaragdakis2014}.  To implement our
+%technique, 
+We used the publicly-available implementation of context
+tunneling given by \cite{JeJeOh18} and newly implemented our
+simulation (Section~\ref{sec:simulation}) and learning
+(Section~\ref{sec:learning}) techniques in Doop.  We conducted all
+experiments on a machine with Intel i7 CPU and 64GB memory running the
+Ubuntu 16.04 64bit operating system.
+
+
+%\paragraph{Benchmarks}
+We used 12 Java programs used by~\cite{JeJeOh18}, of which 10 came from the DaCapo 2006
+benchmarks~\cite{Blackburn2006} ({luindex}, {lusearch}, {antlr},
+{pmd}, {fop}, {eclipse}, {xalan}, {chart}, {bloat}, and {jython}), and
+the remaining two ({checkstyle} and {jpc}) are real-world open-source programs.
+%\textcolor{red}{Note that the DaCapo benchmarks also have consistently been used to experimentally demonstrate the superiority of object sensitivity over call-site sensitivity~\cite{Lhotak2006,BravenboerS09,TanLX16}.}
+Following prior work~\cite{JeJeOh18,Smaragdakis2014}, we classified those 12
+programs into 4 small (luindex, lusearch, antlr, and pmd) and 8 large
+programs. 
+We used the group of small programs as training data, 
+from which our context-tunneling policy $\callheuristic$ is learned, 
+and used large programs as test data to evaluate the
+policy for unseen programs.
+
+
+%Pointer analysis START
+%analysis time: 123.01s
+%Pointer analysis FINISH
+%disk footprint (KB)                                                              959,488
+%loading statistics (simple) ...
+%elapsed time: 11.96s
+%
+%making database available at /home/minseok/Graphick/Ctx_Sensitivity/doop/results/C-1-tunneled-call-site-sensitive+heap/jre1.6/jython.jar
+%making database available at last-analysis
+%#var points-to            20,027,400
+%#may-fail casts           1,723
+%#poly calls               2,498
+%#reach methods            12,011
+%#call edges               107,112
+
+
+
+%\paragraph{Analyses}
+
+Using \ourtechnique, we transformed \oneobjHT, a context-tunneled
+1-object-sensitive analysis developed by \cite{JeJeOh18}, into our
+1-call-site-sensitive analysis, denoted \ours.  We chose
+\oneobjHT~as baseline because it is one of the best object-sensitive analyses
+available today, which boosts the conventional 1-object-sensitive
+analysis using a well-tuned context-tunneling policy. For
+example, \oneobjHT~is empirically more precise than conventional
+2-object-sensitive analysis (\twoobjH), which is considered to be highly
+precise~\cite{JeJeChOh17,Li2018a,Li2018b,Smaragdakis2014,Graphick20}, yet more
+scalable than 1-object sensitivity~\cite{JeJeOh18}.  We obtained the
+tunneling policy of {\oneobjHT} from the publicly available artifact
+of~\cite{JeJeOh18}.
+From {\oneobjHT}, we first applied our simulation
+  technique (Section~\ref{sec:simulation}) to produce
+  the corresponding simulated call-site sensitivity, denoted \oursim. Then, we
+  used our learning algorithm (Section~\ref{sec:learning}) to obtain the final 
+   call-site-sensitive analysis, \ours. 
+%\[
+%\text{\oneobjHT}\xrightarrow[]{\text{simulation}} \text{\oursim} \xrightarrow[]{\text{learning}}\text{\ours}.
+%\]
+Note that {\oursim} runs {\oneobjHT} as a pre-analysis but {\ours} does not (thanks to learning). 
+
+Our main objective is to compare \oneobjHT~and
+\ours, but we compare with some notable analyses as well to
+see the advance more clearly. In summary, we compare the following
+ analyses:
+\begin{itemize}[leftmargin=1.3em]
+\item \oneobjHT: a state-of-the-art context-tunneled 1-object-sensitive analysis~\cite{JeJeOh18}
+\item \oursim: the simulated 1-call-site-sensitive analysis
+    obtained from~\oneobjHT~via 
+    simulation% ($\simheuristic$)
+\item \ours: our final 1-call-site sensitive analysis
+  (obtained from \oursim~via learning)
+\item \twoobjH: 2-object-sensitive analysis without
+  tunneling~\cite{Smaragdakis2011}
+%\item \twocallH: 2-call-site-sensitive analysis without
+%  tunneling~\cite{Smaragdakis2011}
+\item \onecallHT: the existing state-of-the-art 1-call-site sensitivity with
+  tunneling~\cite{JeJeOh18}
+\end{itemize}
+\twoobjH~is available in Doop. 
+\onecallHT~is available in the artifact provided by \cite{JeJeOh18}. 
+%\onecallHT~is the existing
+%state-of-the-art 1-call-site-sensitive analysis with context
+%tunneling, which is available in the artifact of \cite{JeJeOh18}. 
+%\textcolor{red}{
+%\onecallHT~also boosts the conventional 1-call-site-sensitive analysis. 
+%Empirically, \onecallHT~is both more precise and scalable than the conventional 2-call-site-sensitive analysis~\cite{JeJeOh18}.}
+All analyses use 1-context-sensitive heap.
+For precision metric, we mainly use may-fail
+casts. % (\failcasts). % because % it is used in our learning
+% algorithm (Section~\ref{sec:learning}) and
+%the existing analyses 
+%(\oneobjHT~and \onecallHT) have been tuned for it~\cite{JeJeOh18}.
+%\begin{comment}
+%(\oneobjHT~and \onecallHT) have been tuned with the metric~\cite{JeJeOh18}.
+%\end{comment}
+%For scalability, we report analysis time in seconds.
+
+\input{Obj2CFA/table_main}
+\input{Obj2CFA/table_sub}
+
+
+
+
+
+
+\subsection{Performance of \ours}\label{sec:performance}
+
+
+Table~\ref{tbl:eval:main} %compares the precision and cost of the four
+%analyses, which 
+shows that our analysis (\ours) significantly outperforms
+other analyses in both precision and cost, confirming our claim that call-site sensitivity can be superior to object sensitivity for real-world programs. 
+In particular, it beats by far the baseline object sensitivity
+(\oneobjHT) in precision for all programs.  For example,
+\oneobjHT~reports 1,253 may-fail casts for fop but \ours~reduces the
+number to 1,072. 
+Also, \ours~is more scalable than \oneobjHT. For example, \ours~takes 2,731 seconds to analyze jython while \oneobjHT~times out. 
+
+
+
+%the precision gain comes not only from the shared library but application code.
+%For example, \ours~finishes the analysis of jython in
+%2,731s while \oneobjHT~fails to complete.
+
+
+
+
+We note that  our 1-call-site-sensitive analysis is even more precise
+than the traditional 3-object-sensitive analysis with
+2-context-sensitive heap (\threeobjH):
+
+{
+\setstretch{1.0}
+\begin{center}
+  %\small
+  \begin{tabular}{ c r r r r }
+    \toprule
+    % after \\: \hline or \cline{col1-col2} \cline{col3-col4} ...
+    \multirow{2}{*}{Program} & \multicolumn{2}{c }{\ours} & \multicolumn{2}{c }{\threeobjH} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+                             & \#fail-casts & Time(s) & \#fail-cast & Time(s) \\
+    \midrule
+    luindex     & 357 & 40 & 435 & 564 \\
+    antlr       & 477 & 62 & 543 & 561 \\
+    pmd         & 707 & 65 & 782 & 584 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+}
+
+\noindent
+where we compare the results only for the three small 
+programs because \threeobjH~does not scale for other programs.  Note
+that \threeobjH~is the most precise object-sensitive analysis evaluated in
+the literature~\cite{Lu:2019:PYF,Tan2017} and \ours~substantially
+%the literature~\cite{Tan2017,Lu:2019:PYF} and \ours~substantially
+improves its precision with much smaller costs.
+
+
+The performance of \ours~is completely beyond the reach of
+existing call-site-sensitive analyses. 
+\onecallHT~is the state-of-the-art call-site sensitivity,
+%\begin{comment}
+which is more precise and faster than ordinary 2-call-site-sensitive analysis~\cite{JeJeOh18}.
+%\end{comment}
+However, \ours~reduced about 50\% of may-fail casts of \onecallHT~for all programs.
+
+%\textcolor{red}{
+Table~\ref{tbl:eval:graph} compares the precision of the analyses for three other call-graph construction related clients  used in previous works~\cite{Li2018a,Li2018b,Tan2017}. \callgraphedges~presents the number of call-graph edges without contexts, \reachableMethods~presents the number of reachable methods, and \polycalls~presents the number of call-sites that cannot be determined as monomorphic calls. The results show that our simulated call-site sensitivity \oursim~overall shows better precision than the baseline object sensitivity \onecallHT. 
+%Except for two programs bloat and checkstyle, \oursim~is equal or more precise than \oneobjHT~for all the three metrics. In checkstyle, \oursim~is more precise than \oneobjHT~for two metrics. Our learned one~\ours, however, shows a competitive performance compared to \oneobjHT~(e.g., chart, fop).}
+This difference between \oursim~and \ours~ comes from the learning objective. \ours~was not trained to optimize these metrics from~\oursim~(the current implementation of our algorithm uses \failcasts~as the learning objective).
+%; it produces competitive results w.r.t. the metrics in Table~\ref{tbl:eval:graph}. 
+The learning objective, however, can be easily adapted for other clients. 
+%If we use the call-graph-related clients as objective, the learned call-site sensitivity would become more precise than  \oneobjHT~for the clients as the simulated call-site sensitivity \oursim~does.
+%}
+%\callgraphedges, \reachableMethods, \polycalls
+
+
+
+
+
+%\textcolor{red}{
+%In our evaluation, \ours~consistently produces fewer \#may-fail cast than \oneobjHT. It implies that \ours~ consistently analyzed target client-relevant variables more precisely than \oneobjHT. \ours~sometimes produces higher \#VarPtsTo because it analyzed client-irrelevant variables coarsely than \oneobjHT.
+%}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

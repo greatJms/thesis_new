@@ -1,0 +1,79 @@
+% !TEX root = ./paper.tex
+\begin{figure}[t]	
+\begin{multicols}{2}
+\vfill\null
+\begin{subfigure}[t]{1.3\columnwidth}
+\begin{center}
+\begin{lstlisting}[escapeinside={(*}{*)},xleftmargin=0.6cm]
+class D {
+ Object id (v) { 
+  return v; }
+}
+main() {
+ D d = new D();//D
+ A a = (A)d.id(new A()); //A, query1
+ B b = (B)d.id(new B()); //B, query2
+ C c = (C)d.id(new C()); //C, query3
+}
+\end{lstlisting}
+\caption{Example code}
+\label{background:example2}
+\end{center}
+\end{subfigure}
+\columnbreak
+%\scalefont{0.9}
+
+
+
+\qquad
+\begin{subfigure}[t]{0.80\columnwidth}
+	\begin{center}
+		\resizebox{0.4\columnwidth}{!}{
+			\begin{tikzpicture}
+			\node [block] (main) {\LARGE{\tt main$_{}$}\\$[\cdot]$};
+			\node [block, above right=0.5cm and 0.5cm of main] (id1) {\LARGE{\tt id$_{}$}\\$[7]$};
+			\node [block, below = 0.5cm of id1] (id2) {\LARGE{\tt id$_{}$}\\ $[8]$};
+			\node [block, below = 0.5cm of id2] (id3) {\LARGE{\tt id$_{}$}\\ $[9]$};
+			
+			\path [line] (main) -- (id1);
+			\path [line] (main) -- (id2);
+			\path [line] (main) -- (id3);
+					
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{Call-graph by 1-call-site sensitivity}
+	\label{back:cfa:callgraph2}
+\end{subfigure}
+\qquad\linebreak\linebreak
+
+\qquad
+\begin{subfigure}[t]{0.9\columnwidth}
+	\begin{center}
+		\resizebox{0.4\columnwidth}{!}{
+			\begin{tikzpicture}
+			\node [block] (main) {\LARGE{\tt main$_{}$}\\$[\cdot]$};
+			\node [block, right = 0.5cm of main] (id) {\LARGE{\tt id$_{}$}\\${\tt[D]}$};
+			
+			\path [line] (main) -- (id);
+			
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{Call-graph by $k$-object sensitivity (for any $k$)}
+	\label{back:obj:callgraph2}
+\end{subfigure}
+\end{multicols}
+\vspace{-1em}
+\caption{Typical situation that benefits from call-site sensitivity}
+\label{back:b:Fig}
+\vspace{-11pt}
+\end{figure}
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

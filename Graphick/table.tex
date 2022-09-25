@@ -1,0 +1,71 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{multirow}
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\clearpage
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\begin{table}[]
+	\begin{tabular}{@{}clrrrr@{}}
+		\toprule
+		&        & \multicolumn{1}{c}{ours} & \multicolumn{1}{c}{mahjong} & \multicolumn{1}{c}{allocbased} & \multicolumn{1}{c}{typebased} \\ \midrule
+		luindex    & alarms & 358                      & 358                         & 358                            & 795                           \\
+		& costs  & 23                       & 42                          & 10651                          & 19                            \\\midrule
+		lusearch   & alarms & 372                      & 372                         & -                               & 884                           \\
+		& costs  & 25                       & 43                          & \textgreater{}3h               & 19                            \\\midrule
+		antlr      & alarms & 463                      & 463                         & 463                            & 1131                          \\
+		& costs  & 49                       & 48                          & 8302                           & 26                            \\\midrule
+		pmd        & alarms & 871                      & 871                         & 358                            & 1418                          \\
+		& costs  & 48                       & 88                          & 14469                          & 42                            \\\midrule \midrule
+		fop        & alarms & 376                      & 375                         & 375                            & 779                           \\
+		& costs  & 30                       & 50                          & 8647                           & 33                            \\\midrule
+		xalan      & alarms & 539                      & 535                         & -                               & 1093                          \\
+		& costs  & 489                     & 795                         & >3h               & 49                            \\\midrule
+		chart      & alarms & 1331                     &  -                           & -                               & 2299                              \\
+		& costs  & 436                      & >3h            & >3h               & 203                              \\\midrule
+		bloat      & alarms & 1247                     & -                            & -                               & 1926                          \\
+		& costs  & 376                      & >3h            & >3h               & 26                            \\\midrule
+		eclipse    & alarms &  -                        &  -                           & -                               & 6390                          \\
+		& costs  & > 3h                         & >3h            & >3h               & 202                           \\\midrule
+		checkstyle & alarms &  1092                        & 1022                        & -                               & 1922                              \\
+		& costs  & 1700                         & 2346                        & >3h               &  52                             \\\midrule
+		JPC        & alarms & 1304                         & 1226                        &  -                              &   2276                            \\
+		& costs  & 2088                        & 3309                        & >3h               &  49                             \\\midrule
+		findbugs   & alarms & 1789                         & 1671                        &  -                              &  3470                             \\
+		& costs  &  163                        & 273                         & >3h               &   73                            \\ \bottomrule
+	\end{tabular}
+\end{table}
+
+
+\begin{table}[]
+	\begin{tabular}{clrrrr}
+		\toprule
+		&        & \multicolumn{1}{c}{ours} & \multicolumn{1}{c}{Scaler} & \multicolumn{1}{c}{2obj} & \multicolumn{1}{c}{Insens} \\ \midrule
+		luindex  & alarms & 297                      & 297                        & 297                      & 734                        \\
+		& costs  & 38                       & 93                         & 93                       & 22                         \\ \midrule
+		lusearch & alarms & 299                      & 299                        & 299                      & 844                        \\
+		& costs  & 70                       & 93                         & 93                       & 22                         \\\midrule
+		antlr    & alarms & 409                      & 435                           & 409                      & 918                        \\
+		& costs  & 43                       &         85                   & 101                      & 29                         \\\midrule
+		pmd      & alarms &  2075                        & 2176                       & -                         & 2948                       \\
+		& costs  & 710                       & 705                        & >3h                       & 67                         \\\midrule
+		findbugs & alarms & 1436                         & 1542                       & 1409                     & 2508                       \\
+		& costs  & 305                         & 272                        & 2458                     & 49                         \\\midrule
+		chart    & alarms & 998                      & 976                        & 883                      & 1810                       \\
+		& costs  & 63                       & 254                        & 285                      & 48                         \\\midrule
+		eclipse  & alarms &  2989                        & 3211                       &  -                        & 4190                       \\
+		& costs  & 1395                       & 652                        & 3h                       & 135                        \\\midrule
+		jedit    & alarms & 2196                     & 2397                       & -                         & 3398                       \\
+		& costs  & 845                    & 1769                       & 3h                       & 117                        \\\midrule
+		briss    & alarms &  3065                        & 3428                       &   -                       & 4904                       \\
+		& costs  & 2368                       & 1194                       & 3h                       & 228                        \\\midrule
+		soot     & alarms &     -                     & 10549                      &      -                    & 16570                      \\
+		& costs  & 3h                       & 1236                       & 3h                       & 994                        \\\midrule
+		jython     & alarms &     -                     &                       &      -                    &                       \\
+		& costs  & 3h                       &                        &                        &                         \\ \bottomrule
+	\end{tabular}
+\end{table}

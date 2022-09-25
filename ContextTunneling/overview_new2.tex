@@ -1,0 +1,275 @@
+\newpage
+\section{Motivating Example}
+\label{sec:overview}
+
+In this section, we motivate our idea of context tunneling with a simple example. We
+explain our technique in the context of call-site-sensitivity, but it
+is also applicable
+to other flavors of context-sensitivity too, such as object-sensitivity and
+type-sensitivity. The general description is presented in
+Section~\ref{sec:tunneling}.
+
+\myparagraph{Example Code}
+
+Suppose that we analyze the example Java code in
+Fig.~\ref{fig:overview}(a) using a $k$-call-site-sensitive points-to
+analysis~\cite{Smaragdakis2015}.  The example code has three class
+definitions, namely \texttt{A}, \texttt{B}, and \texttt{C}.  Classes
+\texttt{A} and \texttt{B} are empty and class \texttt{C} has two
+methods: \texttt{id} and \texttt{main}.  Method \texttt{id} is
+essentially an identity function on the first argument, which takes an
+object \texttt{v} and an integer \texttt{i}, and returns the same
+object after making recursive calls until \texttt{i} becomes 0. In
+\texttt{main}, \texttt{id} is invoked twice with different
+objects. Both method invocations share the same argument \texttt{i}
+that comes from the external environment (i.e. user input).  The goal
+of the points-to analysis is to prove the safety of two type casts at
+lines 8 and 9.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{.45\columnwidth}
+\begin{lstlisting}
+class A {} class B {}
+class C {
+  static Object id (Object v, int i){
+      return i >= 0 ? id(v, i-1) : v;
+  }
+  public static void main (){
+    int i = input();
+    A a = (A) id(new A(), i);	//Query 1
+    B b = (B) id(new B(), i);	//Query 2
+  }
+}
+\end{lstlisting}
+\caption{Example code}
+\label{fig:overview:code}
+\end{subfigure}
+\quad
+\begin{subfigure}[b]{.45\columnwidth}
+
+%%% k-CFA
+\begin{center}
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {{\tt main} \\ $[\cdot]$};
+    \node [block, above right=0cm and 0.4cm of main] (id1) {{\tt id}\\$[8]$};
+    \node [block, below right=0cm and 0.4cm of main] (id2) {{\tt id}\\$[9]$};
+    \node [block, right=0.4cm of id1] (id3) {{\tt id} \\$[8,4]$};
+    \node [block, right=0.4cm of id2] (id4) {{\tt id} \\$[9,4]$};
+    \node [block2, right=0.4cm of id3] (id5) {{\tt id}\\$[\underbrace{8,4,\cdots,4}_k]$};
+    \node [block2, right=0.4cm of id4] (id6) {{\tt id}\\$[\underbrace{9,4,\cdots,4}_k]$};
+    \node [block2, below right=0cm and 0.4cm of id5] (id7) {{\tt id} \\$[\underbrace{4,\cdots,4}_{k}]$};
+
+    \path [line] (main) -- (id1);
+    \path [line] (main) -- (id2);
+    \path [line] (id1) -- (id3);
+    \path [line] (id2) -- (id4);
+    \path [line, dashed] (id3) -- (id5);
+    \path [line, dashed] (id4) -- (id6);
+    \path [line] (id5) -- (id7);
+    \path [line] (id6) -- (id7);
+    \path [line] (id7) edge[loop above] ();
+\end{tikzpicture}
+}
+\end{center}
+
+
+%%% 2-CFA
+% \begin{center}
+% \resizebox{\columnwidth}{!}{
+% \begin{tikzpicture}
+%     \node [block] (main) {{\tt main} \\ $[\cdot]$};
+%     \node [block, above right=0cm and 0.4cm of main] (id1) {{\tt id}\\$[8]$};
+%     \node [block, below right=0cm and 0.4cm of main] (id2) {{\tt id}\\$[9]$};
+%     \node [block, right=0.4cm of id1] (id3) {{\tt id} \\$[8,4]$};
+%     \node [block, right=0.4cm of id2] (id4) {{\tt id} \\$[9,4]$};
+%     \node [block, below right=0cm and 0.4cm of id3] (id7) {{\tt id} \\$[4,4]$};
+
+%     \path [line] (main) -- (id1);
+%     \path [line] (main) -- (id2);
+%     \path [line] (id1) -- (id3);
+%     \path [line] (id2) -- (id4);
+%     \path [line] (id3) -- (id7);
+%     \path [line] (id4) -- (id7);
+%     \path [line] (id7) edge[loop above] ();
+% \end{tikzpicture}
+% }
+% \end{center}
+\caption{Call-graph by $k$-CFA}
+
+\vspace{2ex}
+
+\begin{center}
+\resizebox{0.5\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {{\tt main}\\$[\cdot]$};
+    \node [block, above right=0cm and 0.5cm of main] (id1) {{\tt id}\\$[8]$};
+    \node [block, below right=0cm and 0.5cm of main] (id2) {{\tt id}\\ $[9]$};
+
+    \path [line] (main) -- (id1);
+    \path [line] (main) -- (id2);
+
+    \path [line] (id1) edge[loop right] ();
+    \path [line] (id2) edge[loop right] ();
+\end{tikzpicture}
+}
+\end{center}
+\caption{Call-graph by 1-CFA with tunneling}
+\end{subfigure}\qquad
+\caption{Example and call-graphs constructed by the conventional 2-call-site sensitivity (2-CFA) and our 1-call-site-sensitivity with tunneling}
+\label{fig:overview}
+\end{figure}
+
+\myparagraph{Conventional Context-Sensitive Analysis}
+
+
+The conventional $k$-call-site-sensitive analysis fails to prove the queries no matter what $k$ value is used.
+Because the value of \texttt{i} can be any integer, the following set $K_{\infty}$ of infinite number of call-strings can be generated for method \texttt{id} at runtime:
+\[
+K_{\infty} = \myset{[8], [9], [8,4], [9,4], [8,4,4], [9,4,4], [8,4,4,4], [9,4,4,4], \dots}
+\]
+where, for example, $[8,4]$ denotes the context that method \texttt{id} was called along the sequence of call-sites 8 and 4. The $k$-call-site-sensitive analysis approximates the call-strings in $K_{\infty}$ by their suffixes of length up to $k$. For example, when $k=2$, the analysis uses the following set $K_2$ of abstract contexts:
+\[
+K_2 = \myset{[8], [9], [8,4], [9,4], [4,4]}
+\]
+where an infinite number of contexts, $\myset{[8,4,4], [9,4,4], [8,4,4,4], [9,4,4,4],\dots}$, in $K_{\infty}$ are approximated by their common suffix $[4,4]$. The analysis analyzes the method \texttt{id} separately for each context in $K_2$. % producing the call-graph in Fig.~\ref{fig:overview}(b).
+Although this approximation ensures termination, the analysis is now unable to differentiate the two separate calls to \texttt{id} at lines 8 and 9, causing the argument {\tt v} of {\tt id} to point to both objects {\tt A} and {\tt B} at the same time when the context is $[4,4]$. Thus, both objects get returned to both queries simultaneously, making the analysis fail to prove their cast safety.
+Note that the analysis fails to prove the queries for any $k$ values, because all the context strings longer than $k$ are eventually
+merged into a single context $[\underbrace{4,\dots,4}_{k}]$ (see Fig.~\ref{fig:overview}(b)).
+
+
+\myparagraph{The Idea of Context Tunneling}
+
+With context tunneling, however, even $1$-call-site sensitive analysis
+becomes to prove the queries.
+% Our idea to improve the analysis is to identify and maintain important
+% context elements only.
+The main weakness of the conventional
+$k$-context-sensitive analysis is that it blindly updates the context
+of a method at every call-site, thereby allowing important context
+elements for the method to be easily overwritten by less important
+ones.  In the example, distinguishing the two call-sites
+at lines 8 and 9 is essential to proving the queries. However, this
+information is eventually lost by repeatedly appending the less
+important call-site 4 to the context of {\tt id}
+(Fig.~\ref{fig:overview}(b)).
+Our technique aims to overcome this weakness by maintaining important
+context elements only during analysis. For example, we exclude the
+call-site 4 from the context strings generated for method {\tt id} and
+thus approximate the set $K_{\infty}$ to the set $K_T$ of contexts:
+\[
+K_T = \myset{[8], [9]}.
+\]
+Here abstract contexts $[8]$ and $[9]$ in $K_{T}$ denote the sets of concrete contexts
+$\myset{[8], [8,4], [8,4,4], \dots}$ and
+$\myset{[9], [9,4], [9,4,4], \dots}$ in $K_{\infty}$, respectively. The resulting
+context-sensitive analysis with $K_{T}$ is able to prove the queries as it differentiates the two calls
+to {\tt id} at lines 8 and 9 completely, producing the call-graph in
+Fig.~\ref{fig:overview}(c).
+
+% With context tunneling, however, even $1$-call-site sensitive analysis
+% is able to prove the queries.
+
+
+This example shows that the idea of context tunneling is potentially
+powerful; even $1$-context-sensitivity with
+tunneling can be as precise as
+$\infty$-context-sensitivity. The goal of this paper is to maximize
+this tremendous, yet untapped, potential of the existing $k$-context-sensitive analysis.
+
+\myparagraph{Challenge}
+
+However, achieving effective context tunneling is
+challenging. The effectiveness of the technique is very sensitive
+to the choice of important context elements.  For example,
+choosing the call-site 4, rather than call-sites 8 and 9, as important does not
+work for the example program.  In the worst case, the analysis
+precision degenerates into the context-insensitive case (e.g. when
+selecting no context elements at all), becoming even inferior to the
+ordinary
+$k$-context-sensitive analysis.  As a result, coming up with a good
+heuristic rule for choosing important context elements is nontrivial;
+hand-crafting such a rule not only requires a huge amount of
+engineering effort and domain knowledge but also likely fails to
+maximize the potential of the technique.
+% adaptable as a fixed heuristic rule tuned for a particular situation
+% may not be effective for other programs, analyses, or queries.
+
+%\input{overview_learning}
+
+\begin{comment}
+\begin{figure}
+\begin{tikzpicture}
+\node [block] (main) {{\tt main} \\ $[\cdot]$};
+\node [block, below left=0.4cm and -0.5cm of main] (id_1) {{\tt id} \\ $[21]$};
+\node [block, left=0.4cm of id_1] (id_2) {{\tt id} \\ $[20]$};
+\node [block, left=0.4cm of id_2] (id_3) {{\tt id} \\ $[19]$};
+\node [block, left=0.4cm of id_3] (id_4) {{\tt id} \\ $[18]$};
+\node [block, below right=0.4cm and -0.5cm of main] (id1_1) {{\tt id1} \\ $[23]$};
+\node [block, below=0.4cm of id1_1] (id_5) {{\tt id} \\ $[23]$};
+\node [block, right=0.4cm of id1_1] (id1_2) {{\tt id1} \\ $[24]$};
+\node [block, below=0.4cm of id1_2] (id_6) {{\tt id} \\ $[24]$};
+\node [block, right=0.4cm of id1_2] (id2_1) {{\tt id2} \\ $[26]$};
+\node [block, below=0.4cm of id2_1] (idrec_1) {{\tt idrec} \\ $[26]$};
+\node [block, right=0.4cm of id2_1] (id2_2) {{\tt id2} \\ $[27]$};
+\node [block, below=0.4cm of id2_2] (idrec_2) {{\tt idrec} \\ $[27]$};
+
+\path [line] (main) -- (id_1);
+\path [line] (main) -- (id_2.north);
+\path [line] (main) -- (id_3.north);
+\path [line] (main) -- (id_4.north);
+\path [line] (main) -- (id1_1);
+\path [line] (id1_1) -- (id_5);
+\path [line] (main) -- (id1_2.north);
+\path [line] (id1_2) -- (id_6);
+\path [line] (main) -- (id2_1.north);
+\path [line] (id2_1) -- (idrec_1);
+\path [line] (idrec_1) edge[loop below] ();
+\path [line] (main) -- (id2_2.north);
+\path [line] (id2_2) -- (idrec_2);
+\path [line] (idrec_2) edge[loop below] ();
+\end{tikzpicture}
+\caption{Call-graph of code in Figure~\ref{fig:overview:new} from $\onecallHT$ analysis with context tunneling relations $\TunnelingRelation=\myset{({\tt id1}, *), (*, {\tt idrec})}$. Symbol $*$ can be any methods.}
+\end{figure}
+
+\begin{figure}
+\begin{tikzpicture}
+\node [block] (main) {{\tt main} \\ $[\cdot]$};
+\node [block, below left=0.4cm and -0.5cm of main] (id_1) {{\tt id} \\ $[21]$};
+\node [block, left=0.4cm of id_1] (id_2) {{\tt id} \\ $[20]$};
+\node [block, left=0.4cm of id_2] (id_3) {{\tt id} \\ $[19]$};
+\node [block, left=0.4cm of id_3] (id_4) {{\tt id} \\ $[18]$};
+\node [block, below right=0.4cm and -0.5cm of main] (id1_1) {{\tt id1} \\ $[23]$};
+\node [block, below right=0.4cm and -0.4cm of id1_1] (id_5) {{\tt id} \\ $[10]$};
+\node [block, right=0.4cm of id1_1] (id1_2) {{\tt id1} \\ $[24]$};
+
+\node [block, right=0.4cm of id1_2] (id2_1) {{\tt id2} \\ $[26]$};
+\node [block, below right=0.4cm and -0.4cm of id2_1] (idrec_1) {{\tt idrec} \\ $[13]$};
+\node [block, right=0.4cm of id2_1] (id2_2) {{\tt id2} \\ $[27]$};
+\node [block, below=0.4cm of idrec_1] (idrec_2) {{\tt idrec} \\ $[7]$};
+
+\path [line] (main) -- (id_1);
+\path [line] (main) -- (id_2.north);
+\path [line] (main) -- (id_3.north);
+\path [line] (main) -- (id_4.north);
+\path [line] (main) -- (id1_1);
+\path [line] (id1_1) -- (id_5);
+\path [line] (main) -- (id1_2.north);
+\path [line] (id1_2) -- (id_5);
+\path [line] (main) -- (id2_1.north);
+\path [line] (id2_1) -- (idrec_1);
+\path [line] (main) -- (id2_2.north);
+\path [line] (id2_2) -- (idrec_1);
+\path [line] (idrec_1) -- (idrec_2);
+\path [line] (idrec_2) edge[loop right] ();
+
+
+\end{tikzpicture}
+\caption{Call-graph of code in Figure~\ref{fig:overview:new} with from conventional $\onecallH$ analysis.}
+\end{figure}
+\end{comment}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

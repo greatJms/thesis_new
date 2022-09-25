@@ -1,0 +1,56 @@
+% !TEX root = ./paper.tex
+
+%<<<<<<< HEAD
+
+We present~\ourtool, a new technique for automatically learning graph-based heuristics for pointer analysis.
+Striking a balance between precision and scalability of pointer analysis requires designing good analysis heuristics. For example, because applying context sensitivity to all methods in a real-world program is impractical, pointer analysis typically uses a heuristic to employ context sensitivity only when it is necessary.
+Past research has shown that exploiting the program's graph structure is a promising way of developing cost-effective analysis heuristics, promoting the recent trend of ``graph-based heuristics'' that work on the graph representations of programs obtained from a  pre-analysis. 
+Although promising, manually developing such heuristics remains challenging, requiring a great deal of expertise and laborious effort.
+In this paper, we aim to reduce this burden by learning graph-based heuristics automatically, in particular without hand-crafted application-specific features. To do so, we present a feature language to describe graph structures and an algorithm for learning analysis heuristics within the language.
+We implemented~\ourtool~on top of \Doop~and used it to learn graph-based heuristics for object sensitivity and heap abstraction.
+The evaluation results show that our approach is general and can generate high-quality heuristics. For both instances,
+the learned heuristics are as competitive as the existing state-of-the-art heuristics designed manually by analysis experts.
+
+
+%Over the past decade, various analysis heuristics to achieve good performance in both scalability and precision.
+%%which generally aims to determine how precisely it analyzes each program component.
+%%Generally, pointer analyzers require various analysis heuristics for two reasons: scalability and precision.
+%%Generally, pointer analyzers require various analysis heuristics for two reasons: scalability and precision.
+%%Analysis heuristics make a trade-off between scalability and precision by determining how precisely each program component is analyzed.
+%%To become practical, pointer analyzers need various heuristics that determine how precisely analyze each program part because blindly analyze them precisely or coarsely make the analysis expensive or produce lots of spurious analysis results.
+%Recently, designing heuristics based on graphs has emerged as a promising technique which generates analysis policies for performance-critical heuristic instances in pointer analysis.
+%The graph-based heuristics work in two steps.
+%They first construct a graph representation of the target program with a cheap pre-analysis.
+%Then, they reason about the graph structure to produce an analysis strategies for the main analysis.
+%Various researches have proven that the graph structures help experts design cost-effective analysis heuristics.
+%%However, existing approaches are manually designed, and manually designing graph-based heuristics still requires a high degree of expertise and lots of laborious tasks.
+%However, manually-designing heuristics, even with the aid of graph structures, still requires a high degree of expertise and lot of laborious tasks.
+%%However, existing approaches are manually designed, which still requires a high degree of expertise and lots of laborious tasks.
+%
+%%we introduced a framework which automatically generates analysis heuristics from given codebases.Our work achieves this goal based on two key ideas:
+%To reduce the burden of the manual design process, we present a framework which automatically generates analysis heuristics from given codebases based on two key ideas:
+%(1) a feature language to describe graph structures and (2) an algorithm for learning analysis heuristics with the feature language.
+%%We developed the framework with two key ideas: (1) we designed a general language for describing graph structures and (2) an algorithm for learning analysis heuristics in terms of the sentences of the language.
+%We implemented our approach on the top of \Doop~Java pointer analysis framework to evaluate two performance critical analysis heuristics in pointer analysis.
+%We applied our approach to produce graph-based context-sensitivity and heap abstraction heuristics from object-allocation-graph and field-points-to-graph, respectively,
+%on which the state-of-the-art graph-based heuristics were developed.
+%The evaluation results demonstrate that our approach can effectively generate high-quality heuristics for the both instances,
+%and the learned heuristics are as competitive as the existing state-of-the-art graph-based heuristics.
+%We also show that our framework can give hints to experts for designing graph-based heuristics.
+%=======
+%%we introduced a framework which automatically generates analysis heuristics from given codebases.Our work achieves this goal based on two key ideas:
+%To reduce the burden of the manual design process, we present a framework which automatically generates analysis heuristics from given codebases based on two key ideas:
+%(1) a feature language to describe graph structures and (2) an algorithm for learning analysis heuristics with the feature language.
+%%We developed the framework with two key ideas: (1) we designed a general language for describing graph structures and (2) an algorithm for learning analysis heuristics in terms of the sentences of the language.
+%We implemented our approach on the top of \Doop~Java pointer analysis framework to evaluate two performance critical analysis heuristics in pointer analysis.
+%We applied our approach to produce graph-based context-sensitivity and heap abstraction heuristics from object-allocation-graph and field-points-to-graph, respectively,
+%on which the state-of-the-art graph-based heuristics were developed.
+%The evaluation results demonstrate that our approach can effectively generate high-quality heuristics for the both instances,
+%and the learned heuristics are as competitive as the existing state-of-the-art graph-based heuristics.
+%We also show that our framework can give hints to experts for designing graph-based heuristics.
+%In comparison with the state-of-the-art heap abstraction heuristic, for example, our learned heuristic successfully analyze programs where the state-of-the-art one is not scale to them.
+%%>>>>>>> 52c2cf20952a1efad1b349065a4b61173dbf659a
+
+
+
+%In this talk, I will introduce a new model for learning analysis heuristics without so-called features. Recently, data-driven techniques, which learn analysis strategies from codebases, has been considered as a promising way to produce cost-effective analysis heuristics. The data-driven approach, however, has a serious drawback: the successfulness of learning heavily depends on the quality of features, and it is a huge burden for an analysis designer to elaborate suitable features. To remove the burden, we designed a new model that can learn analysis heuristics without any features. Our model expresses a heuristic with sets of abstract graphs which are extracted from training programs. The heuristic generates an analysis strategy for unknown programs. We evaluate our approach to learn context-sensitivity heuristic for Java points-to analysis. The evaluation results show that the learned heuristic is as precise and scalable as the heuristic learned from an existing model with manually-crafted features.

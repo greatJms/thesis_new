@@ -1,0 +1,204 @@
+
+\section{Learned formulas}
+\minseok{Remove?}
+Following tables show the learned tunneling heuristics. Each row means a conjunctive formula, and each formula has one seed feature, which is underlined. We denote positive and negative features using ``T'' and ``F'', respectively, and an empty space means ``don't care''.
+\label{app:formulas}
+%\begin{table}[t]
+%     \centering\small
+%    \caption{Atomic features used in evaluation}
+%    \label{tbl:features}
+%\begin{tabular}{c}
+%    \begin{tabular}{clcclcclcclccl}
+%        \toprule
+%        \multicolumn{14}{c}{Class A (Signature features)} \\
+%        \midrule
+%        A1 & ``java'' &\quad& A2 & ``lang'' &\quad& A3 & ``sun'' &\quad& A4 & ``()'' &\quad& A5 & ``void'' \\
+%        A6 & ``security'' &\quad& A7 & ``int''  &\quad&  A8 & ``util'' &\quad& A9 & ``String'' &\quad&  A10 & ``init'' \\
+%        \bottomrule
+%    \end{tabular}
+%%\quad
+%%	\begin{tabular}{clclcl}
+%%		\toprule
+%%		\multicolumn{6}{c}{Class B (Statement features)} \\
+%%		\cmidrule(lr){1-6}
+%%		 B1 & Assign & B6 &
+%%		Breakpoint & B11 & Lookup \\
+%%		 B2 & Identity & B7 &
+%%		EnterMonitor & B12 & Nop \\
+%%		 B3 & Invoke & B8 &
+%%		ExitMonitor & B13 & Ret \\
+%%		 B4 & Return & B9 &
+%%		Goto & B14 & ReturnVoid \\
+%%		 B5 & Throw & B10 &
+%%		If & B15 & TableSwitch \\
+%%		\bottomrule
+%%	\end{tabular}
+%\\
+%\\
+%    \begin{tabular}{clcl}
+%        \toprule
+%        \multicolumn{4}{c}{Class B (Additional features)} \\
+%        \midrule
+%%          B1 & Methods contained in nested class  			& B8 & Methods containing virtual method invocation\\
+%% B2 & Methods taking multiple arguments 			& B9 & Static method \\
+%% B3 & Methods containing array load 				& B10 & Methods containing a single heap allocation \\
+%% B4 & Methods containing local assignments 			& B11 & Methods taking an argument of Object type \\
+%% B5 & Methods containing local variables 			& B12 & Methods containing multiple heap allocations \\
+%% B6 & Methods containing field store 				& B13 & Methods contained in a large class\\
+%% B7 & Methods containing static method invocation\\
+%
+% B1 & Methods contained in nested class  			& B7 & Methods containing static method invocation\\
+% B2 & Methods taking multiple arguments 			& B8 & Methods containing virtual method invocation\\
+% B3 & Methods containing array load 				& B9 & Static method \\
+% B4 & Methods containing local assignments 			& B10 & Methods containing a single heap allocation \\
+% B5 & Methods containing local variables 			& B11 & Methods taking an argument of Object type \\
+% B6 & Methods containing field store 				& B12 & Methods containing multiple heap allocations \\
+% & & B13 & Methods contained in a large class\\
+%
+%      %    \#11 & Methods contained in inner class\\
+%      %    \#12 & Methods taking multiple arguments\\
+%      %   \#13 & Methods containing array load \\ % \textsc{LoadArrayIndex}
+%      %   % instruction\\
+%      %    \#14 & Methods containing local assignments \hakjoo{what is
+%      %           ``local assignment''?}\\
+%      %    \#15 & Methods containing local variables \\
+%      %    \#16 & Methods containing field store\\ % \textsc{StoreInstanceField} instruction\\
+%      %    \#17 & Methods containing static method invocation\\
+%      %    \#18 & Methods containing virtual method invocation\\
+%      %    \#19 & Methods containing a single heap allocation%  \hakjoo{single heap
+%      %           % alloc?} \\ &\minseok{yes only one heap allocation}
+%      % \\
+%      %    \#20 & Methods taking an argument of the ``Object'' type \\
+%      %    \#21 & Methods containing multiple heap allocations%  \hakjoo{diff with
+%      %           % \#19?}\\ &\minseok{Yes, 19 $\subset$ 21}
+%      % \\
+%      %    \#22 & Methods contained in a large class (\#Methods~$>$~20) \\
+%      %    \#23 & Static methods \\
+%        \bottomrule
+%    \end{tabular}
+%\end{tabular}
+%\end{table}
+\subsection{Hybrid Context-Sensitivity}
+\label{app:formulas:sobj}
+%\begin{itemize}
+%  \item $f_1$: $(B10 \land B5 \land B12 \land \neg B11 \land \neg B3 \land B4 \land \neg B9 \land \neg A6 \land A1 \land \neg A3 \land \neg B7 \land \neg A9 \land \neg A2 \land \neg B1 \land A4 \land \neg B8) \lor (A8 \land B5 \land \neg B3 \land A1 \land \neg A6 \land \neg A3 \land \neg B9 \land B4 \land \neg A9 \land \neg B11 \land \neg A2 \land \neg B7 \land \neg B1 \land \neg B8 \land B12 \land B10 \land \neg B13 \land B6 \land A5 \land A10 \land A7 \land \neg A4)$
+%  \item $f_2$: $(B1 \land B5 \land \neg A6 \land \neg A9 \land \neg B13 \land A1 \land \neg A3) \lor (B9 \land \neg A6 \land A1 \land B5 \land B4 \land \neg B6 \land \neg A9 \land \neg A3 \land \neg A10 \land \neg A4 \land A8 \land \neg B1) \lor (B13 \land B5 \land \neg B3 \land \neg A6 \land \neg B9 \land B4 \land \neg A9 \land \neg B10 \land \neg B6 \land \neg A3 \land \neg A5 \land \neg B8 \land A4 \land A8 \land A2 \land B7 \land \neg B1)$
+%
+%\end{itemize}
+\begin{table}[h]
+\newcolumntype{C}{>{\centering}p{0.01\textwidth}}
+\centering
+\tiny
+%\caption{Hybrid context sensitivity}
+\begin{tabular}{|C|C|C|C|C|C|C|C|C|C|C||C|C|C|C|C|C|C|C|C|C|C|C|c|}
+  \hline
+  % after \\: \hline or \cline{col1-col2} \cline{col3-col4} ...
+  & \multicolumn{10}{c||}{ Signature Features (A)} & \multicolumn{13}{c|}{Other Features (B)} \\
+  \cline{2-24}
+   & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 \\
+  \hline                 % 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+   \multirow{2}{*}{$f_1$} &T&F&F&T& &F& &F&F& &F& &F&T&T& &F& &F&\underline{T}&F&T& \\
+                          &T&F&F&F&T&F&T&\underline{T}&F&T&F& &F&F&T&T&F&F&F&T&F&T&F\\
+  \hline                 % 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+   \multirow{3}{*}{$f_2$} &T& &F& & &F& & &F& &\underline{T}& & & &T& & & & & & & &F\\
+                          &T& &F&F& &F& &T&F&F&F& & &T&T&F& & &\underline{T}& & & & \\
+                          & &T&F&T&F&F& &T&F& &F& &F&T&T&F&T&F&F&F& & &\underline{T}\\
+  \hline
+\end{tabular}
+\end{table}
+
+
+\subsection{Object-Sensitivity}
+\label{app:formulas:obj}
+%\begin{itemize}
+%  \item $f_1$: $(B6 \land B5 \land B4 \land \neg B9 \land \neg B11 \land \neg B3 \land A5 \land \neg A4 \land \neg A8 \land \neg A6 \land \neg B7 \land \neg A9 \land \neg A2 \land \neg A7 \land \neg B2 \land \neg A3 \land \neg B1 \land B12 \land B10 \land \neg B13 \land A10 \land \neg B8) \lor (A4 \land \neg B11 \land \neg B2 \land B5 \land \neg B3 \land \neg B9 \land \neg B6 \land \neg A9 \land \neg A2 \land \neg B7 \land \neg A6 \land B4 \land \neg A10 \land \neg A5 \land \neg B1 \land \neg A3 \land A1 \land \neg A7 \land \neg B8 \land \neg B13 \land B10) \lor (B2 \land \neg A4 \land B5 \land \neg B3 \land B4 \land \neg B11 \land \neg A6 \land A1 \land \neg B9 \land \neg B1 \land \neg B7 \land \neg A3 \land \neg A9 \land \neg A2 \land A7 \land A5 \land \neg B8 \land \neg B13 \land A10 \land B12 \land B10 \land B6 \land A8) \lor (B11 \land B5 \land A1 \land \neg A4 \land \neg B3 \land \neg A10 \land \neg A6 \land \neg B6 \land A2 \land \neg B7 \land B4 \land \neg A7 \land \neg B1 \land \neg A5 \land \neg B2 \land \neg A3 \land B13 \land \neg B8 \land A8)$
+%  \item $f_2$: $(B1 \land B5 \land \neg B9 \land B4 \land \neg A6 \land \neg A9 \land A1 \land \neg A3) \lor (B2 \land B5 \land \neg B3 \land B4 \land A1 \land \neg B9 \land \neg B10 \land \neg B11 \land \neg A4 \land \neg A8 \land \neg A7 \land A5 \land B8 \land A2 \land A10 \land B12 \land B13 \land B7 \land B6 \land \neg B1 \land A9 \land A3 \land A6)$
+%\end{itemize}
+\begin{table}[h]
+\tiny
+\centering
+\newcolumntype{C}{>{\centering}p{0.01\textwidth}}
+\begin{tabular}{|C|C|C|C|C|C|C|C|C|C|C||C|C|C|C|C|C|C|C|C|C|C|C|c|}
+  \hline
+  % after \\: \hline or \cline{col1-col2} \cline{col3-col4} ...
+  & \multicolumn{10}{c||}{Signature Features (A)} & \multicolumn{13}{c|}{Other Features (B)} \\
+  \cline{2-24}
+   & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 \\
+  \hline                 % 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+   \multirow{4}{*}{$f_1$} & &F&F&F&T&F&F&F&F&T&F&F&F&T&T&\underline{T}&F&F&F&T&F&T&F\\
+                          &T&F&F&\underline{T}&F&F&F& &F&F&F&F&F&T&T&F&F&F&F&T&F& &F\\
+                          &T&F&F&F&T&F&T&T&F&T&F&\underline{T}&F&T&T&T&F&F&F&T&F&T&F\\
+                          &T&T&F&F&F&F&F&T& &F&F&F&F&T&T&F&F&F& & &\underline{T}& &T\\
+  \hline                 % 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+   \multirow{2}{*}{$f_2$} &T& &F& & &F& & &F& &\underline{T}& & &T&T& & & &F& & & & \\
+                          &T&T&T&F&T&T&F&F&T&T&F&\underline{T}&F&T&T&T&T&T&F&F&F&T&T\\
+  \hline
+\end{tabular}
+\end{table}
+% & & & & & & & & & & & & & & & & & & & & & & & \\
+\subsection{Call-Site-Sensitivity}
+\label{app:formulas:cs}
+%\begin{itemize}
+%  \item $f_1$: $(A4 \land \neg B11 \land \neg B2 \land B5 \land \neg B3 \land \neg B9 \land \neg B6 \land \neg B10 \land \neg B7 \land \neg B12 \land \neg A6 \land B4 \land \neg A2 \land \neg B1 \land \neg A7 \land \neg A3 \land A1 \land \neg B8 \land B13 \land A5 \land A10 \land A8) \lor (\neg B8 \land B5 \land \neg B9 \land \neg B7 \land \neg B10 \land \neg B12 \land \neg B6 \land \neg A6 \land \neg B1 \land \neg A10 \land B4 \land A8) \lor (B9 \land \neg B6 \land \neg A10 \land \neg B1 \land \neg A6 \land \neg B10 \land A1 \land B5 \land B4 \land \neg A4 \land \neg B12 \land \neg A9 \land B13 \land \neg A3 \land A8 \land A2 \land B2 \land B11 \land B8 \land B7)$
+%  \item $f_2$: $(\neg B8 \land B5 \land \neg B9 \land \neg A6 \land \neg A9 \land B4 \land \neg A3 \land \neg B13) \lor (B2 \land B5 \land B4 \land \neg B11 \land \neg B9 \land A1 \land \neg A3 \land \neg A9 \land \neg B6 \land \neg A4 \land A7) \lor (B1 \land B5 \land \neg B9 \land B4 \land \neg B3 \land \neg A6 \land \neg B11 \land \neg A9 \land \neg B10 \land \neg A2 \land \neg A3 \land A1 \land \neg B7 \land \neg B6 \land \neg B13 \land \neg B12)$
+%\end{itemize}
+
+\begin{table}[h]
+\newcolumntype{C}{>{\centering}p{0.01\textwidth}}
+\centering
+\tiny
+\begin{tabular}{|C|C|C|C|C|C|C|C|C|C|C||C|C|C|C|C|C|C|C|C|C|C|C|c|}
+  \hline
+  % after \\: \hline or \cline{col1-col2} \cline{col3-col4} ...
+  & \multicolumn{10}{c||}{Signature Features (A)} & \multicolumn{13}{c|}{Other Features (B)} \\
+  \cline{2-24}
+   & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 \\
+  \hline                 % 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+   \multirow{3}{*}{$f_1$} &T&F&F&\underline{T}&T&F&F&T& &T&F&F&F&T&T&F&F&F&F&F&F&F&T\\
+                          & & & & & &F& &T& &F&F& & &T&T&F&F&\underline{F}&F&F& &F& \\
+                          &T&T&F&F& &F& &T&F&F&F&T& &T&T&F&T&T&\underline{T}&F&T&F&T\\
+  \hline                 % 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+   \multirow{3}{*}{$f_2$} & & &F& & &F& & &F& & & & &T&T& & &\underline{F}&F& & & &F\\
+                          &T& &F&F& & &T& &F& & &\underline{T}& &T&T&F& & &F& &F& & \\
+                          &T&F&F& & &F& & &F& &\underline{T}& &F&T&T&F&F& &F&F&F&F&F\\
+  \hline
+\end{tabular}
+\end{table}
+
+\subsection{Type-Sensitivity}
+\label{app:formulas:type}
+%\begin{itemize}
+%  \item $f_1$: $(B10 \land B5 \land B12 \land B4 \land \neg B9 \land \neg A6 \land \neg A10 \land A1 \land \neg B6 \land \neg A9 \land \neg A3 \land \neg A2 \land \neg B1 \land \neg B7 \land \neg B2 \land \neg A7 \land A8) \lor (\neg B8 \land \neg B3 \land \neg B11 \land B5 \land \neg B9 \land \neg B7 \land \neg B10 \land \neg B6 \land \neg A6 \land \neg A9 \land \neg A2 \land \neg B2 \land \neg B1 \land \neg A3 \land A1 \land \neg A7 \land A4 \land B13 \land A8 \land B12 \land A5 \land A10 \land \neg B4) \lor (B2 \land \neg A4 \land B5 \land \neg B3 \land B4 \land \neg B11 \land \neg A6 \land A1 \land \neg B10 \land \neg B9 \land \neg A8 \land \neg B1 \land \neg B7 \land \neg A3 \land \neg A9 \land B13 \land A5 \land B12 \land \neg A7 \land \neg B8 \land A10 \land A2 \land B6) \lor (B6 \land B5 \land B4 \land \neg B11 \land \neg B3 \land A5 \land \neg A4 \land \neg B7 \land \neg A6 \land A1 \land \neg A3 \land \neg A9 \land \neg A2 \land \neg B2 \land \neg B8 \land \neg B13 \land A10 \land A8 \land \neg B1 \land B12 \land B10 \land A7) \lor (\neg B7 \land B5 \land \neg B3 \land \neg B9 \land \neg B11 \land \neg B10 \land \neg B6 \land \neg A6 \land \neg A8 \land \neg A10 \land \neg B1 \land \neg A9 \land \neg A2 \land B4 \land \neg A3 \land \neg A5 \land B13 \land B8 \land \neg A4 \land A7 \land B12 \land B2 \land \neg A1) \lor (A7 \land B5 \land \neg B11 \land \neg B3 \land \neg B9 \land B4 \land \neg A9 \land \neg A2 \land \neg A6 \land \neg B7 \land \neg B1 \land \neg A4 \land A1 \land \neg A3 \land A5 \land B2 \land \neg B8 \land A10 \land \neg B13 \land B12 \land B10 \land A8 \land B6) \lor (A4 \land \neg B11 \land \neg B2 \land B5 \land \neg B3 \land \neg B9 \land \neg B6 \land \neg A9 \land \neg A2 \land \neg B7 \land \neg B10 \land \neg A6 \land \neg A8 \land \neg B1 \land \neg A7 \land \neg B8 \land \neg B13 \land A5 \land A10 \land \neg A1 \land A3 \land B12 \land \neg B4) \lor (B3 \land B5 \land B4 \land \neg A10 \land \neg B1 \land \neg B6 \land \neg A9 \land B8 \land \neg A4 \land B12) \lor (\neg B9 \land B5 \land \neg B3 \land \neg B11 \land B4 \land \neg B10 \land \neg B6 \land \neg A6 \land \neg A10 \land \neg A9 \land \neg A2 \land \neg B2 \land \neg B7 \land \neg B1 \land \neg A3 \land A1 \land \neg A5 \land A4 \land \neg A7 \land B13 \land B8 \land B12 \land A8) \lor (\neg A2 \land \neg A9 \land \neg B11 \land B5 \land \neg B3 \land \neg B9 \land \neg B6 \land \neg A6 \land \neg B7 \land B4 \land \neg B2 \land \neg B1 \land \neg A3 \land \neg A7 \land A5 \land \neg A4 \land B12 \land \neg A1)$
+%  \item $f_2$: $(B1 \land B5 \land \neg B9 \land B4 \land \neg A6 \land \neg A9 \land \neg B13 \land A1 \land \neg A3) \lor (A9 \land B5 \land A1 \land B4 \land \neg B9 \land \neg B10 \land \neg B6 \land \neg A10 \land \neg A7 \land \neg B13 \land \neg A8 \land \neg A5 \land A2 \land B12 \land B7 \land \neg B1) \lor (A3 \land B5 \land \neg B3 \land \neg B9 \land B4 \land \neg A9 \land \neg B10 \land \neg A6 \land \neg B12 \land \neg A8 \land \neg A7 \land A5 \land B8 \land \neg B1 \land B13) \lor (A5 \land B5 \land \neg B9 \land \neg B11 \land B4 \land \neg A6 \land \neg B10 \land \neg A9 \land \neg A2 \land \neg B7 \land \neg A8 \land \neg A3 \land A1 \land \neg A7 \land \neg A4 \land \neg B1 \land A10 \land B6) \lor (\neg A1 \land \neg A9 \land B5 \land \neg B11 \land \neg B3 \land \neg B9 \land \neg A2 \land B4 \land \neg B10 \land \neg A6 \land \neg B7 \land \neg B13 \land \neg A3 \land \neg A4 \land A7 \land B2 \land \neg B1)$
+%\end{itemize}
+
+\begin{table}[h]
+\tiny
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c||c|c|c|c|c|c|c|c|c|c|c|c|c|}
+  \hline
+  % after \\: \hline or \cline{col1-col2} \cline{col3-col4} ...
+  & \multicolumn{10}{c||}{Signature Features (A)} & \multicolumn{13}{c|}{Other Features (B)} \\
+  \cline{2-24}
+   & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 \\
+  \hline                 % 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+   \multirow{10}{*}{$f_1$}&T&F&F& & &F&F&T&F&F&F&F& &T&T&F&F& &F&\underline{T}& &T& \\
+                          &T&F&F&T&T&F&F&T&F&T&F&F&F&F&T&F&F&\underline{F}&F&F&F&T&T\\
+                          &T&T&F&F&T&F&F&F&F&T&F&\underline{T}&F&T&T&T&F&F&F&F&F&T&T\\
+                          &T&F&F&F&T&F&T&T&F&T&F&F&F&T&T&\underline{T}&F&F& &T&F&T&F\\
+                          &F&F&F&F&F&F&T&F&F&F&F&T&F&T&T&F&\underline{F}&T&F&F&F&T&T\\
+                         % 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+                          &T&F&F&F&T&F&\underline{T}&T&F&T&F&T&F&T&T&T&F&F&F&T&F&T&F\\
+                          &F&F&T&\underline{T}&T&F&F&F&F&T&F&F&F&F&T&F&F&F&F&F&F&T&F\\
+                          & & & &F& & & & &F&F&F& &\underline{T}&T&T&F& &T& & & &T& \\
+                          &T&F&F&T&F&F&F&T&F&F&F&F&F&T&T&F&F&T&\underline{F}&F&F&T&T\\
+                          &F&\underline{F}&F&F&T&F&F& &F& &F&F&F&T&T&F&F& &F& &F&T& \\
+  \hline                 % 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+   \multirow{5}{*}{$f_2$} &T& &F& & &F& & &F& &\underline{T}& & &T&T& & & &F& & & &F\\
+                          &T&T& & &F& &F&F&\underline{T}&F&F& & &T&F&F&T& &F&F& &T&F\\
+                          & & &\underline{T}& &T&F&F&F&F& &F& &F&T&T& & &T&F&F& &F&T\\
+                          &T&F&F&F&\underline{T}&F&F&F&F&T&F& & &T&T&T&F& &F&F&F& & \\
+                          &\underline{F}&F&F&F& &F&T& &F& &F&T&F&T&T& &F& &F&F&F& &F\\
+  \hline
+\end{tabular}
+\end{table}
+

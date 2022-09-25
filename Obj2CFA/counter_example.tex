@@ -1,0 +1,307 @@
+% !TEX root = ./paper.tex
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+%\setcopyright{none}
+%\usepackage {tikz}
+\usetikzlibrary {shapes,positioning}
+%\usepackage {bm}
+\tikzstyle{block} = [rectangle, draw, fill=white, text width=3.8em,
+, text
+centered, rounded corners, minimum height=4em]
+\tikzstyle{block2} =
+[rectangle, draw, fill=white, text width=6em, text centered, rounded
+corners, minimum height=4em, minimum width = 7em] \tikzstyle{line} = [draw, -latex']
+\tikzstyle{onlyText} = [text width =2em, text centered]
+%\setcopyright{rightsretained}
+
+\tikzstyle{block3} =
+[rectangle, draw, fill=white, text width=7em, text centered, rounded
+corners, minimum height=3em] \tikzstyle{line} = [draw, -latex']
+
+%\setcopyright{rightsretained}
+
+
+\tikzstyle{blocks} = [rectangle, draw, fill=white, text width=0.7cm, text height = 4em, text
+centered,  text width=4em, rounded corners, minimum height=0.6cm]
+
+% \chapter{Open Question: Is Complete Simulation Possible?}\label{sec:counter_example}
+
+% In this paper, we showed that it is practically possible to outperform object sensitivity via context-tunneled call-site sensitivity. 
+% %, which supports our claim that call-site sensitivity is empirically superior to object sensitivity in a more general $k$-limited setting. 
+% However, it remains to be seen whether or not call-site sensitivity can be fundamentally superior to object sensitivity. 
+
+\myparagraph{Fundamental superiority}Let us define the notion of `superiority' as follows: 
+\begin{definition}[Superiority of Call-Site Sensitivity]
+Let $\mbp$ be a set of target programs. Let $\mbs$ be a context-tunneling space for the target programs. 
+We say call-site sensitivity is superior to object sensitivity with respect to $\mbs$ if 
+is always possible to simulate object sensitivity via call-site sensitivity: 
+\begin{equation}\label{eq:sup-condition}
+\forall P \in \mbp. \forall T_{\it obj} \in \mbs.  \exists T_{\it call} \in \mbs.\forall k \in [0,\infty]. 
+\; 
+\fix F^{T_{\it call}, U_{\it call}}_{P, k} \moreprecise~\mbox{(more precise than)}~
+\fix F^{T_{\it obj}, U_{\it obj}}_{P, k}
+%\call_k(P, T_{\it call})~\mbox{is more precise than}~\obj_k(P, T_{\it obj}).
+\end{equation}
+where $U_{\it call}$ and $U_{\it obj}$ are context-update functions (Eq.~(\ref{eq:objsens}) and (\ref{eq:cfa})) that are naturally given together with the tunneling space $\mbs$, and the precision order $\moreprecise$ is defined in terms of the context-insensitive points-to sets, as follows: 
+ \[
+   \fix F_{P,k}^{T, \updatectx} \moreprecise \fix
+   F_{P,k}^{T', \updatectx'} \iff \forall x\in \Var_P.\; \project(\fix
+   F_{P,k}^{T, \updatectx})(x) \subseteq \project(\fix
+   F_{P,k}^{T', \updatectx'}) (x)
+ \]
+where $\project(X, Y, R,\callgraph) = \lambda x.\; \bigsqcup_{\ctx \in \Ctx}
+ \myset{h \mid (h, \hctx) \in X(x, \ctx)}$.
+\end{definition}
+Then, the question is restated as follows: Is there a context-tunneling space $\mbs$ that makes the condition (\ref{eq:sup-condition}) true? 
+
+%Formally answering the question would be challenging, although we conjecture that the answer might be true. Let us explain why with examples.
+
+
+
+
+\myparagraph{Object Sensitivity is Not Fundamentally Superior}
+We first show that object sensitivity is not fundamentally superior to call-site sensitivity. 
+That is, it is not possible to find a tunneling
+abstraction space $\mbs$ that makes $k$-object sensitivity with
+tunneling always equal or more precise than $k$-call-site
+sensitivity with tunneling. The example code in
+Figure~\ref{background:example2} is a universal counter-example for all 
+tunneling spaces $\mbs$. By definition of context tunneling
+(i.e., selective update of contexts), the method
+{\tt id} in the example (Figure~\ref{background:example2}) can have
+ \texttt{[D]} (updating context) or \texttt{[$\cdot$]}
+(inheriting context) as a context no matter what tunneling abstraction space is
+used. Thus, $k$-object sensitivity with tunneling is unable to separate the
+three method calls (invoked at the three different invocation sites)
+with the two 
+available context choices. In summary, we conclude that object sensitivity cannot simulate call-site sensitivity even in the generalized setting with context tunneling. 
+
+%k-call-site sensitivity, however, can separate the
+%three method calls with a tunneling abstraction $\emptyset \subseteq
+%S$ (always update contexts) for all tunneling abstraction space
+%$S$ of context tunneling. 
+
+
+
+\myparagraph{The Case for Call-Site Sensitivity}
+On the other hand, the situation for call-site sensitivity is nontrivial and it remains to be seen whether or not call-site sensitivity can simulate object sensitivity completely. 
+%we conjecture that call-site sensitivity can be fundamentally superior to object sensitivity with a well-designed context tunneling space. 
+Let us explain in more detail with examples.
+
+
+
+\begin{figure}[t]
+\begin{multicols}{2}
+%\vfill\null
+~\\\\\\\\
+\begin{subfigure}[b]{1.2\columnwidth}
+\begin{lstlisting}[xleftmargin=13pt,multicols=2,basicstyle={\fontsize{8.5}{10}\selectfont\ttfamily}]
+class C {
+ C f;
+ void m(C v) {
+  this.set(v);
+  v.set(this);
+ }
+ void set(C v) {
+  this.f = v;
+ }
+}
+void main() {
+ C c1 = new C();//C1
+ C c2 = new C();//C2
+
+ c1.m(c2);
+ c2.m(c1);
+ assert(c1.f != c2.f); 
+}
+\end{lstlisting}
+\caption{Example code}
+\label{fig:counterexample:code}
+\end{subfigure}
+\columnbreak~\\
+
+
+\quad\begin{subfigure}[b]{1.0\columnwidth}
+\begin{center}
+	\resizebox{0.55\columnwidth}{!}{
+		\begin{tikzpicture}
+		\tikzstyle{every node}=[font=\LARGE]
+		\node [block] (main) {{\tt main} \\ $[\cdot]$};
+		\node [block, above right = -0.4cm and
+		0.7cm of main] (Dm1) {\tt {m} \\$[$C1$]$};
+		\node [block, below = 0.4cm of Dm1] (Dm2) {\tt{m} \\$[$C2$]$};
+		\node [block, right = 0.9cm of Dm1] (Cm1) {\tt {set} \\$[$C1$]$};
+		\node [block, right = 0.9cm of Dm2] (Cm2) {\tt {set} \\$[$C2$]$};
+		
+		\path [line] (main) edge node[above] {$15$} (Dm1);
+		\path [line] (main) edge node[above] {$16$} (Dm2);
+		\path [line] (Dm1) edge node[above] {$4$} (Cm1);
+		\path [line] (Dm2) edge node[below] {$4$} (Cm2);
+		\path [line] (Dm2) edge node[above] {$5$} (Cm1);
+		\path [line] (Dm1) edge node[below] {$5$} (Cm2);
+		
+		\end{tikzpicture}
+	}
+\end{center}
+\caption{Call-graph by 1-object sensitivity}
+\label{fig:counterexample:obj}
+\end{subfigure}~\\
+
+
+
+\quad\begin{subfigure}[b]{1.0\columnwidth}
+
+\begin{center}
+	\resizebox{0.55\columnwidth}{!}{
+		\begin{tikzpicture}
+		\tikzstyle{every node}=[font=\LARGE]   
+		\node [block] (main) {{\tt main} \\ $[\cdot]$};
+		\node [block, above right = -0.4cm and
+		0.7cm of main] (Dm1) {{\tt m} \\$[15]$};
+		\node [block, below = 0.4cm of Dm1] (Dm2) {{\tt m} \\$[16]$};
+		\node [block, right = 0.9cm of Dm1] (Cm1) {{\tt set} \\$[4]$};
+		\node [block, right = 0.9cm of Dm2] (Cm2) {{\tt set} \\$[5]$};
+		
+		\path [line] (main) edge node[above] {$15$} (Dm1);
+		\path [line] (main) edge node[above] {$16$} (Dm2);
+		\path [line] (Dm1) edge node[above] {$4$} (Cm1);
+		\path [line] (Dm2) edge node[below] {$5$} (Cm2);
+		\path [line] (Dm2) edge node[above left= 0.15cm and 0.02cm] {$5$} (Cm1);
+		\path [line] (Dm1) edge node[below left= 0.15cm and 0.02cm] {$4$} (Cm2);	
+		\end{tikzpicture}
+	}
+\end{center}
+\caption{Call-graph by 1-call-site sensitivity}
+\label{fig:counterexample:call}
+\end{subfigure}
+
+\end{multicols}
+\vspace{-15pt}
+\caption{Example such that call-site sensitivity cannot
+  simulate object sensitivity w.r.t. tunneling space $\mbs = \Invo$.}
+\vspace{-10pt}
+\label{fig:counterexample}
+\end{figure}
+
+First, we point out that that the condition (\ref{eq:sup-condition}) does not hold w.r.t. the tunneling space considered in this paper. 
+In Section~\ref{sec:setting}, we defined the tunneling space $\mbs$ to be the set of invocation-sites, i.e., $\mbs = \Invo$. 
+With this space, there exists a tricky counter-example program that context-tunneled
+call-site sensitivity is unable to simulate object sensitivity.
+Consider the program in Figure~\ref{fig:counterexample}. 
+In the example code, class {\tt C} contains two methods, {\tt set} and {\tt m}.
+Method {\tt set} is a setter that stores the parameter value in the
+the field of the base object,
+and method {\tt m} calls the {\tt set} method twice
+with the receiver object and parameter being swapped.
+The {\tt main} method creates two objects, {\tt C1} and {\tt C2}, and
+stores them in {\tt c1} and {\tt c2}. Method {\tt m} is called on {\tt
+  c1} with parameter {\tt c2} at line 15, and it is called again on
+{\tt c2} with parameter {\tt c1} at line 16.
+At line 17, an assertion asks if
+the fields of {\tt c1} and {\tt c2} are not aliased.
+In the real execution, the query holds because {\tt c1.f} points to {\tt C2} and
+{\tt c2.f} points to {\tt C1}.
+
+The conventional 1-object-sensitive analysis can prove the query but
+1-call-site sensitivity cannot do so no matter what tunneling abstraction from the space $\mbs = \Invo$ is
+chosen.
+Figure~\ref{fig:counterexample:obj} presents
+the call-graph of 1-object sensitivity.
+The object-sensitive analysis is effectively producing the call-graph above as
+each context of {\tt set} determines the value of each parameter.
+When the context is {\tt [C1]}, the receiver object is {\tt C1} and the value of the parameter is {\tt C2}.
+Otherwise, when the context is {\tt [C2]}, the receiver object and the
+parameter value are  {\tt C2} and {\tt C1}, respectively.
+On the other hand, conventional 1-call-site sensitivity constructs a similar but
+different call-graph in Figure~\ref{fig:counterexample:call}.
+Note that the two edges labeled 4 go
+to the same method but they are heading to different methods in the call-graph of object sensitivity. 
+Thus, it is not possible to simulate object sensitivity with the invocation-site-based context tunneling. 
+%However,
+%doing so still fails to simulate object sensitivity.
+
+
+%The code pattern, however, is uncommon in practice.
+%To make call-site sensitivity unable to simulate object sensitivity,
+%the program should have at least two invocation-sites where a single method
+%is called with different parameters and receiver objects.
+%The parameters should come from the parameters of the caller methods, and the
+%caller method should be called from at least two different invocations with
+%different parameters. Satisfying all of these constraints at the same time
+%would happen rarely in practice.
+
+
+%\textcolor{red}{
+%\footnote{
+%We can define the tunneling abstraction in various ways.
+%\citet{JeJeOh18} originally used (pairs of) methods as tunneling abstractions.
+%In this paper, we consider more fine-grained program elements, i.e., invocation-sites. 
+%} 
+
+\begin{figure}[t]
+	\begin{center}
+			\resizebox{0.8\columnwidth}{!}{
+					\begin{tikzpicture}
+					\tikzstyle{every node}=[font=\LARGE]
+					\node [block] (main) {{\tt main} \\ $[\cdot]$};
+					\node [block, right =
+					2.0cm of main] (Dm1) {{\tt m} \\$[15]$};
+					\node [block, left = 1.9cm of main] (Dm2) {{\tt m} \\$[16]$};
+					\node [block, below right = -0.3cm and 1.9cm of Dm1] (Cm1) {{\tt set} \\$[5]$};
+					\node [block, below left = -0.3cm and 1.9cm of Dm2] (Cm2) {{\tt set} \\$[4]$};
+	
+					\node [block, above = 0.4cm of Cm1] (Cm3) {{\tt set} \\$[15]$};
+					\node [block, above = 0.4cm of Cm2] (Cm4) {{\tt set} \\$[16]$};
+	
+	
+					\path [line] (main) edge node[above= 0.15cm] {\large$(C1,15)$} (Dm1);
+					\path [line] (main) edge node[above= 0.15cm] {\large$(C2,16)$} (Dm2);
+					\path [line] (Dm1) edge node[above left= 0.15cm and -0.7cm] {\large $(C1,4)$} (Cm3);
+					\path [line] (Dm2) edge node[above right= 0.15cm and -0.7cm] {\large $(C1,5)$} (Cm4);
+					\path [line] (Dm2) edge node[below right = 0.15cm and -0.7cm] {\large $(C2,4)$} (Cm2);
+					\path [line] (Dm1) edge node[below left = 0.15cm and -0.7cm] {\large $(C2,5)$} (Cm1);
+					\end{tikzpicture}
+			}
+	\end{center}
+	\caption{Call-graph with a fine-grained tunneling space}
+	\label{fig:cg-finegrained}
+	\vspace{-10pt}
+	\end{figure}
+However, this counter-example does not mean that it is fundamentally impossible to simulate object sensitivity via call-site sensitivity, as the counter-example becomes no longer valid if we use a more fine-grained tunneling abstraction. 
+For example, suppose we define the tunneling space to be pairs of receiver objects and invocation-sites, i.e., $\mbs = \Heap \times \Invo$ (recall that choosing a tunneling abstraction does not affect the analysis soundness). 
+With this tunneling space, a context-tunneled 1-call-site-sensitive analysis can now prove the query. 
+Suppose we use a tunneling abstraction $T = \myset{(C1,4), (C1,5)}$, which means that we apply context tunneling only when the receiver object is $C1$ and the invocation-site is either $4$ or $5$. 1-call-site sensitivity with $T$ produces the call-graph in Figure~\ref{fig:cg-finegrained}. 
+In the call-graph, $\texttt{m[15]} \stackrel{(C1,4)}{\to}
+\texttt{set[15]}$ indicates that the caller ({\tt m}) and callee ({\tt
+  set}) have the same context 15 where the callee method is called at
+invocation-site 4 and its receiver object is $C1$. With this call-graph, we can prove the query 
+in Figure~\ref{fig:counterexample:code} as it is strictly more precise than the call-graph produced by object sensitivity
+(Figure~\ref{fig:counterexample:obj}). 
+
+
+
+%Note that the above counter-example is not valid that 1-call-site
+%sensitivity with tunneling can prove the query if we use a generalized
+%abstraction space of context tunneling instead of invocation sites. if
+%we use pairs of receiver objects and invocation sites as tunneling
+%abstraction, 1-call-site-sensitive analysis with tunneling can prove
+%the query in the example
+%(Figure~\ref{fig:counterexample:call}). Suppose we use a
+%tunneling abstraction $T = \{(C1,4),(C1,5)\}$ where it applied context
+%tunneling when the receiver object and invocation site are $C1$ and
+%$4$, respectively, or the object and the invocation site are $C2$
+%and $5$, respectively. It produces
+%the following context abstraction:
+
+
+
+This way, we conjecture that it would be always possible to find a suitable context-tunneling space $\mbs$ that satisfies the condition (\ref{eq:sup-condition}) w.r.t. the given set of programs ($\mbp$). We leave an in-depth theoretical analysis as future work. 
+
+%}
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

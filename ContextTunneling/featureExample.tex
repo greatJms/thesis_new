@@ -1,0 +1,56 @@
+\begin{figure}
+\begin{multicols}{2}
+\begin{lstlisting}
+class A{} class B{}
+
+public class C {
+ void main(String[] args) {
+
+   LinkedList al = new LinkedList();//L1
+   LinkedList bl = new LinkedList();//L2
+
+   Iterator aItr = al.iterator();
+   Iterator bItr = bl.iterator();
+		
+   al.add(new A());
+   bl.add(new B());
+		
+   A a1 = (A)aItr.next();//query1
+   B b1 = (B)bItr.next();//query2
+  }
+}
+
+
+public class LinkedList {
+  private Entry header = new Entry(...);
+  private int size = 0;
+  ...
+  public boolean add(Object v){
+   addBefore(v, header);
+   return true;}
+  ...
+  public ListIterator listIterator(){
+   return new ListItr();}//I
+  ...
+  private class ListItr{
+   ...
+   public Object next(){...
+    next = next.next;
+    nextIndex++;
+    return lastReturned.element;}
+  }
+}
+
+\end{lstlisting}
+\end{multicols}
+\caption{Example}
+\label{fig:FeatureExampleCode}
+\end{figure}
+
+\section{Feature Engineering}
+To obtain suitable features for context tunneling, we investigate conventional context sensitive analysis. We elaborate features with following procedure procedure. Let assume we want to make features for \oneobjHT. First, we collect queries from training programs that \oneobjH~can't prove but \twoobjH~can. For instance, query1,2 in figure \ref{fig:FeatureExampleCode}  are queries that \twoobjH~can prove but \oneobjH~can't. Second, we manually find tunneling predicate that \oneobjHT~can prove the queries.  In above example, $\TunnelingRelation = \myset{(main, ListItr.next)}$ can prove the queries in \oneobjHT. Third, generalize methods in predicates and use them as candidate features. For instance ${ListItr.next}$ is a nested class's methods, has local assign, etc. We then run analysis with each candidate features and filterout features that have proven queries that \oneobjH~can't prove.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

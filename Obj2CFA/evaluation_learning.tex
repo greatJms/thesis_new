@@ -1,0 +1,342 @@
+% !TEX root = ./paper.tex
+
+
+\subsection{Impact of Simulation and Learning}\label{sec:eval_learning}
+
+
+Next, we discuss the impact of our technical contributions, simulation and learning. 
+
+\myparagraph{Simulation Accuracy}
+We first note that our technique enabled call-site
+sensitivity to accurately simulate object sensitivity for real-world
+applications.
+For all benchmark programs except for jython, we ran the
+baseline object-sensitive analysis (\oneobjHT) and the corresponding
+call-site sensitive analysis (\ours) and counted the number ($A$) of may-fail cast
+queries that both analyses can prove and the number ($B$) of queries
+that \oneobjHT~can prove. The ratio $A/B$ hints at how accurately
+\ours~covers the baseline object sensitivity. The
+average ratio over the 11 programs was $0.98$, implying that \ourtechnique~can simulate object sensitivity almost completely.
+
+%\textcolor{red}{
+Most of the remaining 2\% of queries, which \ourtechnique~missed, were caused by imperfect simulation rather than learning; 
+when we calculated the ratio using simulation only (i.e., \oursim), 
+the ratio $A'/B$ was still $0.98$, where $A'$ denotes the number of may-fail casts that both \oursim~and \oneobjHT~can prove. 
+%, the may-fail casts proved by \oursim~($A'$)
+%still cover 98\% of the queries proved by \oneobjHT~(e.g., $A'/B = 0.98$).
+We found that this was because we used a coarse tunneling space, i.e., invocation sites, and that 
+using a more fine-grained tunneling space (e.g., pairs of invocation-sites and receiver objects) would improve the simulation accuracy. 
+We describe an example in Section~\ref{sec:counter_example}. 
+%We also found the (coarse) tunneling space we used makes the simulation imperfect.
+%In this paper, we used invocation sites as tunneling space (e.g., $T \subseteq \Invo$); a tunneling abstraction determines whether to apply context tunneling with invocation sites.
+%Using a more fine-grained space (e.g., pair of invocation-sites and receiver objects), however, would improve the simulation accuracy and precision. 
+%An example is described in Section~\ref{sec:counter_example}.
+%}
+
+
+%Without simulation, our learning algorithm was unable to find good-enough tunneling policies for call-site sensitivity. 
+
+%
+%
+%The learning phase of \ourtechnique~spent 58 hours in total, and it effectively captured the behavior of the simulated policy. For all programs, the simulated analysis with $\simheuristic$ was more precise but expensive than the baseline (\oneobjHT).  For eclipse, for example, it reported 573 may-fail casts and took 172s while \oneobjHT~reported 698 may-fail casts and took 43s. With the learned policy, \ours~took 48s with 569 may-fail casts. 
+%%We also found our learning algorithm in Section~\ref{sec:learning} is essential; using existing  algorithms~\cite{JeJeOh18,Pedregosa11} ends up with suboptimal results. 
+%%We provide detailed results in Section C of the supplementary material.
+
+\myparagraph{Roles of Simulation and Learning}
+%This accurate simulation played a key role in improving the precision of call-site sensitivity. 
+The results in Table~\ref{tbl:eval:main} show that our simulation technique plays a key role in improving the precision of call-site sensitivity. % and learning reduces the overhead of the simulation. 
+%  \ours~mainly comes from our simulation technique ($\simheuristic$).
+The column~\oursim~in Table~\ref{tbl:eval:main} presents the
+performance of the call-site sensitive analysis obtained by simulating \oneobjHT. For all programs,
+\oursim~shows a far better precision than \oneobjHT. 
+%Minseok
+%\textcolor{red}{For example in the program chart,~\oursim~produces 127 fewer alarms than \oneobjHT.}
+
+%\myparagraph{Impact of Learning}
+Comparing the performance of \oursim~and \ours~reveals that 
+the use of learning reduced the overhead of \oursim~significantly.  
+As the simulation needs to run the baseline object sensitivity (\oneobjHT), the simulated call-site-sensitive analysis (\oursim) is inherently more expensive than the baseline object sensitivity (\oneobjHT). For example, \oursim~is unable to analyze the program jython because the baseline object sensitivity
+  (\oneobjHT) failed to analyze it. Thanks to our learning technique, however, our call-site sensitivity (\ours) removed the limitation. For example, \ours~successfully analyzed jython within the time budget.
+
+
+We checked that the result of learning is not overfitted to the shared library. 
+%; we observed reasonable precision gain comes from application code. 
+%\textcolor{red}{
+In eclipse, for example, \ours~proved 17\% (resp., 15\%) more may-fail casts compared to \oneobjHT~in the application (resp., library) code, which implies that learning is equally effective in both application and library code. 
+We also checked \ours~is not overfitted to DaCapo benchmarks. In a non-DaCapo benchmark checkstyle, for example, \ours~proved 41\% (resp., 19\%) more may-fail casts compared to \oneobjHT~in the application (resp., library) code.
+%}
+
+%\begin{center}
+%\begin{tabular}{@{}lrrrrrrr@{}}
+%\toprule
+%\multicolumn{1}{c}{} & \multicolumn{1}{c}{eclipse} & \multicolumn{1}{c}{xalan} & \multicolumn{1}{c}{chart} & \multicolumn{1}{c}{fop} & \multicolumn{1}{c}{bloat} & \multicolumn{1}{c}{jpc} & \multicolumn{1}{c}{checkstyle} \\ \midrule
+%\#total proven-cast  & 1.17                        & 1.13                      & 1.18                      & 1.14                    & 1.12                      & 1.10                    & 1.19                           \\
+%\#app proven-cast    & 1.15                        & 0.91                      & 0.99                      & 0.99                    & 1.03                      & 1.02                    & 1.41                           \\ \bottomrule
+%\end{tabular}
+%\end{center}
+
+
+%In eclipse, \ours~produces 22 fewer alarms than \oneobjHT~in application code; about 17\% of the precision gain, a similar portion (18\%) of application code, comes from application code.
+
+
+\myparagraph{Impact of Simulation-Guided Learning}
+Our simulation-guided learning (Section~\ref{sec:learning}) was essential for effectively capturing the precision of the simulated policy. 
+%simulated policy ($\simheuristic$ in Section~\ref{sec:simulation})
+%; existing or simpler learning algorithms were not powerful enough 
+%to capture its behavior. 
+To demonstrate this, we conducted two
+experiments. 
+%Table~\ref{fig:sim-learning-needed} shows the effectiveness of our learning algorithm by comparing the precision of call-site-sensitive analyses with the policy learned from our algorithm. 
+% (e.g., \OurLearn) and those produced from existing or simpler learning algorithms~(e.g.,~\Existing~\cite{JeJeOh18} and  \DecisionTree~\cite{Pedregosa11}):
+We first replaced our algorithm by the existing
+unguided algorithm for learning context tunneling~\cite{JeJeOh18} and trained a policy using the same set of
+atomic features in Table~\ref{tbl:features} and training programs.  
+Table~\ref{tbl:impact-of-learning} shows that the existing algorithm ended up with a much less precise policy.
+Over the four training programs, the context-tunneled call-site sensitivity obtained using the existing learning algorithm~\cite{JeJeOh18}, denoted \Existing~in Table~\ref{tbl:impact-of-learning}, reported 2,809 may-fail casts while the
+number for \OurLearn~is much smaller (1,912). This result shows that the use of simulation in our approach 
+is critical.
+%%Minseok
+%\textcolor{red}{; the learning phase alone does not produce the desired results.}
+ 
+Second, we replaced our algorithm by a simple supervised learning
+method. We generated labeled data, which consists of feature vectors
+of invocation sites and labels indicating whether selected by the
+simulated policy ($\simheuristic$) or not. We used the decision tree
+algorithm in~\cite{Pedregosa11} to learn a policy. 
+Again, the resulting
+analysis (denoted \DecisionTree~in Table~\ref{tbl:impact-of-learning}) was unsatisfactory in precision; over the training programs, it
+reported 2,604 may-fail casts.  This is mainly because the labeled
+data does not have enough information; although the simulated policy
+labels which invocations need context tunneling, it is unable to label
+which invocations are precision critical.
+
+
+\begin{table}[t]
+\caption{Impact of our simulation-guided learning (numbers indicate {\failcasts})}
+\vspace{-5pt}
+\label{tbl:impact-of-learning}
+\begin{center}
+\begin{tabular}{@{}c r r r r r@{}}
+\toprule
+%              & \multicolumn{5}{c}{\#fail-cast}                                                                                                            \\ \cmidrule{2-6}
+              & \multicolumn{1}{c}{luindex} & \multicolumn{1}{c}{lusearch} & \multicolumn{1}{c}{antlr} & \multicolumn{1}{c}{pmd} & \multicolumn{1}{c}{Total} \\\midrule
+\ours          & 357                         & 371                          & 477                       & 707                     & 1,912                    \\
+\Existing      & 565                         & 580                          & 735                       & 929                     & 2,809                   \\ 
+\DecisionTree & 519                         & 533                          & 659                       & 895                     & 2,606                    \\
+%\onecallHT      & 784                         & 843                          & 945                       & 1,200                   & 3,772                   \\ 
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{-10pt}
+\end{table}
+
+
+\myparagraph{Impact of New Features}
+Another important factor for effective learning was the use of the features in Table~\ref{tbl:features} that are specifically designed for call-site sensitivity (recall that we crafted those features guided by the simulated policy $\simheuristic$). 
+For example, the \Existing~analysis described above, which differs from \onecallHT~\cite{JeJeOh18} only in the use of the new set of features, is much more precise than \onecallHT: \Existing~produces 970 fewer alarms than \onecallHT~that is learned using the same algorithm but with the different features designed by~\cite{JeJeOh18}. 
+
+%The features in Table~\ref{tbl:features} are qualified features for learning call-site sensitivity tunneling heuristics. \Existing~in the above, learned with the existing algorithm~\cite{JeJeOh18} and the new features in Table~\ref{tbl:features}, is a lot more precise than the state-of-the-art call-site sensitivity \onecallHT~learned with the same algorithm but the old features~\cite{JeJeOh18}. \Existing~produces 970 fewer alarms than \onecallHT~over the training programs. Although they used the same learning algorithm, \Existing~shows a far better precision thanks to our newly designed qualified features.
+
+
+We note that our features in Table~\ref{tbl:features} are not appropriate for learning tunneling heuristics for object sensitivity. %In any application of machine learning, the quality of features has a great impact on learning. 
+This is because our features are designed to reproduce the results of the simulated call-site sensitivity ($\simheuristic$) rather than object sensitivity. 
+To clarify the impact of using a different set of features, we used our features and the existing algorithm~\cite{JeJeOh18} to learn a tunneling heuristic for object sensitivity.
+The resulting analysis, denoted \oneobjHTnew, was overall less precise than \oneobjHT. 
+%%Minseok
+%\textcolor{red}{For example, \oneobjHTnew~reported 630 may-fail casts while \oneobjHT~reported 462 for program luindex. }
+
+% \textcolor{red}{Note that \oneobjHTnew~is also a good 1-object sensitivity analysis compared to the conventional 1-object sensitive analysis that reported 796 alarms for the program luindex.} 
+
+%he learned object-sensitivity is less precise than the existing state-of-the-art object sensitivity \oneobjHT.
+%The algorithm failed to learn a better tunneling heuristic for object sensitivity because the features in Table~\ref{tbl:features} are tuned with call-site sensitivity in mind. 
+%Note that the existing algorithm successfully learned a far more precise call-site sensitivity (\Existing) than the \onecallHT~with the newly designed features.
+%The features are carefully crafted for call-site sensitivity (e.g., we crafted features with~\oursim) instead of object sensitivity. 
+
+
+%For example, the key feature $C1$, a key feature for call-site sensitivity, we describe above is a bad feature for object sensitivity.
+%Unlike call-site-sensitivity that applying context tunneling to $C1$ (e.g., $T_{\tt C1}$) make 1-call-site sensitivity more precise than the conventional 2-call-site sensitivity, 
+%applying the tunneling abstraction $T_{\tt C1}$ make 1-object-sensitivity even less precise than the conventional 1-object-sensitivity. 
+
+\myparagraph{Learning Cost}
+The learning phase of \ourtechnique~spent 58 hours in total, which is slightly faster than the prior algorithm~\cite{JeJeOh18}. 
+Although our algorithm is expensive, we believe it is acceptable because learning is done off-line and saves otherwise more expensive human effort. 
+%
+%\subsection{Observations}\label{sec:eval:learnedInsight}
+%\myparagraph{A key feautre for learning call-site sensitivity tunneling heuristics}
+%\textcolor{red}{
+%We investigated the learned formula $\heuristic_f$, used in \ours\footnote{The detail formula is presented in Appendix~\ref{appendix:learnedFormula}}~and~\Existing, and found that the feature $C1$ (method invocations uses \texttt{this} variable (i.e. \texttt{this.$m$(...)})) in Table~\ref{tbl:features} plays an important role for improving precision of call-site sensitivity.
+%For example, applying context tunneling to the invocations belong to $C1$
+%(e.g., $T_{f=C1}$) is a simple way to improve the precision of call-site sensitivity.
+%For the four training programs, 1-call-site sensitive analysis with the tunneling abstraction $T_{C1}$ (apply context tunneling when the base variable is {\tt this}) is even more precise than the conventional 2-call-site sensitive analysis (\twocallH); \onecallThis~produces 114 fewer alarms than \twocallH~over the training programs.
+%}
+%
+%
+%
+%
+%\textcolor{red}{
+%{\tt this} variables is directly related to $I_1$ (caller and callee method shares the same context in object sensitivity) in our simulation technique $\simheuristic$~where $I_1$ need to be tunneled for call-site sensitivity to simulate object sensitivity.
+%Although the feature $C1$ is a syntactic feature, it presents a semantic property that the caller and callee methods share the same context in object sensitivity.
+%In java programs, caller and callee methods share the same receiver object if the invocation sites use {\tt this} variable;
+%caller and callee methods inevitably share the same context (receiver object) in conventional object sensitivity.
+%As a result, all the invocation sites using {\tt this} variable always belongs to $I_1$ and need to be tunneled to make call-site sensitivity simulate object sensitivity. 
+%}
+%
+%
+%\myparagraph{Sensitivity to Features}
+%\textcolor{red}{
+%The features in Table~\ref{tbl:features} are qualified features for learning call-site sensitivity tunneling heuristics. \Existing~in the above, learned with the existing algorithm~\cite{JeJeOh18} and the new features in Table~\ref{tbl:features}, is a lot more precise than the state-of-the-art call-site sensitivity \onecallHT~learned with the same algorithm but the old features~\cite{JeJeOh18}. \Existing~produces 970 fewer alarms than \onecallHT~over the training programs. Although they used the same learning algorithm, \Existing~shows a far better precision thanks to our newly designed qualified features.
+%}
+%
+%
+%\textcolor{red}{
+%The features in Table~\ref{tbl:features}, however, are inadequate for learning tunneling heuristics for object sensitivity. %In any application of machine learning, the quality of features has a great impact on learning. 
+%To clarify the impact of using a different set of features, we gave the newly designed features and used the existing algorithm~\cite{JeJeOh18} for learning a tunneling heuristic for object sensitivity.
+%The learning, however, ended up with a suboptimal one; the learned object-sensitivity is less precise than the existing state-of-the-art object sensitivity \oneobjHT.
+%The algorithm failed to learn a better tunneling heuristic for object sensitivity mainly because the features in Table~\ref{tbl:features} are highly fitted to learn tunneling heuristics for call-site sensitivity. 
+%%Note that the existing algorithm successfully learned a far more precise call-site sensitivity (\Existing) than the \onecallHT~with the newly designed features.
+%The features are carefully crafted for call-site sensitivity (e.g., we crafted features with~\oursim) instead of object sensitivity. 
+%For example, the key feature $C1$, a key feature for call-site sensitivity, we describe above is a bad feature for object sensitivity.
+%Unlike call-site-sensitivity that applying context tunneling to $C1$ (e.g., $T_{\tt C1}$) make 1-call-site sensitivity more precise than the conventional 2-call-site sensitivity, 
+%applying the tunneling abstraction $T_{\tt C1}$ make 1-object-sensitivity even less precise than the conventional 1-object-sensitivity. 
+%}
+%
+%
+%\myparagraph{Unexchangeable of learned tunneling heuristics}
+%\textcolor{red}{
+% We checked tunneling heuristics of each context are not exchangeable.
+%The tunneling heuristic used in \ours~is inadequate to object sensitivity;
+%1-object sensitivity with the tunneling heuristic is even less precise than the one without tunneling (conventional 1-object sensitive analysis).
+%The tunneling heuristic used in \oneobjHT~is also a bad tunneling heuristic for call-site sensitivity.}
+
+
+
+%\input{table_zipper}
+\input{Obj2CFA/table_vsZipper}
+
+\subsection{Comparison with Selective Object Sensitivity}\label{sec:SelectiveCtx}
+
+We also checked how \ours~works in comparison with \Zipper~\cite{Li2018a,ZipperJournal20}, a state-of-the-art technique that performs selective 2-object sensitivity. 
+Unlike the analyses considered in Section~\ref{sec:performance}, which perform uniform $k$-context sensitivity,  \Zipper~performs a selective context-sensitive analysis and applies $2$-object sensitivity only when it is necessary. In particular, compared to other selective approaches~\cite{Li2018b,JeJeChOh17,Smaragdakis2014,Graphick20}, \Zipper~is precision-focused and 
+improves the scalability of uniform 2-object sensitivity while preserving most (98.8\%) of its precision. 
+%
+%We compare \ours~with object-sensitivity equipped with a context sensitivity heuristic \Zipper~\cite{Li2018a}. 
+%Recently, various selective context sensitivity heuristics have been proposed to develop cost-effective object-sensitive analysis~\cite{Li2018a,Li2018b,Lu:2019:PYF,JeJeChOh17,Smaragdakis2014,Graphick20}. 
+%As it is usually too expensive to apply object sensitivity (e.g., 2-object sensitivity) to all method calls,
+%context sensitivity heuristics apply object-sensitivity only when doing so would increase precision~\cite{Li2018a,Lu:2019:PYF}.
+%Otherwise, the heuristics use alternative cheap contexts (e.g., type sensitivity or context insensitivity) to improve scalability~\cite{Smaragdakis2014,Li2018b}.
+%\Zipper~is a precision-focused context sensitivity heuristic that preserves almost (98.8\%) full precision of the conventional 2-object-sensitive analysis.
+
+%\myparagraph{Setup}
+For direct comparison, we implemented \ours~and \oneobjHT~on top of the artifact provided by~\cite{Li2018a}.
+We used 14 programs (batik, fop, sunflow, bloat, xalan, chart, findbugs, eclipse, jpc, checkstyle, h2, xalan09, avrora09, sunflow09) used in~\cite{Li2018a}.
+Five programs (fop, xalan, bloat, chart, eclipse) are DaCapo 2006 benchmarks~\cite{Blackburn2006}, four programs (xalan09, sunflow09, avrora09, and h2) are from DaCapo 2009 benchmarks, and the remaining five programs (sunflow, findbugs, jpc, checkstle, batik) are real-world Java applications.
+Note that the artifact of~\cite{Li2018a} uses a quite different reflection analysis from the one we used in Table~\ref{tbl:eval:main}.
+The number of alarms and analysis time varies significantly depending on how reflection is supported. 
+The baseline analysis on top of \Zipper~is implemented supports reflection less conservatively than our implementation in Section~\ref{sec:performance} and therefore Table~\ref{tbl:eval:vsZipper} reports fewer alarms than Table~\ref{tbl:eval:main}. In Table~\ref{tbl:eval:vsZipper}, our analysis uses the same reflection analysis as \Zipper. 
+
+
+%\myparagraph{Results}
+Table~\ref{tbl:eval:vsZipper} compares the performance of \ours~and \Zipper~(denoted \twoobjZipper~in Table~\ref{tbl:eval:vsZipper}). 
+For all programs, \ours~shows a better precision than \Zipper. Especially for bloat, \ours~is more precise and scalable than  than \twoobjZipper; \twoobjZipper~took 1,942 seconds and reports 1,224 alarms but \ours~analyzed it within 456 seconds with 1,136 may-fail cast alarms. However, for batik, \ours~was slower than \twoobjZipper. 
+
+%\oneobjHT~shows comparable precision with \twoobjZipper. It shows better precision than \twoobjZipper~for 8 programs (eclipse, bloat, chart, checkstyle, avrora09, xalan09, findbugs, xalan) while \oneobjHT~is less precise than \twoobjZipper~for the others.
+%%\ours~also shows good scalability. For 8 programs (luindex, lusearch, antlr, pmd, chart, xalan, jpc, and checkstyle), \ours~is faster than the others.
+
+% \begin{table}[]
+% \label{tbl:oursZipper}
+% \caption{\TODO{Why not report all programs? Include the result for batik}Performance of our context tunneled 1-call-site sensitivity with \Zipper~(\oursZipper).}
+% \begin{tabular}{@{}lccccccc@{}}
+% \toprule
+% Program         & \multicolumn{1}{c}{h2}  & \multicolumn{1}{c}{fop}   & \multicolumn{1}{c}{batik}      & \multicolumn{1}{c}{sunflow}   & \multicolumn{1}{c}{bloat}   & \multicolumn{1}{c}{findbugs} & \multicolumn{1}{c}{chart}   \\ \midrule
+% \#may-fail cast & 1,225                   & 1,397                     & 1,782                          & 1,818                         & 1,168                       & 1,360                        & 890                         \\
+% Time (s)        & 2,375                   & 385                       & 1,812                          & 377                           & 424                         & 207                        & 102                          \\\midrule
+% Program         & \multicolumn{1}{c}{jpc} & \multicolumn{1}{c}{xalan} & \multicolumn{1}{c}{checkstyle} & \multicolumn{1}{c}{sunflow09} & \multicolumn{1}{c}{xalan09} & \multicolumn{1}{c}{avrora09} & \multicolumn{1}{c}{eclipse} \\\midrule
+% \#may-fail cast & 1,368                   & 482                       & 535                            & 1,146                              &   1,004                          &      964                        & 482                         \\
+% Time (s)        & 258                    & 113                        & 135                             &   135                            &    224                         &  163                            & 86                          \\ \bottomrule
+% \end{tabular}
+% \end{table}
+%
+%\begin{table}[]
+%\caption{Performance of our context tunneled 1-call-site sensitivity with \Zipper~(\oursZipper).}
+%\label{tbl:oursZipper}
+%\begin{tabular}{@{}lccccccc@{}}
+%\toprule
+%Program         & \multicolumn{1}{c}{h2}  & \multicolumn{1}{c}{fop}   & \multicolumn{1}{c}{batik}      & \multicolumn{1}{c}{sunflow}   & \multicolumn{1}{c}{bloat}   & \multicolumn{1}{c}{findbugs} & \multicolumn{1}{c}{chart}   \\ \midrule
+%\failcasts & 1,225                   & 1,397                     & 1,782                          & 1,818                         & 1,168                       & 1,360                        & 890                         \\
+%Time (s)        & 2,318                  & 279                      & 1,649                       & 279                          & 397                        & 164                         & 58                        \\\midrule
+%Program         & \multicolumn{1}{c}{jpc} & \multicolumn{1}{c}{xalan} & \multicolumn{1}{c}{checkstyle} & \multicolumn{1}{c}{sunflow09} & \multicolumn{1}{c}{xalan09} & \multicolumn{1}{c}{avrora09} & \multicolumn{1}{c}{eclipse} \\\midrule
+%\failcasts & 1,368                   & 482                       & 535                            & 1,146                              &   1,004                          &      964                        & 482                         \\
+%Time (s)        & 176                     & 72                        & 88                             &   84                            &    166                         &  105                            & 42                          \\ \bottomrule
+%\end{tabular}
+%\end{table}
+%
+%
+
+%\myparagraph{Combination with Zipper}
+Because context tunneling and selective context sensitivity are orthogonal techniques, we can combine 
+our analysis (\ours) and \Zipper, resulting in a selective 1-call-site-sensitive analysis with context tunneling (\oursZipper). 
+This is possible because the idea of \Zipper~is general and applicable to various context-sensitivity flavors including call-site sensitivity~\cite{ZipperJournal20}. 
+Table~\ref{tbl:eval:vsZipper} shows the performance of \oursZipper. Thanks to \Zipper, \oursZipper~becomes faster than~\ours~at the small cost of the precision.
+In h2, for example, \oursZipper~took 2,318 seconds while \ours~took 3,766 seconds.
+One exception is batik, where \oursZipper~is slower than \ours. This is because 
+\oursZipper~in this case loses precision significantly (reporting 180 more alarms than \ours), producing spurious points-to sets that make the analysis slow. 
+
+%
+%
+%Note that context tunneling heuristics (e.g., our technique) and context sensitivity heuristics (\Zipper) are orthogonal; we can use both techniques to develop highly precise and scalable call-site sensitivity. For example, we can apply \Zipper~to improve the scalability of \ours. In \ours, all method calls are analyzed context sensitively (1-call-site sensitivity). 
+%Applying context sensitivity to all the method calls, however, makes the analysis. 
+%To mitigate the problem,
+%we can use the context sensitivity heuristic \Zipper, which is applicable to various context flavors including call-site sensitivity~\cite{ZipperJournal20}. 
+%Unfortunately, other existing context sensitivity heuristics~are usually inapplicable to \ours~because they are usually designed~\cite{Li2018b,Lu:2019:PYF} or learned~\cite{Graphick20} to optimize object sensitivity. 
+%The context sensitivity heuristic \Zipper~identifies method calls that our call-site sensitivity (\ours) needs to analyzed context sensitively (1-call-site sensitivity). Otherwise, \ours~analyzes them context insensitively. 
+
+
+
+
+%\begin{table}[]
+%\label{tbl:oursZipper}
+%\begin{tabular}{@{}lrrrrrrrrr@{}}
+%\toprule
+%\multicolumn{1}{c}{} & \multicolumn{1}{c}{h2} & \multicolumn{1}{c}{fop} & \multicolumn{1}{c}{\TODO{bloat}} & \multicolumn{1}{c}{sunflow} & \multicolumn{1}{c}{\TODO{bloat}} & \multicolumn{1}{c}{findbugs} & \multicolumn{1}{c}{chart} & \multicolumn{1}{c}{avrora09} & \multicolumn{1}{c}{xalan09} \\ \midrule
+%\#may-fail cast      & 1,223                   & 1,384                    & 1,166                      & 1,818                        & 1,166                      & 1,352                         & 886                          &  951                     & 1,001                        \\
+%Time (s)             & 2,414                   & 310                     & 421                       & 279                         & 421                       & 172                          & 71                          & 117                        & 169                         \\ \bottomrule
+%\end{tabular}
+%\end{table}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+
+
+
+\input{Obj2CFA/sobj_table}
+
+
+
+\subsection{Applicability to Variations of Object Sensitivity}
+
+In this paper, we focused on the original object sensitivity~\cite{Milanova2002} as it is the most widely known and used (e.g.,~\cite{Li2018b,Li2018a,TanLX16,Smaragdakis2014,GordonKPGNR_NDSS15,Feng2014,Lu:2019:PYF,Li2018a}). 
+Therefore, though we believe our claim holds for variations of object sensitivity as well (e.g., hybrid context sensitivity~\cite{KastrinisS13a}, type sensitivity~\cite{Smaragdakis2011}), we do not claim that \ourtechnique~in its present form is readily applicable to them. 
+Note that we have designed \ourtechnique~by exploiting the properties of original object sensitivity (e.g., call-graph patterns and atomic features). To apply \ourtechnique~to its variations, we may need domain-specific tuning of the simulation and learning techniques (e.g., the inference rules in Section~\ref{sec:simulation} and feature engineering in Section~\ref{sec:learning}). 
+It would be interesting future work to generalize our results for other variants of object sensitivity.
+%Minseok
+%\textcolor{red}{It would be interesting future work to generalize our results for other variants of object sensitivity. }
+
+
+When we simply used \ourtechnique~to hybrid object sensitivity (in the setting of Section~\ref{sec:performance}), for example, we found that the results are encouraging yet suboptimal. 
+Hybrid context sensitivity~\cite{KastrinisS13a} is a variant of object sensitivity that selectively combines call-site and object sensitivity, and the state-of-the-art is the context-tunneled version,  \onesobjHT~\cite{JeJeOh18}. 
+We applied \ourtechnique~to \onesobjHT~and transformed it into a call-site-sensitive analysis. 
+We compared the performance of \onesobjHT~with the simulated call-site sensitivity without learning (denoted \simonecallH), and the final analysis with learning (denoted \sobjSimLearn). 
+Table~\ref{tbl:sobj} shows that, though suboptimal, our simulation technique overall makes hybrid context sensitivity more precise (\simonecallH~vs. \onesobjHT), indicating that hybrid context sensitivity can benefit from our approach. However, the learned analysis (\sobjSimLearn) shows overall worse precision than hybrid context sensitivity.  
+The failure of learning comes from the lack of atomic features appropriate for hybrid object sensitivity. We leave adaptation to hybrid object sensitivity as future work. 
+
+
+\section{Open Question: Is Complete Simulation Possible?}
+In this thesis, we showed that it is practically possible to outperform object sensitivity via contexttunneled call-site sensitivity. However, it remains to be seen whether or not call-site sensitivity can
+be fundamentally superior to object sensitivity. 
+We discuss this in Appendix~\ref{sec:setting}
+
+%\clearpage
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

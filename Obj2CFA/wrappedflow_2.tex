@@ -1,0 +1,135 @@
+
+
+\begin{figure*}
+\begin{center}
+\begin{subfigure}[b]{1\columnwidth}
+%\begin{multicols}{2}
+\centering
+\begin{lstlisting}[multicols=2, xleftmargin=10pt]
+class Container {
+  Object elem;
+  void add(Object el) {
+    this.elem = el;
+  }
+  Itr itr() {
+    Object e = this.elem;
+    Itr itr = new Itr(e);//It
+    return itr;
+  }
+}
+class Itr {
+  Object next;
+  Itr(Object obj) {
+    this.next = obj;
+  }
+  Object next() {
+    return this.next;
+  }
+}
+void main() {
+  Container c1 = new Container();//C1
+  c1.add(new A());//A
+  Itr i1 = c1.itr();
+  object o1 = i1.next();
+	
+  Container c2 = new Container();//C2
+  c2.add(new B());//B
+  Itr i2 = c2.itr();
+  object o2 = i2.next();
+}
+\end{lstlisting}
+%\end{multicols}
+\caption{Example code}
+\label{fig:wrappedflow:code}
+\end{subfigure}
+\begin{multicols}{2}
+	\begin{subfigure}[b]{\columnwidth}
+	\centering
+		\begin{center}
+			\resizebox{\columnwidth}{!}{
+				\begin{tikzpicture}
+                \tikzstyle{every node}=[font=\Large]
+				\node [block] (main) {\tt {main}\\$[\cdot]$};
+				
+				\node [block, left = 1.28cm of main] (add1) {\tt {add}\\$[$C1$]$};
+				\node [block, below = 0.6cm of add1] (add2) {\tt {add}\\$[$C2$]$};
+				
+				\node [block, right = 0.4cm of add2] (next1) {\tt {next}\\$[$C1$]$};
+				\node [block, right = 0.4cm of next1] (next2) {\tt {next}\\$[$C2$]$};
+				
+				\node [block, right=0.4cm of next2] (itr1) {\tt {itr}\\$[$C1$]$};
+				\node [block, above=0.6cm of itr1] (itr2) {\tt {itr}\\$[$C2$]$};
+				
+				\node [block, right=0.4cm of itr1] (Itr1) {\tt {Itr}\\$[$C1$]$};
+				\node [block, right=0.4cm of itr2] (Itr2) {\tt {Itr}\\$[$C2$]$};
+				
+				
+				\path [line] (main) edge node[above] {$23$} (add1);
+				\path [line] (main) edge node[above] {$28$} (add2);
+				
+				\path [line] (main) edge node[left] {$25$} (next1);
+				\path [line] (main) edge node[right] {$30$} (next2);
+				
+				\path [line] (main) edge node[above] {$24$} (itr1);
+				\path [line] (main) edge node[above] {$29$} (itr2);
+				
+				\path [line] (itr1) edge node[above] {$8$} (Itr1);
+				\path [line] (itr2) edge node[above] {$8$} (Itr2);
+				
+				
+				\end{tikzpicture}
+			}
+		\end{center}
+		\caption{$1$-object sensitivity with $T_{\it obj}=\myset{8,25,30}$}
+		\label{fig:wrappedflow:1objT}
+	\end{subfigure}
+	\vfill\null
+	\columnbreak
+	\begin{subfigure}[b]{\columnwidth}
+		\begin{center}
+			\resizebox{\columnwidth}{!}{
+				\begin{tikzpicture}
+                \tikzstyle{every node}=[font=\Large]
+				\node [block] (main) {\tt {main}\\$[\cdot]$};
+				
+				\node [block, left = 1.28cm of main] (add1) {\tt {add}\\$[23]$};
+				\node [block, below = 0.6cm of add1] (add2) {\tt {add}\\$[28]$};
+				
+				\node [block, right = 0.4cm of add2] (next1) {\tt {next}\\$[25]$};
+				\node [block, right = 0.4cm of next1] (next2) {\tt {next}\\$[30]$};
+				
+				\node [block, right=0.4cm of next2] (itr1) {\tt {itr}\\$[24]$};
+				\node [block, above=0.6cm of itr1] (itr2) {\tt {itr}\\$[29]$};
+				
+				\node [block, right=0.4cm of itr1] (Itr1) {\tt {Itr}\\$[24]$};
+				\node [block, right=0.4cm of itr2] (Itr2) {\tt {Itr}\\$[29]$};
+				
+				
+				\path [line] (main) edge node[above] {$23$} (add1);
+				\path [line] (main) edge node[above] {$28$} (add2);
+				
+				\path [line] (main) edge node[left] {$25$} (next1);
+				\path [line] (main) edge node[right] {$30$} (next2);
+				
+				\path [line] (main) edge node[above] {$24$} (itr1);
+				\path [line] (main) edge node[above] {$29$} (itr2);
+				
+				\path [line] (itr1) edge node[above] {$8$} (Itr1);
+				\path [line] (itr2) edge node[above] {$8$} (Itr2);
+				
+				
+				\end{tikzpicture}
+			}
+			
+		\end{center}
+		\caption{$1$-call-site sensitivity with $T_{\it call}=\myset{8}$}
+		\label{fig:wrappedflow:1callT}
+	\end{subfigure}
+\end{multicols}
+\vspace{-20pt}
+\caption{Wrapped flow pattern~\cite{Li2018a} and call-graphs produced by
+1-object sensitivity with context-tunneling and 1-call-site
+sensitivity with context tunneling}
+\label{fig:wrappedflow}
+\end{center}
+\end{figure*}

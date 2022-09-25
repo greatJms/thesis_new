@@ -1,0 +1,451 @@
+%\newpage
+
+\section{Motivating Examples}
+\label{sec:overview}
+
+In this section, we illustrate context tunneling with examples.
+We describe our technique with $k$-call-site-sensitivity, but it is applicable to other flavors of
+context-sensitivity too. The general description
+is presented in Section~\ref{sec:tunneling}.
+
+% \sehun{To
+% show existence of aforementioned $k$-limiting context-sensitivity's
+% limitation regardless of choice of context flavor, our examples are designed
+% around two major principles, $k$-limiting call-site-sensitivity and
+% $k$-object sensitivity. But it is also applicable to other flavors of
+% context-sensitivity too, such as type-sensitivity.}
+
+% \myparagraph{Caveat}
+In this section, we restrict our discussion to the
+traditional $k$-limited context-sensitive analysis. % Although the example
+% programs in this section could be analyzed precisely with
+Other approaches
+such as value-based context-sensitivity~\cite{Khedker2008,PadhyeK13}
+may not suffer from the issue described in this section.
+However, their applicability to real-world pointer analysis remains to
+be seen, which is beyond the scope of this paper. On the other hand,
+the $k$-limited method is more widely used in practical settings~\cite{Bravenboer2009,Smaragdakis2011,KastrinisS13a,Smaragdakis2014,JeJeChOh17}.
+
+
+
+%applying them to real-world programs remains to be seen and is beyond the scope of this paper.
+% On the other hand, the $k$-limited method is popular in practical settings~\cite{Bravenboer2009,Smaragdakis2011,kastrinis2013hybrid,Smaragdakis2014,JeJeChOh17}.
+
+
+% The goal and scope of this paper are to identify and fix the
+% major weakness of $k$-limited context-sensitive analysis that is
+% widely used in modern pointer
+% analyses~\cite{Bravenboer2009,Smaragdakis2011,kastrinis2013hybrid,Smaragdakis2014,JeJeChOh17}.
+% Applying other methods such as value
+% contexts~\cite{Khedker2008,PadhyeK13} to avoid the problem is beyond the scope of
+% this paper.
+
+\subsection{Call-Site-Sensitivity}
+\myparagraph{Example Code}
+
+Suppose that we analyze the example Java code in
+Fig.~\ref{fig:overview:code} using a $k$-call-site-sensitive pointer
+analysis~\cite{Smaragdakis2015}.  The example code has three class
+definitions, namely \texttt{A}, \texttt{B}, and \texttt{C}.  Classes
+\texttt{A} and \texttt{B} are empty and class \texttt{C} has two
+methods: \texttt{id} and \texttt{main}.  Method \texttt{id} is
+essentially the identity function on the first argument, which takes an
+object \texttt{v} and an integer \texttt{i}, and returns the same
+object after making recursive calls until \texttt{i} becomes 0. In
+\texttt{main}, \texttt{id} is invoked twice with different
+objects. Both method invocations share the same argument \texttt{i}
+that comes from the external environment (i.e. user input).  The goal
+of the pointer analysis is to prove the safety of two type casts at
+lines 8 and 9.
+
+\begin{figure}
+\hspace*{0.1cm}
+\centering
+\begin{subfigure}[b]{.49\columnwidth}
+\begin{lstlisting}
+class A {} class B {}
+class C {
+  static Object id (Object v, int i){
+    return i >= 0 ? id(v, i-1) : v;
+ }
+ public static void main (){
+   int i = input();
+   A a = (A) id(new A(), i);//Query 1
+   B b = (B) id(new B(), i);//Query 2
+ }
+}
+\end{lstlisting}
+\caption{Example code}
+\label{fig:overview:code}
+\end{subfigure}
+\quad
+\hspace*{-1.cm}
+\begin{subfigure}[b]{.45\columnwidth}
+
+%%% k-CFA
+\begin{center}
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {{\tt main} \\ $[\cdot]$};
+    \node [block, above right=0cm and 0.4cm of main] (id1) {{\tt id}\\$[8]$};
+    \node [block, below right=0cm and 0.4cm of main] (id2) {{\tt id}\\$[9]$};
+    \node [block, right=0.4cm of id1] (id3) {{\tt id} \\$[8,4]$};
+    \node [block, right=0.4cm of id2] (id4) {{\tt id} \\$[9,4]$};
+    \node [block2, right=0.4cm of id3] (id5) {{\tt id}\\$[\underbrace{8,4,\cdots,4}_k]$};
+    \node [block2, right=0.4cm of id4] (id6) {{\tt id}\\$[\underbrace{9,4,\cdots,4}_k]$};
+    \node [block2, below right=-0.5cm and 0.4cm of id5] (id7) {{\tt id} \\$[\underbrace{4,\cdots,4}_{k}]$};
+
+    \path [line] (main) -- (id1);
+    \path [line] (main) -- (id2);
+    \path [line] (id1) -- (id3);
+    \path [line] (id2) -- (id4);
+    \path [line, dashed] (id3) -- (id5);
+    \path [line, dashed] (id4) -- (id6);
+    \path [line] (id5) -- (id7);
+    \path [line] (id6) -- (id7);
+    \path [line] (id7) edge[loop above] ();
+\end{tikzpicture}
+}
+\end{center}
+
+
+\caption{Call-graph by $k$-CFA}
+\label{fig:overview:kCFA}
+\vspace{2ex}
+
+\begin{center}
+\resizebox{0.45\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {{\tt main}\\$[\cdot]$};
+    \node [block, above right=0cm and 0.5cm of main] (id1) {{\tt id}\\$[8]$};
+    \node [block, below right=0cm and 0.5cm of main] (id2) {{\tt id}\\ $[9]$};
+
+    \path [line] (main) -- (id1);
+    \path [line] (main) -- (id2);
+
+    \path [line] (id1) edge[loop right] ();
+    \path [line] (id2) edge[loop right] ();
+\end{tikzpicture}
+}
+\end{center}
+\caption{Call-graph by 1-CFA with tunneling}
+\label{fig:overview:tunneling}
+\end{subfigure}\qquad
+\caption{Example and call-graphs constructed by the conventional
+  $k$-call-site-sensitivity ($k$-CFA) and our 1-call-site-sensitivity
+  with context tunneling}
+\label{fig:overview}
+\end{figure}
+
+
+
+
+\myparagraph{Conventional Call-Site-Sensitivity}
+
+The traditional $k$-call-site-sensitive analysis fails to prove the queries no matter what $k$ value is used.
+Because the value of \texttt{i} can be any integer, the following set $K_{\infty}$ of infinite number of call-strings can be generated for method \texttt{id} at runtime:
+\[
+K_{\infty} = \myset{[8], [9], [8,4], [9,4], [8,4,4], [9,4,4], [8,4,4,4], [9,4,4,4], \dots}
+\]
+where, for example, $[8,4]$ denotes the context that method \texttt{id} was called along the sequence of
+call-sites 8 and 4.
+ The $k$-call-site-sensitive analysis approximates the call-strings in $K_{\infty}$ by their suffixes of length up to $k$. For example, when $k=2$, the analysis uses the following set $K_2$ of abstract contexts:
+\[
+K_2 = \myset{[8], [9], [8,4], [9,4], [4,4]}
+\]
+where an infinite number of contexts, $\myset{[8,4,4], [9,4,4], [8,4,4,4], [9,4,4,4],\dots}$, in $K_{\infty}$ are approximated by their common suffix $[4,4]$. The analysis analyzes the method \texttt{id} separately for each context in $K_2$. % producing the call-graph in Fig.~\ref{fig:overview}(b).
+Although this approximation ensures termination, the analysis is now unable to differentiate the two separate calls to \texttt{id} at lines 8 and 9, causing the argument {\tt v} of {\tt id} to point to both objects {\tt A} and {\tt B} at the same time when the context becomes $[4,4]$. Thus, both objects get returned to both queries simultaneously, making the analysis fail to prove their cast safety.
+Note that the analysis fails to prove the queries for any $k$ values, because all the context strings longer than $k$ are eventually
+merged into a single context $[\underbrace{4,\dots,4}_{k}]$ (see
+Fig.~\ref{fig:overview:kCFA}).
+
+
+% the $k$-limited method is
+% widely used in modern pointer
+% analysis frameworks such as Doop~\cite{Bravenboer2009}.\minseok{redundant??}
+
+
+% \minseok{
+% 	Be aware that other kinds of context sensitivity like value context
+% 	can prove the queries but	our goal is to overcome limitation of k-limiting context-sensitivity
+% 	which is widely used.}
+	
+\myparagraph{Context Tunneling}
+
+With context tunneling, however, even $1$-call-site sensitive analysis
+becomes to prove the queries.
+% Our idea to improve the analysis is to identify and maintain important
+% context elements only.
+The main weakness of the conventional
+$k$-context-sensitive analysis is that it blindly updates the context
+of a method at every call-site, thereby allowing important context
+elements for the method to be easily overwritten by less important
+ones.  In the example, distinguishing the two call-sites
+at lines 8 and 9 is essential to proving the queries. However, this
+information is eventually lost by repeatedly appending the less
+important call-site 4 to the context of {\tt id}
+(Fig.~\ref{fig:overview:kCFA}).
+Our technique aims to overcome this weakness by maintaining important
+context elements only during analysis. For example, we exclude the
+call-site 4 from the context strings generated for method {\tt id} and
+thus approximate the set $K_{\infty}$ to the set $K_T$ of contexts:
+\[
+K_T = \myset{[8], [9]}.
+\]
+Here abstract contexts $[8]$ and $[9]$ in $K_{T}$ denote the sets of concrete contexts
+$\myset{[8], [8,4], [8,4,4], \dots}$ and
+$\myset{[9], [9,4], [9,4,4], \dots}$ in $K_{\infty}$, respectively. The resulting
+context-sensitive analysis with $K_{T}$ is able to prove the queries as it differentiates the two calls
+to {\tt id} at lines 8 and 9 completely, producing the call-graph in
+Fig.~\ref{fig:overview:tunneling}.
+
+% With context tunneling, however, even $1$-call-site sensitive analysis
+% is able to prove the queries.
+
+\myparagraph{Challenge}
+
+The example shows that the idea of context tunneling is potentially
+powerful; even $1$-context-sensitivity with
+tunneling can be as precise as
+$\infty$-context-sensitivity. The goal of this paper is to maximize
+this tremendous, yet untapped, potential of the existing $k$-context-sensitive analysis.
+However, achieving effective context tunneling in practice is
+challenging. The effectiveness of the technique is very sensitive
+to the choice of important context elements.  For example,
+choosing the call-site 4, rather than call-sites 8 and 9, does not
+work for the example program.  In the worst case, the analysis
+precision degenerates into the context-insensitive case (e.g. when
+selecting no context elements at all), becoming even inferior to the
+ordinary
+$k$-context-sensitive analysis.  Coming up with a good
+heuristic rule for choosing important context elements is nontrivial;
+hand-crafting such a rule not only requires a huge amount of
+engineering effort and domain knowledge but also likely fails to
+maximize the potential of the technique.
+% adaptable as a fixed heuristic rule tuned for a particular situation
+% may not be effective for other programs, analyses, or queries.
+
+
+\myparagraph{Data-Driven Context Tunneling}
+
+
+We address this challenge with a data-driven approach that
+automatically learns a good heuristic rule for context tunneling from
+a training set of programs.
+Our aim is to generate a heuristic $\heuristic$,
+% To do so, we first define a parameterized heuristic $\heuristic_\Pi$
+% (where $\Pi$ is a parameter). $\heuristic_\Pi$
+which takes a program and returns a relation $\TunnelingRelation$ on methods.
+The relation contains a method pair $(m_1, m_2)$ if the calling context of
+$m_1$ is more important than that of $m_2$. Thus, if $(m_1, m_2) \in
+\TunnelingRelation$, the analysis applies context tunneling when $m_2$ is
+invoked; that is, $m_2$ inherits the context of $m_1$ ignoring the current
+context element. For the $k$-call-site-sensitivity example, $\heuristic_\Pi$
+produces the relation $\TunnelingRelation = \myset{({\tt id}, {\tt id})}$,
+which means that tunneling is applied when {\tt id} is called from {\tt id}.
+As a result, the call-site 4, on which {\tt id} is called from {\tt id}, will
+not be used as important context elements during analysis.  When {\tt main}
+calls {\tt id}, however, the analysis updates the contexts as the ordinary
+analysis since $({\tt main}, {\tt id}) \not\in \TunnelingRelation$.  In our
+approach, the heuristic is parameterized and the parameter determines the
+contents of the relation $\TunnelingRelation$.  The goal of our data-driven
+technique is to characterize the two classes of methods: 1) methods that
+increase the analysis precision by passing their contexts to others, and 2)
+methods that increase the analysis precision by inheriting contexts from
+others. Section~\ref{sec:learning} defines the learning problem and presents
+an efficient algorithm to solve the problem.
+
+
+%\subsection{Object-Sensitivity}
+%
+%The use of context tunneling is not limited to call-site-sensitivity.
+%% Context tunneling is also effective for other flavors of
+%% context-sensitivity.
+%Below, we describe a typical situation where object-sensitivity
+%benefits from context
+%tunneling.
+%
+%%\include{objExample}
+%\lstset{
+%  language=Java,
+%  aboveskip=3mm,
+%  belowskip=3mm,
+%  showstringspaces=false,
+%  columns=flexible,
+%  basicstyle={\scriptsize\ttfamily},
+%  numbers=left,
+%  numbersep=5pt,
+%  numberstyle=\small\color{gray},
+%  keywordstyle=\color{blue},
+%  commentstyle=\color{dkgreen},
+%  stringstyle=\color{mauve},
+%  breaklines=true,
+%  breakatwhitespace=true,
+%  tabsize=3
+%}
+%\begin{figure}
+%\begin{subfigure}[b]{0.9\columnwidth}
+%\begin{multicols}{2}
+%\centering
+%\begin{lstlisting}
+%class A {} class B {}
+%class C {
+%  public static void main (){
+%    ArrayList al1 = new ArrayList();//AL1
+%    ArrayList al2 = new ArrayList();//AL2
+%
+%    al1.add(new A());
+%    al2.add(new B());
+%
+%    ArrayList.ListItr it1 = al1.iterator();
+%    ArrayList.ListItr it2 = al2.iterator();
+%
+%    A a = (A)it1.next();  //Query 1
+%    B b = (B)it2.next();  //Query 2
+%  }
+%}
+%
+%class ArrayList{
+%  Object[] elementData = new Object[10];
+%  int size = 0;
+%  void add(Object e){
+%    elementData[size++] = e;
+%  }
+%  ListItr iterator(){
+%    return new ListItr(); //IT
+%  }
+%  class ListItr{
+%    int cursor = 0;
+%    Object next(){
+%      return elementData[cursor++];
+%    }
+%  }
+%}
+%\end{lstlisting}
+%\end{multicols}
+%\caption{Example code}
+%\label{fig:obj:code}
+%\end{subfigure}
+%\begin{multicols}{2}
+%\begin{subfigure}[b]{.9\columnwidth}
+%\begin{center}
+%\resizebox{\columnwidth}{!}{
+%\begin{tikzpicture}
+%    \node [block] (main) {{\tt main}\\$[\cdot]$};
+%    \node [block, below left=1cm and 2.7cm of main] (add1) {{\tt add}\\$[AL1]$};
+%    \node [block, right=0.4cm of add1] (add2) {{\tt add}\\$[AL2]$};
+%    \node [block2, right=0.4cm of add2] (iterator1) {{\tt iterator}\\ $[AL1]$};
+%    \node [block2, right=0.4cm of iterator1] (iterator2) {{\tt iterator}\\$[AL2]$};
+%    \node [block, right=0.4cm of iterator2] (next) {{\tt next}\\$[IT]$};
+%
+%    \path [line] (main) -- (add1);
+%    \path [line] (main) -- (add2);
+%    \path [line] (main) -- (iterator1);
+%    \path [line] (main) -- (iterator2);
+%    \path [line] (main) -- (next);
+%
+%\end{tikzpicture}
+%}
+%\end{center}
+%\caption{Call-graph by $1$-object-sensitive analysis}
+%\label{fig:obj:callgraph}
+%\end{subfigure}
+%\vfill\null
+%\columnbreak
+%\begin{subfigure}[b]{.9\columnwidth}
+%\begin{center}
+%\resizebox{\columnwidth}{!}{
+%\begin{tikzpicture}
+%    \node [block] (main) {\tt main\\$[\cdot]$};
+%    \node [block, below left=1cm and 2.7cm of main] (add1) {{\tt add}\\$[AL1]$};
+%    \node [block, right=0.4cm of add1] (add2) {\tt add\\$[AL2]$};
+%    \node [block2, right=0.4cm of add2] (iterator1) {\tt iterator\\$[AL1]$};
+%    \node [block2, right=0.4cm of iterator1] (iterator2) {\tt iterator\\$[AL2]$};
+%    \node [block, right=0.4cm of iterator2] (next1) {\tt next\\$[AL1]$};
+%    \node [block, above=0.4cm of next1] (next2) {\tt next\\$[AL2]$};
+%
+%    \path [line] (main) -- (add1);
+%    \path [line] (main) -- (add2);
+%    \path [line] (main) -- (iterator1);
+%    \path [line] (main) -- (iterator2);
+%    \path [line] (main) -- (next1);
+%    \path [line] (main) -- (next2);
+%
+%\end{tikzpicture}
+%}
+%
+%\end{center}
+%\caption{Call-graph by $1$-object-sensitive analysis with tunneling}
+%\label{fig:obj:tunneling}
+%\end{subfigure}
+%\end{multicols}
+%\setlength{\abovecaptionskip}{-5pt}
+%\caption{Example and call-graphs constructed by the conventional 1-object-sensitivity and our
+%1-object-sensitivity with context tunneling}
+%\label{fig:overviewObj}
+%\end{figure}
+%
+%\myparagraph{Example Code}
+%
+%Fig.~\ref{fig:obj:code} shows
+%a common code pattern that $1$-object-sensitivity with a context-sensitive heap
+%loses precision, which is found frequently in data
+%structure implementations such as List and Map.
+%In the example code, we have four
+%top-level classes, \texttt{A}, \texttt{B}, \texttt{C}, and
+%\texttt{ArrayList}, and an inner class \texttt{ListIter} inside of the
+%\texttt{ArrayList} class. The \texttt{ArrayList} class % , as the name suggests,
+%% models on \texttt{java.util.ArrayList}, which is
+%implements a resizable array.
+%For simplicity, it maintains data in the % (fixed-size)
+%\texttt{elementData} array and has the \texttt{add} method to append new data at
+%the end of \texttt{elementData}. It also has the \texttt{iterator} method that
+%returns an object of type \texttt{ListIter}, providing access to \texttt{elementData}.
+%The \texttt{main} method in class \texttt{C} performs usual
+%allocate-add-retrieve
+%tasks using \texttt{ListIter}. The goal of the pointer
+%analysis is to prove the safety of two type casts at lines 13
+%and 14.
+%
+%\myparagraph{Conventional Object-Sensitivity}
+%
+%Conventional object-sensitivity analyzes different method calls
+%separately for their base objects (and their heap contexts, if needed)~\cite{Smaragdakis2011}.  For
+%example, when we analyze the \texttt{next} method at line 13,
+%2-object-sensitivity creates the context $[\texttt{AL1},
+%\texttt{IT}]$, where \texttt{IT} is the allocation-site of the base
+%object (\texttt{it1}) and \texttt{AL1} is its heap context.
+%Likewise, the
+%method invocation at line 14 creates the context $[\texttt{AL2}, \texttt{IT}]$, enabling
+%the analysis to distinguish the first and second calls to the same method. Using base objects
+%as contexts makes object-sensitivity more favorable than
+%call-site-sensitivity for object-oriented languages. However, it still
+%updates contexts unconditionally at every method call and may lose important
+%context elements when $k$ is not sufficiently large. For example, when we
+%analyze the code with 1-object-sensitivity, the two calls to
+%\texttt{next} are analyzed under the same context $[\texttt{IT}]$
+%(Fig.~\ref{fig:obj:callgraph}).
+%As a result, both objects \texttt{A} and \texttt{B} get returned to both
+%queries simultaneously, making the analysis fail to prove the safety of type
+%casting.
+%
+%
+%
+%\myparagraph{Object-Sensitivity with Context Tunneling}
+%With context tunneling, however, even 1-object-sensitivity can prove the queries. Note that
+%object-sensitivity has a different flavor from call-site-sensitivity; it
+%updates the context with the heap context of the base object~\cite{Milanova2005, Milanova2002}. Base
+%variables \texttt{it1} and \texttt{it2} point to the same heap allocation with different heap contexts: \texttt{AL1} and \texttt{AL2}. Applying context
+%tunneling for the two method calls to \texttt{next} corresponds to
+%propagating the heap contexts \texttt{AL1} and \texttt{AL2} at lines
+%13 and 14, respectively, without modification.
+%% makes the method call at line 13 to have
+%% the context \texttt{AL1} and the method call at 14 to have the context \texttt{AL2}.
+%The resulting context-sensitive analysis proves the queries with a call-graph
+%shown in Fig.~\ref{fig:obj:tunneling}.
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

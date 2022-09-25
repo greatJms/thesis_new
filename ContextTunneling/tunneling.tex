@@ -1,0 +1,93 @@
+%\newpage
+
+\section{Pointer Analysis with Context Tunneling} \label{sec:tunneling}
+Now, we formally describe the idea of context tunneling on the top the analysis rule in Figure~\ref{pre:baseline-rules}.
+%\subsection{Analysis with Context Tunneling}\label{sec:tunneling-analysis}
+%Now we describe context tunneling on top of the generic context-sensitive analysis.
+We assume that a binary relation $\TunnelingRelation$ on methods,
+called tunneling relation, is given prior to the analysis:
+% The idea of tunneling is simple: compare the
+% parent and child contexts and use the more important one as the
+% calling context of the called method.  We do so by using a binary
+% relation
+% $\TunnelingRelation$ on methods, called tunneling relation:
+\[
+  \TunnelingRelation \subseteq \Methods \times \Methods.
+\]
+Intuitively, $\TunnelingRelation$ relates the parent and child methods
+that require context tunneling. Suppose that a method
+$m_2$ is called during analysis where its parent method is $m_1$. If
+$m_1$ and $m_2$ are related by $\TunnelingRelation$, i.e., $(m_1,m_2) \in \TunnelingRelation$, we apply context tunneling by
+reusing the context of the parent method ($m_1$) in analyzing the
+child method ($m_2$) without creating a new context for $m_2$.  Given
+a tunneling relation $\TunnelingRelation$, the analysis rule for
+performing context tunneling is defined in
+Figure~\ref{fig:tunneling-rules}. All the existing rules except for
+method calls are carried over to the new analysis without any modifications.
+The rule for method call in Figure~\ref{pre:baseline-rules} is
+replaced by the rule in Figure~\ref{fig:tunneling-rules}, where the
+only difference is in the way of constructing the child context
+$\ctx'$. If $(p,m) \not\in \TunnelingRelation$ (i.e. tunneling
+disabled), we update the calling context as the conventional $k$-context-sensitive
+analysis does. Otherwise, when $(p,m)\in \TunnelingRelation$
+(i.e. tunneling enabled), we just pass the parent context $\pctx$ to
+the child method (i.e. $\ctx' = \pctx$) without appending the current
+context element to $\pctx$.
+% Note that the ordinary $k$-context-sensitive analysis and
+% context-insensitive analysis are special cases with
+% $\TunnelingRelation = \emptyset$ and
+% $\TunnelingRelation = \Methods \times \Methods$, respectively.
+
+
+Although the idea of context tunneling is simple, realizing effective
+tunneling in practice is challenging. We found that the performance of
+context tunneling is very sensitive to the choice of the tunneling
+relation; with a good relation, context tunneling is able to improve the
+baseline analysis significantly but, with an inappropriate choice, the analysis
+becomes even inferior to the context-insensitive analysis.  Manually finding a general heuristic rule to
+generate an optimal tunneling relation for a given program was
+difficult for real-world Java programs.
+The goal of Section~\ref{tunneling:learning} is to address this challenge
+with a data-driven technique that automatically learns a good
+tunneling heuristic from data.
+
+\begin{figure}[t]
+  \[
+    \begin{array}{c}
+      \infer[]
+      {
+      \begin{array}{c}
+        \ctx' \in \Reachable ({m}) \quad
+        ({\heap}, {\hctx}) \in  \VarPointsTo ({m_{\this}}, {\ctx'}) \\
+        \VarPointsTo({\it arg}, \ctx) \subseteq \VarPointsTo(m_{\it param}, \ctx')
+        \quad
+        \VarPointsTo(m_{\it return}, \ctx') \subseteq \VarPointsTo(x, \ctx)\\
+        (\invo, \ctx, m, \ctx') \in \CallGraph
+      \end{array}
+      }{
+      \begin{array}{c}
+        {\it \invo : x = y.\sig({\it arg})} \quad
+        \ctx \in    \Reachable ({\methof(\invo)}) \\
+        ({\heap}, {\hctx})\in  \VarPointsTo ({\it y},\ctx) \quad
+        t = {\typeof}(\heap)  \quad m = {\lookup}(t, \sig) \\
+(e, {\pctx}, p) = \parent(\heap,\hctx, \invo, \ctx) \quad
+        \ctx' = \left\{
+        \begin{array}{l@{\quad}l}
+          \truncateCtx{\appendCtx{{ \pctx}}{{e}}}{\CallDepth}
+          & \mbox{if}~(p,m)\not\in \TunnelingRelation \\
+          \truncateCtx{\pctx}{\CallDepth}     & \mbox{if}~(p,m)
+                                                \in \TunnelingRelation
+        \end{array}
+                                                          \right.
+      \end{array}
+                                                          }
+    \end{array}
+  \]
+  \caption{Context-sensitive pointer analysis with tunneling}
+\label{fig:tunneling-rules}
+\end{figure}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

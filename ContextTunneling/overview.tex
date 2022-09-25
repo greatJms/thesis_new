@@ -1,0 +1,140 @@
+
+\section{Overview}
+\label{sec:overview}
+This section exemplifies how our context tunneling approach.
+\subsection{Context tunneling}
+Suppose that we analyze the example Java code in Fig.~\ref{fig:overview:code} using flow-insensitive and context-sensitive points-to analysis. In this example code, we make calling contexts using call-site information. The example code has three classes, \texttt{A}, \texttt{B}, and \texttt{C}, and class \texttt{C} has two methods. Method \texttt{C.id(v, i)} is an identity function which returns an object passed to a formal parameter \texttt{v} after calling itself \texttt{i} times recursively. Method \texttt{C.main} calls \texttt{C.id} twice. Both invocation share same parameter \texttt{i} which is decided by user input but the first arguments are different. Finally, we want to prove safeness of two down casting operations at line 8 and 9 at run-time.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{.45\columnwidth}
+\begin{lstlisting}
+class A {} class B {}
+class C {
+  static Object id (Object v, int i){
+      return i >= 0 ? id(v, i-1) : v;
+  }
+  public static void main (){
+    int i = input();
+    A a = (A) id(new A(), i);	//Q1
+    B b = (B) id(new B(), i);	//Q2
+  }
+}
+\end{lstlisting}
+\caption{Example code}
+\label{fig:overview:code}
+\end{subfigure}\quad
+\begin{subfigure}[b]{.45\columnwidth}
+\begin{center}
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {main\\(*)};
+    \node [block, above right=0cm and 0.2cm of main] (id1) {id\\(8)};
+    \node [block, below right=0cm and 0.2cm of main] (id2) {id\\(9)};
+    \node [block, right=0.4cm of id1] (id3) {id\\(8,4)};
+    \node [block, right=0.4cm of id2] (id4) {id\\(9,4)};
+    \node [block2, right=0.4cm of id3] (id5) {id\\(8,4,$\cdots$,4)};
+    \node [block2, right=0.4cm of id4] (id6) {id\\(9,4,$\cdots$,4)};
+    \node [block, below right=0cm and 0.4cm of id5] (id7) {id\\(4,$\cdots$,4)};
+
+    \path [line] (main) -- (id1);
+    \path [line] (main) -- (id2);
+    \path [line] (id1) -- (id3);
+    \path [line] (id2) -- (id4);
+    \path [line, dashed] (id3) -- (id5);
+    \path [line, dashed] (id4) -- (id6);
+    \path [line] (id5) -- (id7);
+    \path [line] (id6) -- (id7);
+    \path [line] (id7) edge[loop right] ();
+\end{tikzpicture}
+}
+\end{center}
+\caption{$k$-CFA callgraph}
+
+\vspace{2ex}
+
+\begin{center}
+\resizebox{0.5\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {main\\(*)};
+    \node [block, above right=0cm and 0.5cm of main] (id1) {id\\(8)};
+    \node [block, below right=0cm and 0.5cm of main] (id2) {id\\(9)};
+
+    \path [line] (main) -- (id1);
+    \path [line] (main) -- (id2);
+
+    \path [line] (id1) edge[loop right] ();
+    \path [line] (id2) edge[loop right] ();
+\end{tikzpicture}
+}
+\end{center}
+\caption{1-callsite+T callgraph}
+\end{subfigure}\qquad
+\caption{Example code and callgraphs}
+\label{fig:overview}
+\end{figure}
+
+Conventional $k$-callsite analysis with an arbitrary $k$ fails to prove all the queries. Because a sound static analyzer assumes an external user input \texttt{i} to be unbounded, no matter how large $k$ is chosen, $k^{th}$ and beyond invocations of method \texttt{C.id} are eventually merged and therefore formal argument \texttt{v} of method \texttt{C.id} points to objects of classes \texttt{A} and \texttt{B}. In other words, early context information (i.e., 8 and 9) that separates two call chains is wiped out by fresh but redundant context information (i.e., 4). As a result, the analysis concludes the method \texttt{C.id} can return an object of class \texttt{A} and \texttt{B}, which in turn causes invalid down casting alarm at line 8 and 9. Theoretically, $\infty$-callsite analysis can prove all the queries but it is obviously infeasible.
+
+Our approach equips a heuristic that compares parent and child contexts and tells which one is more promising for the called method. Conventional analysis can be thought as one who blindly prefers child context over parent one. By using our heuristic, we can prove all the queries with only 1-callsite analysis. Suppose we have following relations.
+\[
+\TunnelingRelation({\texttt {C.id}}, {\texttt {C.id}})
+\]
+This relation means two things:
+\begin{itemize}
+  \item The first argument method provides context information to the second argument method. Since \texttt{C.id} is calls itself recursively, this relation is true for the example in this regard.
+  \item The context made from the first argument is more important than a context made from the second argument. First invocation of \texttt{C.id} makes more important context than one who is called recursively in it, and this is true for the following recursions.
+\end{itemize}
+
+As a whole, we can translate the above relation into; \emph{``C.id invocations inside C.id shouldn't make a new calling context.''} Instead of making new calling context, method invocations that satisfies the relation inherit contexts from parent contexts. For example, \texttt{C.id} invocations inside \texttt{C.main} can make new contexts using their callsites, like conventional analysis. In contrary, the recursively called \texttt{C.id} invocations inherit their contexts from old contexts. By doing so, performing 1-callsite analysis is enough for the example code to carry two key context information, which are 8 and 9, over call chains and make analysis to prove all queries.
+
+\subsection{Context tunneling approach overview}
+Our approach takes three inputs: a parametric static analyzer, training programs and a set of atomic features that describe Java methods. The parametric analyzer equips a heuristic that tells which method invocation should inherit its calling contexts from parent context (i.e., in case of $k$-CFA, it is a caller's context) instead of its child context. We model the heuristic's behavior using boolean formulas. Training programs are just a set of Java programs without any predefined labels. Lastly, a set of atomic features describes syntactic or semantic properties of methods, such as method's return type or whether it belongs to a inner class or not. Suppose we have three atomic features over method definitions as follows;
+\[
+\afeatures=\myset{a_1, a_2, a_3}
+\]
+and assume two method definitions in Fig.~\ref{fig:overview:code} have the features as follows:
+\begin{align}
+  C.main=\myset{a_3}, \quad C.id=\myset{a_1, a_2}
+\end{align}
+Given three components, suppose our learning algorithm results two boolean formulas $f_prime$ and $f_second$, e.g.,
+\[
+f_1=a_1 \wedge \neg a_3, \\quad f_2=a_2\wedge \neg a_3 
+\]
+The first formula $f_1$ means \emph{very important methods} who are believed to make useful context information
+
+
+
+
+
+
+Note that, our heuristic doesn't evaluate invocation's contexts as they are; instead, it abstracts methods from the contexts and then extracts feature vectors using the atomic features. For instance, suppose call-site sensitive analysis with depth 1 distinguished three method invocations in Fig.~\ref{fig:overview:code} using call-site labels (e.g., line numbers) as follows:
+\begin{align}\label{eq:overview:invos}
+C.id(8),\quad C.id(9),\quad C.id(4)
+\end{align}
+Our heuristic has a function \methof~to extract method from each context information. Applying the function over context information in \ref{eq:overview:invos} results a set of methods as follows:
+\begin{align}\label{eq:overview:mths}
+\methof(8)=C.id, \quad \methof(9)=C.id, \quad \methof(4)=C.id
+\end{align}
+Now suppose we have three atomic features over method definitions as follows:
+\[
+\afeatures=\myset{a_1, a_2, a_3}
+\]
+And suppose two methods in \ref{eq:overview:mths} have the features as follows:
+\begin{align}
+  C.main=\myset{a_3}, \quad C.id=\myset{a_1, a_2}
+\end{align}
+Given three input components, our learning algorithm outputs two boolean formulas $f_1$ and $f_2$ over the atomic features as follows:
+\[
+f_1=a_2\wedge \neg a_3, \qquad f_2=a_1 \wedge \neg a_3
+\]
+Two boolean formulas $f_1$ and $f_2$ mean \emph{important} and \emph{very important} methods respectively. A method in $f_1$ or $f_2$ makes possibly useful context information but our heuristic outweighes $f_2$ over $f_1$. That m
+
+If a method invocation's child context satisfies $f_2$, our heuristic marks a method invocation as \emph{important per se} and let it to use the child context. For the unmarked method invocations, otherwise, the heuristic makes them to use parent contexts instead. The heuristic also prefers a parent context over child one if a invocation's child context is \emph{important per se} but its parent context satisfies $f_1$, which means \emph{very important}. 
+
+\subsection{Learning context tunneling heuristics}
+asdf 
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

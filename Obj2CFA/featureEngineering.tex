@@ -1,0 +1,106 @@
+% !TEX root = ./paper.tex
+
+
+
+\begin{table}[ht]
+	\renewcommand{\arraystretch}{1}
+	\caption{Atomic features ($\mba$) used in our method}\label{tbl:obj2cfa:features}
+	\centering
+	\setstretch{1.1}
+	\footnotesize
+		 \begin{tabular}{c c c c c c c c c c }
+			\toprule
+			 A1  & ``java''    & A2  & ``lang''     & A3 & ``sun'' & A4 & ``()'' & A5  & ``void''\\ 
+			 A6  & ``security'' & A7 & ``int''      & A8 & ``util'' & A9  & ``String'' &  A10 & ``init''\\ \bottomrule
+		 \end{tabular}
+		\begin{tabular}{ l l }
+			 B1 &  Method is contained in a nested class               \\      
+			 B2 & Method contains local assignments                    \\ 
+			 B3 & Method contains local variables                      \\ 
+			 B4 & Method is contained in a large class                      \\ 
+			 B5 & Method contains a heap allocation         \\
+			 B6 & Method is a static method         \\
+			\midrule
+			C1 & Method is called on \texttt{this} (i.e. \texttt{this.$m$(...)}) \\
+			C2 & An argument is allocated in the same method      \\ 
+			C3 & Method is called on object of static field					\\
+			C4 & Method is called else where in the same method \\
+			C5 & The base variable is passed to an initializer  \\
+			C6 & The containing method's modifier is ``$\texttt{protected}$''        \\
+			C7 & The containing method has exception handling        \\
+			C8 & All  parameters are passed from caller method\\
+			C9 & All  parameters are initialized just before the calls\qquad\,\,\\
+			C10 & In ``{\tt java.util.regex}'' class\\
+			C11 & Invoke constructor (i.e. \texttt{new C(...)}) \\
+			C12 & All the caller method's arguments' type is integer\\
+			C13 & Caller method takes more than 2 arguments \\
+			C14 & In ``{\tt java.io.*}'' class\\
+			C15 & In ``{\tt java.util.logging}'' class \\
+			C16 & Takes at least 2 arguments\\
+			C17 & Virtual method calls in application class \\
+			C18 & Callee method's name is ``{\tt clone}''\\
+			C19 & C16 $\land \neg$ C6 $\land \neg$ C1\\
+			\bottomrule
+		 \end{tabular}
+	%\vspace{-10pt}
+	\end{table}
+
+
+
+
+\myparagraph{Feature Engineering} 
+The success of learning depends also on the atomic features ($\mba$). 
+We used a total of 35 atomic features in Table~\ref{tbl:obj2cfa:features},
+all of which describe syntactic properties of invocation sites. 
+Here, we identify invocations with called methods on them.
+Features A1--A10 and B1--B6 came from~\cite{JeJeOh18}. 
+% that designed features describing methods in Java programs.}
+%Features A1--A10 and B1--B6 came from \citet{JeJeOh18}. 
+%Jeon et al.~\cite{JeJeOh18} designed a number of syntactic features of methods. 
+Features A1--A10 describe methods whose signatures 
+contain the corresponding strings.
+For example, when a method's signature string is ``java.lang.String: int length()'', the method has features A1, A2, A4, A7, and A9.
+Features B1--B6 describe properties of method bodies. 
+For example, feature B1 indicates whether a method is defined in a nested class or not.
+
+
+Using existing features only was
+insufficient 
+and we newly designed features C1--C19 in
+Table~\ref{tbl:obj2cfa:features}.  In our case, feature engineering was not very difficult as it
+can be guided by the simulated policy $\simheuristic$.  To obtain those
+features, we initially ran our learning algorithm on training data
+with existing features (A1--A10 and B1--B6) only, which resulted in a
+parameter $f$ with which the learned policy ($\heuristic_{f}$) did not
+satisfy the learning objective. We investigated the reason why $\heuristic_{f}$
+fails to capture the behavior of $\simheuristic$ by analyzing the
+difference between $\simheuristic$ and $\heuristic_f$ 
+(i.e. $\simheuristic(P)\setminus \heuristic_{f}(P)$ and
+$\heuristic_{f}(P) \setminus \simheuristic(P)$). 
+That is, our goal was to identify features $a_1$ and
+$a_2$ that minimize
+$\sum_{P\in \vec{P}} \sem{a_1}_P \xor (\simheuristic(P) \setminus
+\heuristic_f(P))$ and
+$\sum_{P\in \vec{P}} \sem{a_2}_P \xor (\heuristic_f(P) \setminus
+\simheuristic(P))$, respectively. 
+We included the new 
+features $a_1$ and $a_2$ in the feature set and ran the 
+algorithm  again. 
+We repeated this process until the policy space was large enough to contain solutions and the learning
+algorithm could find one of them.
+% In our case, the loop iterated 7 times and each iteration produced a
+% feature in C1--C7. 
+% This feature engineering process was done with training programs only. 
+% \minseok{Sunbeom: It seems too expensive, Junhee: feature engineering needs creativity.}
+
+
+
+
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

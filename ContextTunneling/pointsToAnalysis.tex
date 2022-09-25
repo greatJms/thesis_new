@@ -1,0 +1,167 @@
+\clearpage
+\section{Parametric Points-to Analysis in Datalog}
+\label{sec:analysisrules}
+\label{sec:input-output-relations}
+\begin{figure}[]
+\begin{tabular}{ll} \hline
+\multicolumn{2}{c}{Input Relations} \\
+%\multicolumn{1}{c}{Instructions} & \multicolumn{1}{c}{Auxiliary
+%                                    Information} \\
+\hline
+\textsc{Alloc} ({\it var}: $V$, {\it heap}: $H$, {\it inMeth}: $M$) &
+\textsc{FormalArg}(${\it meth}:M,{\it i}:\mathbb{N},{\it arg}:V$) \\ 
+
+\textsc{Move}(${\it to}:V,{\it from}:V$) 
+	& \textsc{ActualArg}(${\it invo}:I,i:\mathbb{N},{\it arg}:V$)\\
+
+\textsc{Load}(${\it to}:V,{\it base}:V,{\it fld}:F$) 
+	& \textsc{FormalReturn}(${\it meth}:M,{\it ret}:V$) \\
+\textsc{Store}(${\it base}:V,{\it fld}:F,{\it from}:V$) 
+	& \textsc{ActualReturn}(${\it invo}:I,{\it var}:V$)\\
+\textsc{VCall}(${\it base}:V,{\it sig}:S,{\it invo}:I,{\it inMeth}:M$)
+	& \textsc{ThisVar}(${\it meth}:M,{\it this}:V$)\\ 
+\textsc{SCall}(${\it meth}:M,{\it invo}:I,{\it inMeth}:M$) 
+	& \textsc{HeapType}(${\it heap}:H,{\it type}:T$) \\
+	& \textsc{LookUp}(${\it type}:T,{\it sig}:S,{\it meth}:M$)\\
+\end{tabular}
+
+\begin{tabular}{l}
+\\
+\hline
+    \multicolumn{1}{c}{Output Relations} \\ \hline
+    \textsc{VarPointsTo}(${\it var}:V,{\it ctx}:C,{\it heap}:H,{\it 
+hctx}:HC$)\\
+     \textsc{CallGraph}(${\it invo}:I,{\it callerCtx}:C,{\it
+  meth}:M,{\it calleeCtx}:C$)\\
+     \textsc{FldPointsTo}(${\it baseH}:H,{\it baseHCtx}:HC,{\it
+  fld}:F,{\it heap}:H,{\it hctx}:HC$)\\
+     \textsc{InterProcAssign}(${\it to}:V,{\it toCtx}:C,{\it
+  from}:V,{\it fromCtx}:C$)\\
+     \textsc{Reachable}(${\it meth}:M,{\it ctx}:C$)\\
+\end{tabular}
+
+\caption{Input and output relations of points-to analysis}
+\label{fig:input-output}
+\end{figure}
+\clearpage
+\input{datalogrules}
+
+\section{instanticating Model:Standard vs Tunneling}
+
+\subsection{Context-insensitive(insens)}
+\begin{align*}
+	\Record (heap, ctx) &=\star\\
+	\Merge(heap, hctx, invo, ctx)&=\star\\
+	\MergeStatic(invo, ctx)&=\star\\
+\end{align*}
+
+\subsection{1-call-site sensitive(1call)}
+
+
+\begin{align*}
+	\Record (heap, ctx) &=\star\\
+	\Merge(heap, hctx, invo, ctx) &= invo\\
+	\MergeStatic(invo, ctx)&=invo\\
+\end{align*}
+
+\subsection{1-call-site sensitive + Tunnel(1call + tunnel)}
+\begin{align*}
+\Record (heap, ctx) &=\star\\
+\Merge ({\it \textbf{importantness}, heap, hctx, invo, ctx}) &= \left\{
+ \begin{array}{rl}
+{\it invo} & \mbox{if}~{\it importantness} = true \\
+{\it ctx} & \mbox{if}~{\it importantness}=false
+\end{array}
+\right.\\
+\MergeStatic ({\it \textbf{importantness}, invo, ctx}) &= \left\{
+\begin{array}{rl}
+{\it invo} & \mbox{if}~{\it importantness} = true \\
+{\it ctx} & \mbox{if}~{\it importantness}=false
+\end{array}
+\right.\\
+\end{align*}
+
+\subsection{2-call-site sensitive}
+
+\begin{align*}
+	\Record (heap, ctx) &=\star\\
+	\Merge (heap, hctx, invo, ctx)&= (first(ctx),invo)\\
+	\MergeStatic (invo, ctx)&=(first(ctx),invo)\\
+\end{align*}
+
+\subsection{2-call-site sensitive + Tunneling(2call + T)}
+\begin{align*}
+\Record (heap, ctx) &= \star\\
+\Merge ({\it \textbf{importantness}, heap, hctx, invo, ctx}) &= \left\{
+ \begin{array}{rl}
+{\it (first(ctx), invo)} & \mbox{if}~{\it importantness} = true \\
+{\it ctx} & \mbox{if}~{\it importantness}=false
+\end{array}
+\right.\\
+\MergeStatic ({\it \textbf{importantness}, invo, ctx}) &= \left\{
+\begin{array}{rl}
+{\it (first(ctx),invo)} & \mbox{if}~{\it importantness} = true \\
+{\it ctx} & \mbox{if}~{\it importantness}=false
+\end{array}
+\right.\\
+\end{align*}
+\newpage
+\subsection{1-object sensitive(1obj)}
+
+\begin{align*}
+	\Record (heap, ctx) &=\star\\
+	\Merge (heap, hctx, invo, ctx)&= heap\\
+	\MergeStatic (invo, ctx)&=ctx\\
+\end{align*}
+
+\subsection{1-obj + Tunneling(1obj + T)}
+\begin{align*}
+\Record (heap, ctx) &= ctx\\
+\Merge ({\it \textbf{importantness}, heap, hctx, invo, ctx}) &= \left\{
+ \begin{array}{rl}
+{\it heap} & \mbox{if}~{\it importantness} = true \\
+{\it ctx} & \mbox{if}~{\it importantness}=false
+\end{array}
+\right.\\
+\MergeStatic (invo, ctx)&=ctx\\
+\end{align*}
+
+\subsection{1-object sensitive with a context sensitive heap(1obj + H)}
+
+\begin{align*}
+	\Record (heap, ctx) &=\star\\
+	\Merge (heap, hctx, invo, ctx)&= heap\\
+	\MergeStatic (invo, ctx)&=ctx\\
+\end{align*}
+
+\subsection{1-obj with a context sensitive heap+ Tunneling(1obj + H + T)}
+\begin{align*}
+\Record (heap, ctx) &= ctx\\
+\Merge ({\it \textbf{importantness}, heap, hctx, invo, ctx}) &= \left\{
+ \begin{array}{rl}
+{\it heap} & \mbox{if}~{\it importantness} = true \\
+{\it hctx} & \mbox{if}~{\it importantness}=false
+\end{array}
+\right.\\
+\MergeStatic (invo, ctx)&=ctx\\
+\end{align*}
+
+\subsection{2-object sensitive with a context sensitive heap(1obj + H)}
+
+\begin{align*}
+	\Record (heap, ctx) &=first(ctx)\\
+	\Merge (heap, hctx, invo, ctx)&= pair(hctx, heap)\\
+	\MergeStatic (invo, ctx)&=ctx\\
+\end{align*}
+
+\subsection{2-obj with a context sensitive heap+ Tunneling(1obj + H + T)}
+\begin{align*}
+\Record (heap, ctx) &= first(ctx)\\
+\Merge ({\it \textbf{importantness}, heap, hctx, invo, ctx}) &= \left\{
+ \begin{array}{rl}
+{\it (hctx,heap)} & \mbox{if}~{\it importantness} = true \\
+{\it (heap,hctx)} & \mbox{if}~{\it importantness}=false
+\end{array}
+\right.\\
+\MergeStatic (invo, ctx)&=ctx\\
+\end{align*}

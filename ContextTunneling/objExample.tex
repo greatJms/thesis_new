@@ -1,0 +1,142 @@
+\lstset{
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\scriptsize\ttfamily},
+  numbers=left,
+  numbersep=5pt,
+  numberstyle=\small\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+\begin{figure}
+\begin{subfigure}[b]{.9\columnwidth}
+\begin{multicols}{2}
+\centering
+\begin{lstlisting}
+class A {} class B {}
+class C {
+  public static void main (){
+    ArrayList al1 = new ArrayList();//AL1
+    ArrayList al2 = new ArrayList();//AL2
+
+    al1.add(new A());
+    al2.add(new B());
+
+    Itr it1 = al1.iterator();
+    Itr it2 = al2.iterator();
+
+    A a = (A)it1.next();  //Query 1
+    B b = (B)it2.next();  //Query 2
+  }
+}
+
+class ArrayList{
+  Object[] elementData = new Object[10];
+  int size = 0;
+  void add(Object e){
+    elementData[size++] = e;
+  }
+  Itr iterator(){
+    return new Itr(); //IT
+  }
+  class Itr{
+    int cursor = 0;
+    Object next(){
+      return elementData[cursor++];
+    }
+  }
+}
+\end{lstlisting}
+\end{multicols}
+\caption{Example code}
+\label{fig:obj:code}
+\end{subfigure}
+\begin{multicols}{2}
+\begin{subfigure}[b]{.9\columnwidth}
+\begin{center}
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {{\tt main}\\$[*]$};
+    \node [block, below left=1cm and 2.7cm of main] (add1) {{\tt add}\\$[AL2]$};
+    \node [block, right=0.4cm of add1] (add2) {{\tt add}\\$[AL2]$};
+    \node [block2, right=0.4cm of add2] (iterator1) {{\tt iterator}\\ $[AL1]$};
+    \node [block2, right=0.4cm of iterator1] (iterator2) {{\tt iterator}\\$[AL2]$};
+    \node [block, right=0.4cm of iterator2] (next) {{\tt next}\\$[IT]$};
+
+    \path [line] (main) -- (add1);
+    \path [line] (main) -- (add2);
+    \path [line] (main) -- (iterator1);
+    \path [line] (main) -- (iterator2);
+    \path [line] (main) -- (next);
+
+\end{tikzpicture}
+}
+\end{center}
+\caption{Call-graph by $1$-object-sensitive analysis}
+\label{fig:obj:callgraph}
+\end{subfigure}
+\vfill\null
+\columnbreak
+\begin{subfigure}[b]{.9\columnwidth}
+\begin{center}
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}
+    \node [block] (main) {\tt main\\$[*]$};
+    \node [block, below left=1cm and 2.7cm of main] (add1) {{\tt add}\\$[AL2]$};
+    \node [block, right=0.4cm of add1] (add2) {\tt add\\$[AL2]$};
+    \node [block2, right=0.4cm of add2] (iterator1) {\tt iterator\\$[AL1]$};
+    \node [block2, right=0.4cm of iterator1] (iterator2) {\tt iterator\\$[AL2]$};
+    \node [block, right=0.4cm of iterator2] (next1) {\tt next\\$[AL1]$};
+    \node [block, above=0.4cm of next1] (next2) {\tt next\\$[AL2]$};
+
+    \path [line] (main) -- (add1);
+    \path [line] (main) -- (add2);
+    \path [line] (main) -- (iterator1);
+    \path [line] (main) -- (iterator2);
+    \path [line] (main) -- (next1);
+    \path [line] (main) -- (next2);
+
+\end{tikzpicture}
+}
+
+\end{center}
+\caption{Call-graph by $1$-object-sensitive analysis with tunneling}
+\label{fig:obj:tunneling}
+\end{subfigure}
+\end{multicols}
+\setlength{\abovecaptionskip}{-5pt}
+\caption{Example code and callgraphs}
+\label{fig:overviewObj}
+\end{figure}
+
+\myparagraph{Example Code for Object Sensitivity}
+Example code in Fig.~\ref{fig:obj:code} present common pattern that 1-object-sensitive+heap
+analysis lose precision. The main method use two data structure Arraylist, and it add
+different data to each Arraylist. Main method makes iterator for each Arraylist and 
+get data with iterators. The queries ask if two type casts at line 13 and 14 are
+safe. 1-object-sensitive+heap analysis fails to prove the queries because
+\texttt{next} method invoked in 13 and 14 are merged as
+the method invocations have same context \texttt{IT}, 
+constructing call-graph in Fig.~\ref{fig:obj:callgraph}. 
+
+\myparagraph{Context Tunneling for Object sensitivity} 
+With context tunneling, 1-object-sensitive+heap analysis can prove the queries. Note that Object sensitivity
+has different flavor from call-site sensitivity; it updates context from heap context. Base
+variable \texttt{it1} and \texttt{it2} point to same heap allocation but have different heap context: 
+\texttt{AL1} and \texttt{AL2}. Applying context tunneling for \texttt{next} method make method call
+at line 13 have context \texttt{AL1} and 14 have context \texttt{AL2},
+resulting context sensitive analysis prove the queries with call-graph 
+Fig.~\ref{fig:obj:tunneling}. 
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

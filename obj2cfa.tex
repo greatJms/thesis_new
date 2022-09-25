@@ -1,0 +1,135 @@
+\chapter{Learning a Precise Call-site Sensitivity from a Given Object Sensitivity~\footnote{The contents of this chapter are based on our previous work presented at \emph{POPL 2022: 49th ACM SIGPLAN Symposium on Principles of Programming Languages}~\cite{JeOh22}}}\label{sec:Obj2CFA}
+
+
+In this chapeter, we present \ourtechnique~that 
+learns a precise call-site site sensitivity from a given object sensitivity.
+In other words, we challenge the commonly-accepted wisdom in static analysis 
+that object sensitivity is superior to call-site sensitivity for object-oriented programs. 
+In static analysis of object-oriented programs, object sensitivity
+has been established as the dominant flavor of context sensitivity
+thanks to its outstanding precision. On the other hand, call-site
+sensitivity has been regarded as unsuitable and its use in practice has been 
+constantly discouraged for object-oriented programs. 
+However, we claim that call-site sensitivity is generally 
+a superior context abstraction because it is practically possible to transform 
+object sensitivity into more precise call-site sensitivity. 
+Our key
+insight is that the previously known superiority of object sensitivity holds only
+in the traditional $k$-limited setting, where the analysis is enforced
+to keep the most recent $k$ context elements. However, it no longer holds if context tunneling in Section~{\ref{sec:Tunneling}} is included.
+With context tunneling, where the analysis is free to choose an
+arbitrary $k$-length subsequence of context strings, we show that
+call-site sensitivity can simulate object sensitivity almost
+completely, but not vice versa. To support the claim, we present a
+technique, called \ourtechnique, for transforming 
+arbitrary context-tunneled object sensitivity into
+more precise, context-tunneled call-site-sensitivity.
+We implemented \ourtechnique~in Doop and used it to derive a
+new call-site-sensitive analysis from a state-of-the-art object-sensitive pointer analysis. 
+Experimental results
+ confirm that the resulting call-site sensitivity outperforms 
+ object sensitivity in precision and scalability for real-world Java programs. 
+Remarkably, our results show that even 1-call-site sensitivity can be more precise than the
+conventional 3-object-sensitive analysis.
+
+
+
+
+
+
+
+
+
+\lstset{,language=Java, aboveskip=3mm, belowskip=3mm,
+	showstringspaces=false, columns=flexible,
+	basicstyle=\linespread{1.2}\small\ttfamily, numbers=left, numbersep=5pt,
+	numberstyle=\small\color{gray}, keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen}, stringstyle=\color{mauve},
+	breaklines=true, breakatwhitespace=true, tabsize=3 
+}
+
+
+ 
+
+\lstdefinestyle{mydefault}{frame=tb,
+	language=Java,
+	xleftmargin=0.5cm,
+	aboveskip=-3mm, % top margin
+	belowskip=0mm,  % bottom margin
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=false,
+	tabsize=3,
+	frame=none
+}
+
+
+\lstdefinestyle{myCustomMatlabStyle}{
+	language=Java,
+	xleftmargin=0.5cm,
+	aboveskip=-3mm, % top margin
+	belowskip=0mm,  % bottom margin
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\large\ttfamily},
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=false,
+	tabsize=3,
+	frame=none
+}
+
+
+
+%\usepackage{tabularx}
+
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+%\setcopyright{none}
+%\usepackage {tikz}
+\usetikzlibrary {shapes,positioning}
+%\usepackage {bm}
+\tikzstyle{block} = [rectangle, draw, fill=white, text width=4.8em,
+, text
+centered, rounded corners, minimum height=4em]
+\tikzstyle{block2} =
+[rectangle, draw, fill=white, text width=6em, text centered, rounded
+corners, minimum height=4em, minimum width = 7em] \tikzstyle{line} = [draw, -latex']
+\tikzstyle{onlyText} = [text width =2em, text centered]
+%\setcopyright{rightsretained}
+
+\tikzstyle{block3} =
+[rectangle, draw, fill=white, text width=7em, text centered, rounded
+corners, minimum height=3em] \tikzstyle{line} = [draw, -latex']
+
+%\setcopyright{rightsretained}
+
+
+\tikzstyle{blocks} = [rectangle, draw, fill=white, text width=0.7cm, text height = 4em, text
+centered,  text width=4em, rounded corners, minimum height=0.6cm]
+
+%\usepackage[bottom]{footmisc} %putting footnotes below bottom figures
+
+
+
+\input{Obj2CFA/introduction}
+\input{Obj2CFA/illustration}
+\input{Obj2CFA/analysis_simple}
+\input{Obj2CFA/framework}
+\input{Obj2CFA/simulation}
+\input{Obj2CFA/learn}
+\input{Obj2CFA/featureEngineering}
+\input{Obj2CFA/evaluation}
+\input{Obj2CFA/evaluation_learning}
+%\input{Obj2CFA/counter_example}
+%\input{Obj2CFA/discussion}

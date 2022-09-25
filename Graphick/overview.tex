@@ -1,0 +1,530 @@
+\section{Overview}
+In this section, we illustrate how our approach learns a context sensitivity heuristic from codebases; the learned heuristic generate analysis strategy for unknown programs. 
+
+\subsection{Our learning framework}
+\myparagraph{Learning analysis heuristic from codebases}
+Below graph depicts how our learning framework:
+\begin{center}
+\resizebox{0.7\columnwidth}{!}{
+	\centering
+	\begin{tikzpicture}
+	\node [onlyText] (codebases) {\text{codebases $\vec{P}$}};
+	\node [onlyText, right =
+	 4.4cm of codebases]
+	(minimalabs) {\text{minimal abstractions}};
+	\node [onlyText, below = 1.4cm of minimalabs,align=center] (graphs) {\text{set of graphs}};
+	\node [onlyText, below right = 0.2 and -1.0cm of minimalabs] (mytext) {\text{transforms to} \\ \text{set of graphs}};		
+	\node [onlyText, left = 4.4cm of graphs] (heuristic) {\text{heuristic $\heuristic$}};	
+
+	\path [line] (codebases) edge node[above] {$\text{learn minimal abstractions}$} (minimalabs);
+	\path [line] (minimalabs) edge node[right] {} (graphs);	
+	\path [line] (graphs) edge node[below] {$\text{learn heuristic graphs}$} (heuristic);
+	\end{tikzpicture}
+}
+\end{center}
+Suppose program in Fig~\ref{fig:codebase} is a given codebase. The program has an identity method {\tt h}.
+Method {\tt f} calls {\tt h} twice with its parameter {\tt a} and a value from users. A method {\tt g} calls method {\tt f} with parameter 8. Method {\tt m} invokes {\tt f} with 8 and {\tt g} twice.
+A query in method {\tt f} asks if the value of x is larger than 0. In real execution, it always holds because the value of x is 4 or 8. 
+%To prove the query, we need 2-call-site-sensitivity. 
+Our framework first learns minimal abstractions of the codebases. 
+An abstraction maps each method in the codebase to an abstraction degree (e.g., 0, 1, or 2).
+Minimal abstraction maps each method to an as small as possible one while the proves the query. 
+In our example, the minimal abstraction is Fig~\ref{fig:minimal}; if we give lower abstraction degree to any of the method, the analysis fails to prove the query.
+
+
+
+After it obtains minimal abstractions, our framework transforms each program component to a graph which can be obtained by a cheap analysis.
+In our example, we use context-insensitive analysis to get call-graph (e.g., Fig~\ref{fig:callgraph}) and transforms each method in minimal abstraction to corresponding graph like Fig~\ref{fig:setOfGraph}.
+
+
+From the sets of graphs in minimal abstractions, we transforms each graph to a small abstract graph.
+The learned sets of abstract graphs are returned as a call-site-sensitivity heuristic heuristic;
+it produces context sensitivity strategy for unknown programs.
+
+
+
+%
+%\begin{enumerate}
+%	\item From the codebases, our framework obtain minimal abstraction for each program.
+%	\item It transforms the minimal abstraction to a set of graphs.
+%	\item It learns suitable abstract graphs from the extracted ones.
+%	\item The learned abstract graphs becomes the heuristic; it generates an abstraction for unknown programs.
+%\end{enumerate}
+
+\begin{figure}
+	\centering
+	\begin{multicols}{2}
+	\begin{lstlisting}
+	class A{} class B{}
+	class C{
+	main(){
+	  Container c1 = new Container();//C1
+	  Container c2 = new Container();//C2
+	
+	  c1.add(new A());//A1
+	  c1.add(new A());//A2
+	  
+	  c2.add(new B());//B1
+	  c2.add(new B());//B2
+	
+	  Iterator it1 = c1.iterator();
+	  Iterator it1 = c2.iterator();
+	  A a = (A)it1.next();//query
+	  B b = (B)it2.next();//query
+	  }
+	}
+	class Container{
+	  Object[] data = new Object[2];//O
+	  int size = 0;
+	  void add(Object e){
+	    data[size++] = e;
+	  }
+	  Iterator iterator(){
+	    return new Iterator();//It
+	  } 
+	}
+	class Iterator{
+	  Container container; cursor = 0;
+	  Iterator(Container c){
+	    container = c;}
+	  Object next(){
+	    return c.data[cursor++];}
+	}
+	\end{lstlisting}
+	\end{multicols}
+	\caption{Example to illustrate heap abstraction and context abstraction}
+\end{figure}
+
+\begin{figure}
+	\begin{multicols}{2}
+	\begin{subfigure}[t]{0.7\columnwidth}
+		\begin{center}
+			\resizebox{1.\columnwidth}{!}{
+				\begin{tikzpicture}
+				\node [shape=circle,draw=black] (it) {{\tt It}};
+
+				\node [shape=circle,draw=black, below right = 0.cm and 0.4cm of it] (c1) {{\tt C1}};				
+				\node [shape=circle,draw=black, above right = 0.cm and 0.4cm of it] (c2) {{\tt C2}};
+
+				\node [shape=circle,draw=black, right = 1.2cm of it] (o) {{\tt O}};				
+
+
+				\node [shape=circle,draw=black, below right = 0.0cm and 0.5cm of o] (a1) {{\tt A1}};
+				\node [shape=circle,draw=black, below = 0.1cm of a1] (a2) {{\tt A2}};
+
+				\node [shape=circle,draw=black, above right = 0.0cm and 0.5cm of o] (b1) {{\tt B1}};
+				\node [shape=circle,draw=black, above = 0.1cm of b1] (b2) {{\tt B2}};
+
+
+
+
+				\path [line] (it) -- (c1);
+				\path [line] (it) -- (c2);
+
+				\path [line] (c1) -- (o);
+				\path [line] (c2) -- (o);
+				
+				\path [line] (o) -- (a1);
+				\path [line] (o) -- (a2);
+				\path [line] (o) -- (b1);
+				\path [line] (o) -- (b2);
+				\end{tikzpicture}
+			}
+		\end{center}
+		\caption{Points-to graph}
+	\end{subfigure}
+	
+	
+	\begin{subfigure}[t]{0.7\columnwidth}
+		
+		\begin{center}
+			\resizebox{1.\columnwidth}{!}{
+				\begin{tikzpicture}
+				\node [shape=circle,draw=black] (root) {{\tt root}};
+						
+				\node [shape=circle,draw=black, right =  0.4cm of root] (c2) {{\tt C2}};
+				\node [shape=circle,draw=black, above= 0.4cm of c2] (c1) {{\tt C1}};		
+				
+				\node [shape=circle,draw=black, right = 0.5cm of c2] (o) {{\tt O}};				
+				\node [shape=circle,draw=black, right = 0.4cm of c1] (it) {{\tt It}};				
+
+
+				\node [shape=circle,draw=black, below left = 0.8cm and 0.4cm of root] (a1) {{\tt A1}};		
+				\node [shape=circle,draw=black, right = 0.4cm of a1] (a2) {{\tt A2}};
+				\node [shape=circle,draw=black, right = 0.4cm of a2] (b1) {{\tt B1}};
+				\node [shape=circle,draw=black, right = 0.4cm of b1] (b2) {{\tt B2}};
+
+
+
+				\path [line] (root) -- (c1);
+				\path [line] (root) -- (c2);
+
+				\path [line] (root) -- (a1);
+				\path [line] (root) -- (a2);
+				\path [line] (root) -- (b1);
+				\path [line] (root) -- (b2);
+
+				\path [line] (c1) -- (it);
+				\path [line] (c1) -- (o);
+				\path [line] (c2) -- (it);
+				\path [line] (c2) -- (o);
+
+				\end{tikzpicture}
+			}
+		\end{center}
+		\caption{Object allocation graph}
+	\end{subfigure}	
+	\end{multicols}
+	\caption{Points-to graph and object allocation graph produced by a cheap analysis (e.g., context-insensitive)}
+\end{figure}
+
+
+
+
+
+
+\begin{figure}[t]	
+	\begin{multicols}{3}
+		\begin{subfigure}[t]{1.0\columnwidth}
+			\begin{center}
+				\begin{lstlisting}[escapeinside={(*}{*)}]
+int h(n) {ret n;}
+void f(a){
+  x = h(a);
+  assert(x==4||x==8);//query
+  y=h(input());
+}
+void g(){f(8);}
+void m(){
+  f(4);
+  g();
+  g();
+}
+\end{lstlisting}
+\caption{Codebase}
+\label{fig:codebase}
+\end{center}
+\end{subfigure}~\linebreak
+		
+		%\scalefont{0.9}
+		\begin{subfigure}[b]{1.0\columnwidth}
+			\begin{center}
+				\resizebox{0.4\columnwidth}{!}{
+					\begin{tikzpicture}
+					\node [onlyText] (main) {\Large \text{Apply 2-call: \{h\}}\\\text{Apply 1-call: \{f\}}\\\text{Apply 0-call: \{g,m\}}};
+					\end{tikzpicture}
+				}
+			\end{center}
+			\caption{Minimal abstraction}
+			\label{fig:minimal}
+		\end{subfigure}
+		\vspace{8pt}~\\
+
+					
+		\qquad\linebreak%\linebreak
+		\begin{subfigure}[b]{1.0\columnwidth}
+			\begin{center}
+				\resizebox{0.5\columnwidth}{!}{
+					\begin{tikzpicture}
+					\node [shape=circle,draw=black] (m) {{\tt m}};
+					\node [shape=circle,draw=black, right = 0.4cm of m] (f) {{\tt f}};
+					\node [shape=circle,draw=black, below = 0.4cm of m] (g) {{\tt g}};
+					\node [shape=circle,draw=black, below = 0.4cm of f] (h) {{\tt h}};
+					
+					\path [line] (m) -- (f);
+					\path [line] (f) edge [bend left=20] (h);
+					\path [line] (f) edge [bend right=20] (h);
+					\path [line] (g) -- (f);
+					\path [line] (m) edge [bend left=20] (g);
+					\path [line] (m) edge [bend right=20] (g);
+					
+					\end{tikzpicture}
+				}
+			\end{center}
+			\caption{Call-graph of ci}
+			\label{fig:callgraph}
+		\end{subfigure}
+	
+	
+	\columnbreak%\linebreak
+		\begin{subfigure}[b]{1.0\columnwidth}
+			\begin{center}
+				\resizebox{0.5\columnwidth}{!}{
+					\begin{tikzpicture}
+					\node [shape=circle,draw=black] (m) {{\tt 0}};
+					\node [shape=circle,draw=black, right = 0.4cm of m] (f) {{\tt 1}};
+					\node [shape=circle,draw=black, below = 0.4cm of m] (g) {{\tt 0}};
+					\node [shape=circle,draw=black, below = 0.4cm of f] (h) {{\tt 2}};
+					
+					\path [line] (m) -- (f);
+					\path [line] (f) edge [bend left=20] (h);
+					\path [line] (f) edge [bend right=20] (h);
+					\path [line] (g) -- (f);
+					\path [line] (m) edge [bend left=20] (g);
+					\path [line] (m) edge [bend right=20] (g);
+					
+					\end{tikzpicture}
+				}
+			\end{center}
+			\caption{Graph with a minimal abstraction}
+			\label{fig:graphmin}
+		\end{subfigure}
+%			
+%	\begin{subfigure}[b]{1.0\columnwidth}
+%		\begin{center}
+%			\resizebox{0.7\columnwidth}{!}{
+%				\begin{tikzpicture}
+%
+%				\node [shape=circle,draw=black] (m) {};
+%				\node [onlyText, below left = -0.02cm and
+%				1.5cm of f] (depth2) {\Large \text{Apply 2-call:\{$\qquad\quad$\}}};
+%				\node [shape=circle,draw=black, right = 0.4cm of m] (f) {};
+%				\node [shape=circle,draw=black, below = 0.4cm of m] (g) {};
+%				\node [shape=circle,draw=black, below = 0.4cm of f,fill=gray] (h) {};
+%				
+%
+%
+%
+%
+%				\path [line] (m) -- (f);
+%				\path [line] (f) edge [bend left=20] (h);
+%				\path [line] (f) edge [bend right=20] (h);
+%				\path [line] (g) -- (f);
+%				\path [line] (m) edge [bend left=20] (g);
+%				\path [line] (m) edge [bend right=20] (g);
+%				
+%				
+%				\node [shape=circle,draw=black,below = 1.cm of m] (m2) {};
+%				\node [shape=circle,draw=black, right = 0.4cm of m2,fill=gray] (f2) {};
+%				\node [onlyText, below left = 0.05cm and
+%				1.3cm of f2] (depth1) {\Large \text{Apply 1-call:\{$\qquad\quad$\}}};
+%				\node [shape=circle,draw=black, below = 0.4cm of m2] (g2) {};
+%				\node [shape=circle,draw=black, below = 0.4cm of f2] (h2) {};
+%				
+%				\path [line] (m2) -- (f2);
+%				\path [line] (f2) edge [bend left=20] (h2);
+%				\path [line] (f2) edge [bend right=20] (h2);
+%				\path [line] (g2) -- (f2);
+%				\path [line] (m2) edge [bend left=20] (g2);
+%				\path [line] (m2) edge [bend right=20] (g2);
+%				
+%							
+%				\end{tikzpicture}
+%			}
+%		\end{center}
+%		\caption{Graphs}
+%		\label{fig:setOfGraph}
+%	\end{subfigure}~\\
+	\vspace{8pt}~\\
+	\vspace{8pt}~\\
+	
+
+	\begin{subfigure}[b]{1.0\columnwidth}
+		\begin{center}
+			\resizebox{1\columnwidth}{!}{
+				\begin{tikzpicture}
+
+				\node [] (f) {};
+				\node [shape=ellipse,draw=black, right = 0.4 of f,fill=gray] (h) {((2,2),(0,0))};
+				\node [onlyText, left = -0.1cm of f] (depth2) {\Large \text{Apply 2-call:\{$\qquad\qquad\qquad\quad$\}}};
+
+				\node [shape=ellipse,draw=black, below = .5cm of f,fill=gray] (f2) {((2,2),(2,2))};
+				\node [shape=ellipse,draw=black, right = 0.4 of f2] (h2) {((2,2),(0,0))};
+				\node [onlyText, left = 0.5cm of f2] (depth1) {\Large \text{Apply 1-call:\{$\qquad\qquad\qquad\qquad\qquad\qquad\quad$\}}};
+				\path [line] (f2) edge [] (h2);
+%				\node [shape=ellipse, above left = 0.1 and 0.3 of f2] (blank1) {};
+%				\node [shape=ellipse, below left = 0.1 and 0.3 of f2] (blank2){};				
+
+
+
+%				\path [line] (f) edge [bend left=20] (h);
+%				\path [line] (f) edge [bend right=20] (h);
+
+
+%				\path [line] (f2) edge [bend left=20] (h2);
+%				\path [line] (f2) edge [bend right=20] (h2);
+
+%				\path [line] (blank1) edge  (f2);
+%				\path [line] (blank2) edge  (f2);
+				
+				
+				
+				\end{tikzpicture}
+			}
+		\end{center}
+		\caption{Heuristic graphs}
+	\end{subfigure}
+	
+	\end{multicols}
+	\vspace{-1em}
+	\caption{How our learning framework obtains a heuristic}
+\end{figure}
+
+
+
+
+\myparagraph{How learned heuristic works}
+We illustrate how learned heuristic generate analysis strategy with Fig~\ref{fig:heuristicWork}.
+Suppose Fig~\ref{fig:unknown} is given unknown program and Fig~\ref{fig:learnedHeuristic} is learned heuristic from codebases.
+To obtain analysis strategy, we run context insensitive analysis and obtain call-graph in Fig~\ref{fig:unknwon:callgraph}.
+The learned heuristic assign 2-call-site-sensitivity to the method {\tt h} as
+the node {\tt h} in Fig~\ref{fig:unknwon:callgraph} has no out going edges and has 2 incoming edges from a node like Apply 2-call in Fig~\ref{fig:learnedHeuristic}.
+The heuristic assign 1-call-site-sensitivity to the method {\tt f} as
+the node {\tt f} in in Fig~\ref{fig:unknwon:callgraph} has two out going edges to a node and has two incoming edges like Apply 1-call in Fig~\ref{fig:learnedHeuristic}.
+Other methods belong to 0-call as node {\tt m} and {\tt d} has different form from abstract graphs in Fig~\ref{fig:learnedHeuristic}.
+It generates call-site-sensitivity strategy in Fig~\ref{fig:strategy}. It produces context abstraction in Fig~\ref{fig:unknown:callGraph} and it can prove the queries.
+
+
+
+
+\begin{figure}[t]	
+	\begin{multicols}{3}
+		\begin{subfigure}[t]{1.0\columnwidth}
+			\begin{center}
+				\begin{lstlisting}[escapeinside={(*}{*)}]
+d(){}
+h(v){
+  return 2*v;}
+f(v){
+  r = h(v);
+  return h(r);}
+main(){
+  q1 = f(1);
+  q2 = f(2);
+  assert(q1 == 4);//query1
+  assert(q2 == 8);//query2
+  d();
+  d();
+  d();
+}
+				\end{lstlisting}
+				\caption{Unknown program}
+				\label{fig:unknown}
+			\end{center}
+		\end{subfigure}
+			
+			\columnbreak%\linebreak
+		
+		%\scalefont{0.9}
+%		\begin{subfigure}[b]{1.0\columnwidth}
+%			\begin{center}
+%				\resizebox{0.4\columnwidth}{!}{
+%					\begin{tikzpicture}
+%					\node [onlyText] (main) {\Large \text{Apply 2-call: \{h\}}\\\text{Apply 1-call: \{f\}}\\\text{Apply 0-call: \{g,m\}}};
+%					\end{tikzpicture}
+%				}
+%			\end{center}
+%			\caption{Minimal abstraction}
+%		\end{subfigure}
+%		\vspace{8pt}~\\
+%		\vspace{8pt}~\\
+		\begin{subfigure}[b]{0.8\columnwidth}
+			\begin{center}
+				\resizebox{1.2\columnwidth}{!}{
+					\begin{tikzpicture}
+					
+					\node [] (f) {};
+					\node [shape=ellipse,draw=black, right = 0.4 of f,fill=gray] (h) {((2,2),(0,0))};
+					\node [onlyText, left = -0.1cm of f] (depth2) {\Large \text{Apply 2-call:\{$\qquad\qquad\qquad\quad$\}}};
+					
+					\node [shape=ellipse,draw=black, below = .5cm of f,fill=gray] (f2) {((2,2),(2,2))};
+					\node [shape=ellipse,draw=black, right = 0.4 of f2] (h2) {((2,2),(0,0))};
+					\node [onlyText, left = 0.5cm of f2] (depth1) {\Large \text{Apply 1-call:\{$\qquad\qquad\qquad\qquad\qquad\qquad\quad$\}}};
+					\path [line] (f2) edge [] (h2);
+					\end{tikzpicture}
+				}
+			\end{center}
+			\caption{Learned heuristic graphs}
+			\label{fig:learnedHeuristic}
+		\end{subfigure}		
+		\vspace{8pt}~\\
+		\vspace{8pt}~\\
+				
+			
+		\qquad\linebreak%\linebreak
+		\begin{subfigure}[b]{.7\columnwidth}
+			\begin{center}
+				\resizebox{.8\columnwidth}{!}{
+					\begin{tikzpicture}
+					\node [shape=circle,draw=black] (m) {{\tt m}};
+					\node [shape=circle,draw=black, right = 0.4cm of m] (f) {{\tt f}};
+					\node [shape=circle,draw=black, below = 0.4cm of m] (d) {{\tt d}};
+					\node [shape=circle,draw=black, below = 0.4cm of f] (h) {{\tt h}};
+					
+					\path [line] (m) edge [bend left=20] (f);
+					\path [line] (m) edge [bend right=20] (f);
+					\path [line] (f) edge [bend left=20] (h);
+					\path [line] (f) edge [bend right=20] (h);
+					\path [line] (m) edge [bend left=20] (d);
+					\path [line] (m) edge [bend right=20] (d);
+					\path [line] (m) edge (d);
+										
+					\end{tikzpicture}
+				}
+			\end{center}
+			\caption{Call-graph of ci}
+			\label{fig:unknwon:callgraph}
+		\end{subfigure}~\\
+
+
+
+
+		\columnbreak%\linebreak
+
+		\begin{subfigure}[b]{1\columnwidth}
+			\begin{center}
+				\resizebox{0.5\columnwidth}{!}{
+					\begin{tikzpicture}
+					\node [onlyText] (main) {\Large \text{Apply 2-call: \{h\}}\\\text{Apply 1-call: \{f\}}\\\text{Apply 0-call: \{d,m\}}};
+					\end{tikzpicture}
+				}
+			\end{center}
+			\caption{Generated abstraction}
+			\label{fig:strategy}
+		\end{subfigure}~\\
+		\vspace{8pt}~\\
+		
+
+		\begin{subfigure}[b]{1\columnwidth}
+			\begin{center}
+				\resizebox{.8\columnwidth}{!}{
+					\begin{tikzpicture}
+					\node [shape=circle,draw=black] (m) {m$[\cdot]$};
+					\node [shape=circle,draw=black, right = 0.4cm of m] (f1) {{\tt f$[8]$}};
+					\node [shape=circle,draw=black, below = 0.4cm of f1] (f2) {{\tt f$[10]$}};
+					\node [shape=circle,draw=black, right = 0.4cm of f1] (h1) {{\tt h$[8,5]$}};
+					\node [shape=circle,draw=black, above = 0.4cm of h1] (h11) {{\tt h$[8,6]$}};
+					
+					\node [shape=circle,draw=black, right = 0.4cm of f2] (h2) {{\tt h$[9,5]$}};
+					\node [shape=circle,draw=black, below = 0.4cm of h2] (h22) {{\tt h$[9,6]$}};
+					
+					\node [shape=circle,draw=black, below = 0.4cm of m] (d) {{\tt d$[\cdot]$}};
+
+					
+					\path [line] (m) edge (f1);
+					\path [line] (m) edge (f2);					
+					\path [line] (f1) edge (h1);
+					\path [line] (f2) edge (h2);
+					\path [line] (f1) edge (h11);
+					\path [line] (f2) edge (h22);
+					\path [line] (m) edge [bend left=20] (d);
+					\path [line] (m) edge [bend right=20] (d);
+					\path [line] (m) edge (d);
+					
+					\end{tikzpicture}
+				}
+			\end{center}
+			\caption{Call-graph}
+			\label{fig:unknown:callGraph}
+		\end{subfigure}~\\
+		
+		
+
+		
+	\end{multicols}
+	\vspace{-1em}
+	\caption{How learned heuristic generates analysis strategy}
+	\label{fig:heuristicWork}
+\end{figure}
+
+

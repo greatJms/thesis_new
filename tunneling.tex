@@ -1,0 +1,125 @@
+\chapter{Data-driven Context Tunneling~\footnote{The contents of this chapter are based on our previous work presented at \emph{OOPSLA 2018: ACM Conference on Object-Oriented Programming, Systems, Languages, and Applications}~\cite{JeJeOh18}}}\label{sec:Tunneling}
+  In this chapter, we present our novel technique context tunneling and our data-driven approach for learning context tunneling strategies.
+  As context-sensitivity holds the key to the development
+  of precise and scalable pointer analysis, a variety of techniques
+  for context-sensitivity have been proposed. However, existing
+  approaches such as $k$-call-site-sensitivity or $k$-object-sensitivity have a
+  significant weakness that they unconditionally update the context of a
+  method at every call-site, allowing important context elements to be
+  overwritten by more recent, but not necessarily more important,
+  context elements. In this paper, we show that this is a key limiting factor of
+  existing context-sensitive analyses, and demonstrate that remarkable increase in
+  both precision and scalability can be gained by
+  maintaining important context elements only.
+  Our approach, called context tunneling, updates contexts selectively
+  and decides when to propagate the same context without
+  modification.
+
+
+
+  We attain context tunneling via a data-driven approach.  The
+  effectiveness of context tunneling is very sensitive to the choice
+  of important context elements. Even worse, precision is not
+  monotonically increasing with respect to the ordering of the
+  choices. As a result, manually coming up with a good heuristic rule
+  for context tunneling is extremely challenging and likely fails to
+  maximize its potential. We address this challenge by developing a
+  specialized data-driven algorithm, which is able to automatically
+  search for high-quality heuristics over the non-monotonic space of
+  context tunneling.
+
+  We implemented our approach in the Doop framework and applied it to
+  four major flavors of context-sensitivity: call-site-sensitivity,
+  object-sensitivity, type-sensitivity, and hybrid context-sensitivity. In
+  all cases, $1$-context-sensitive analysis with context
+  tunneling far outperformed deeper context-sensitivity with $k=2$ in
+  both precision and scalability.
+
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{,language=Java, aboveskip=3mm, belowskip=3mm,
+	showstringspaces=false, columns=flexible,
+	basicstyle=\linespread{1.2}\small\ttfamily, numbers=left, numbersep=5pt,
+	numberstyle=\small\color{gray}, keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen}, stringstyle=\color{mauve},
+	breaklines=true, breakatwhitespace=true, tabsize=3 
+}
+
+
+
+% \tikzstyle{block} = [rectangle, draw, fill=white, text width=5em,
+% text centered, rounded corners, minimum height=4em]
+
+\tikzstyle{block} = [rectangle, draw, fill=white, text width=2.8em,
+, text
+centered, rounded corners, minimum height=3em]
+
+%\tikzstyle{block2} = [rectangle,   text width=2em, text
+%centered, rounded corners, minimum height=3em]
+
+\tikzstyle{block2} =
+[rectangle, draw, fill=white, text width=5em, text centered, rounded
+corners, minimum height=4em, minimum width = 6em] \tikzstyle{line} = [draw, -latex']
+\tikzstyle{onlyText} = [text width =2em, text centered]
+
+
+
+
+\tikzstyle{myCircle} = [circle,thick,draw=black!75   text width=3.5em, text
+centered, minimum height=3em]
+
+
+
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{onlyText} = [text width =5em, text centered]
+\tikzstyle{smallOnlyText} = [text width =15em, text centered]
+\tikzstyle{None} = [text width =0em, text centered]
+\tikzstyle{longText} = [text width = 20em, text centered]
+
+%\setcopyright{rightsretained}
+
+
+\tikzstyle{block4} =
+[rectangle, draw, fill=white, text width=9.5em, text centered, rounded
+corners, minimum height=2.3em]
+\tikzstyle{block3} =
+[rectangle, draw, fill=white, text width=8em, text centered, rounded
+corners, minimum height=2.3em] \tikzstyle{line} = [draw, -latex']
+
+
+\tikzstyle{blocks} = [rectangle, draw, fill=white, text width=0.7cm, text
+centered,  text width=4em, rounded corners, minimum height=0.5cm]
+
+
+
+
+
+
+
+
+
+
+
+\input{ContextTunneling/introduction}
+\input{ContextTunneling/overview_new3}
+\input{ContextTunneling/tunneling}
+\input{ContextTunneling/learning}
+\input{ContextTunneling/evaluation}
+%\input{ContextTunneling/validity}
+%
+%Context-sensitivity holds the key to the development of precise and
+%scalable pointer analysis. In order to accurately track local
+%variables and heap objects, a context-sensitive analysis treats
+%multiple calls to the same method separately for its different calling
+%contexts.  For object-oriented and functional languages,
+%context-sensitivity is the single most important factor that affects
+%both precision and scalability.  It has greater impact on the analysis
+%precision than other techniques such as
+%flow-sensitivity~\cite{Lhotak2006,Smaragdakis2015}, and the improved
+%precision by context-sensitivity is likely to increase scalability as
+%well~\cite{Smaragdakis2011, Kashyap2014}.
+%
+%

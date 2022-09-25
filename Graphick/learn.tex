@@ -1,0 +1,401 @@
+\clearpage
+\subsection{Learning Algorithm}
+Now we illustrate our learning algorithm that learns heuristic
+$\heuristic_\params$ from codebases $\vec{P}$.
+The goal of our algorithm is to find $\params$ where
+%$\heuristic_\params$ would produce minimal abstractions for the training programs.
+$\heuristic_\params$ produces minimal abstractions for the training programs.
+Let $A_P$ be a minimal abstraction of a program $P$.
+The learning objective is as follows:
+\[
+\mbox{Find $\params = \myvec{\Feat_1, \Feat_2,\dots,\Feat_k}$
+  that }\forall P\in\vec{P}. \heuristic_\params({\projgraph}
+(F_P(\lambda c \in \component_P.0))) \approx A_P(P)
+\]
+%The insight behind the learning objective is that we expect learned
+%heuristic would produce a suitable abstraction
+The insight behind this objective is that the learned
+heuristic would produce a minimal abstraction
+for other programs as it was trained to produce minimal abstractions
+for the training programs.
+
+
+\begin{algorithm}[t]
+	\caption{Overall learning algorithm}\label{alg:overall}%\small
+	\begin{algorithmic}[1]
+		\Require Training programs $\vec{P}$, static analyzer $F$, maximum abstraction degree $k$
+		\Ensure Parameters $\myvec{\Feat_1,\Feat_2,\dots,\Feat_k}$
+		\Procedure{Learn}{$\vec{P}, F, k$}
+		\State
+		$\myvec{\Feat_1,\Feat_2,\dots,\Feat_k} \gets \myvec{\emptyset,\emptyset,\dots,\emptyset}$
+		\State
+		$A_\vec{P} \gets \lambda P \in \vec{P}. {\LearnMinimalAbstraction}(P,F,k)$ \Comment{mapping programs to minimal abstractions}
+		\State
+		$G_\vec{P} \gets \lambda P\in \vec{P}.{\projgraph}(F_P(\absz))$ \Comment{mapping programs to graphs from pre-analysis}
+		\For{$i=1$ to $k$}
+                \State
+			$\Feat_i \gets \LearnSetOfFeatures(i,A_\vec{P},G_\vec{P})$
+		\EndFor
+		\State \Return $\myvec{\Feat_1,\Feat_2,\dots,\Feat_k}$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+
+\myparagraph{Overall Algorithm}
+Algorithm~\ref{alg:overall} presents the overall algorithm. The
+parameter $\params$ starts with a vector of empty sets
+$\myvec{\emptyset,\emptyset,\dots,\emptyset}$.
+First, the algorithm obtains minimal abstractions $A_\vec{P}$ and
+graph $G_\vec{P}$  over the training
+programs $\vec{P}$ at line 3 and 4. $A_\vec{P}$ presents minimal
+abstractions over the training programs where $A_\vec{P}$ maps each
+%programs' component to a minimal abstraction degree while preserving
+component of programs to a minimal abstraction degree while preserving
+the full precision.
+With the minimal abstractions $A_\vec{P}$ and a graph $G_\vec{P}$, the algorithm
+%learns each set of features $G_i$ that presents nodes that need abstraction degree $i$.
+learns each set of features $G_i$ presenting the nodes which requires abstraction degree $i$.
+The function $\textsc{LearnSetofFeatures}$ takes minimal abstractions
+$A_\vec{P}$, a graph $G_\vec{p}$, and an abstraction degree $i$ as
+inputs.
+%It returns a set of features $\Feat_i$ that presents nodes that need to be assigned $i$.
+It returns a set of features $\Feat_i$ which depicts the nodes to be assigned $i$.
+%Although we write $G_i$ is obtain iteratively, we can parallely learn $G_i$ to reduce learning costs.
+Although $G_i$ is obtained iteratively in the algorithm, we can learn it in parallel to reduce the learning cost.
+The algorithm ends if it gets all the sets of features $\Feat_1,
+\Feat_2,\dots, \Feat_k$, and returns $\myvec{\Feat_1, \Feat_2,\dots, \Feat_k}$ as a parameter $\params$.
+
+
+\clearpage
+
+\begin{algorithm}[t]
+	\caption{Learning minimal abstraction}\label{alg:Learnminimal}%\small
+	\begin{algorithmic}[1]
+			\Require Program $P$, static analyzer $F$, maximum abstraction degree $k$
+		\Ensure A minimal abstraction for $P$
+		\Procedure{\LearnMinimalAbstraction}{$P,F,k$} 
+		\State
+		$C \gets \component_{P}$
+		\State
+		$\abs \gets \lambda c. k$
+		\For{$i=k$ to 1}
+		\State
+		$C' \gets C$
+		\While {$C' \neq \emptyset$}
+			\State
+			$c' \gets pick(C')$
+			\State
+			$C' \gets C' \setminus \{c'\}$
+			\State
+			$\abs' \gets \lambda c. {\it if}~c=c'~{\it then}~i-1~{\it else}~\abs(c)$
+			\If {${\projproved}(F_P(\absk)) = {\projproved}(F_P(\abs'))$}
+				\State
+				$\abs \gets \abs'$
+			\EndIf
+		\EndWhile
+		\State
+		$C \gets C \setminus \{c \mid \abs(c) = i\}$
+		\EndFor
+		\State \Return $\abs$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+\myparagraph{Getting Minimal Abstractions}
+Algorithm~\ref{alg:Learnminimal} presents our efficient algorithm to
+obtain a minimal abstraction for a given program $P$.
+Searching minimal abstractions for a program $P$ poses a huge search space $k^{\component_P}$.
+%$(k+1)^C$ where $C$ presents all program components in the codebases.
+%Our algorithm reduces the search space into $k*C$ while guarantees to find minimal abstractions.
+Our algorithm reduces the search space into $k*C$ but still guarantees to find minimal abstractions.
+At line 2, $C$ gets all the program components in $P$.
+$\abs$ starts from the most precise one; it always assigns $k$.
+At line 4 -- 15, it iteratively refines $\abs$ toward a minimal abstraction.
+In each iteration, it finds program components that needs abstraction degree $i$ in the minimal abstraction
+where $i$ is equal to $k$ at a start point and decreases as the loop iterates.
+At line 5, it collects free program components $C'$ which are not determined their 
+abstraction degree in the minimal abstraction; it equals to $\component_P$ in the first iteration.
+At line 6 -- 13, it iteratively picks a component $c'$ in $C'$ and decreases its abstraction 
+degree by 1~(e.g., assign $i-1$) in \abs. If the refined abstraction $\abs'$ is still precise 
+(e.g., ${\projproved}(F_P(\absk)) = {\projproved}(F_P(\abs'))$), it accepts the refinement.
+If it violates the precision constraint, the algorithm rejects the refinement, and the abstraction degree of the program component $c'$ is determined as $i$. 
+At line 14, it subtracts the determined components from $C$.
+The algorithm ends after it learns program components that need $1$;
+$\abs$ assigns $0$ to the remaining ones in $C$.
+In worst case, our algorithm searches
+$k*\component_P$ different abstractions as search space of each iteration is
+at most $\component_P$, and the algorithm has $k$ iterations.
+Although the algorithm considers much less search spaces than the original one
+$(k+1)^C$, it still guarantees to find minimal abstractions:
+\begin{theorem}\label{THM:REDUCESPACE}
+The abstraction $A_\vec{P}$ returned from
+Algorithm~\ref{alg:Learnminimal} corresponds to minimal abstractions over the
+codebases $\vec{P}$.
+\end{theorem}
+\begin{proof}
+See Appendix~\ref{sec:proof}.
+\end{proof}
+%Our algorithm is a generalized one from~\citet{Liang2011learning}.
+Our algorithm is an advanced version of~\citet{Liang2011learning}.
+The prior algorithm searches all the abstraction space (e.g., $C^{k}$) without reduction.
+Our one, however, reduces the search space into a small one(e.g., $C*{k}$) but
+still guarantees to find minimal abstractions.
+
+\clearpage
+\begin{algorithm}[t]
+	\caption{Learning a set of features}\label{alg:learnFeatures}\small
+	\begin{algorithmic}[1]
+		\Require Abstraction level $i$, minimal abstractions $A_\vec{P}$, graphs $G_\vec{P}$
+		\Ensure A set of abstract features $\Feat$
+		\Procedure{LearnSetOfFeatures}{$i,A_\vec{P},G_\vec{P}$}
+		\State
+		$C \gets \{c \mid P \in \vec{P}\land c \in \component_P \land A_\vec{P}(P)(c) = i\}$
+		\State
+		$\Feat \gets \emptyset$
+                \While {$C \not = \emptyset $}
+                \State $\feature \gets {\textsc LearnFeature}(C,G_\vec{P})$ \Comment Learn abstract graph
+                \State $\Feat \gets \Feat \cup \feature$
+                \State $C \gets C \setminus \{c \mid P\in\vec{P}\land c\in \component_P \land c \in \sem{\feature}_{G_\vec{P}(P)} \}$
+                \EndWhile
+                \State \Return $\Feat$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+
+\myparagraph{Learning a Set of Features}
+%Algorithm~\ref{alg:learnFeatures} presents how to learn a set of features $\Feat_i$.
+Algorithm~\ref{alg:learnFeatures} describes a learning algorithm for a set of features $\Feat_i$.
+%The algorithm takes an abstraction level $i$, minimal abstractions $A_\vec{P}$, and graphs $G_\vec{P}$ as inputs.
+It takes an abstraction level $i$, minimal abstractions $A_\vec{P}$, and graphs $G_\vec{P}$ as inputs.
+It returns as an output a set of features $\Feat$ presenting nodes that require an abstraction degree $i$ (e.g., $\Feat_i$ in Algorithm~\ref{alg:overall}).
+%The goal of this algorithm is to convert the program components to be assigned $i$ into a set of features $\Feat$.
+The goal of this algorithm is to convert the program components to which $i$ will be assigned to a set of features $\Feat$.
+%The returned features cover all the program components:
+Thereby, the returned features can cover the components assigned $i$:
+\[ \forall P\in\vec{P}. \{c \mid c \in \component_P \land A_\vec{P}(P)(c) = i\}
+\setminus \{ c \mid c\in \component_P \land \sem{\Feat}_{G_\vec{P}(P)} \}  = \emptyset.
+\]
+At line 2, it collects all program components $C$ (e.g., nodes) to which the minimal abstraction
+assigns $i$.
+At line 3, it initializes $\Feat$  as an empty set.
+At line 4--8, the algorithm iteratively calls ${\textsc LearnFeature}$ to generate a feature.
+The algorithm adds the generated features to $\Feat$ until the
+features cover all program components, and returns $\Feat$ as learned features when $\Feat$ does.
+%If $\Feat$ does, the algorithm returns $\Feat$ as learned features.
+
+%In each iteration, the algorithm generates a feature $\feature$.
+%${\textsc LearnGHat}$ takes the components $C_i$ and graphs
+%$G_\vec{P}$ and generate a feature $\feature$ that
+%${\textsc LearnGHat}$ tries to make the feature maximize the following function:
+
+\algdef{SE}[DOWHILE]{Do}{doWhile}{\algorithmicdo}[1]{\algorithmicwhile\ #1}%
+%Ver. 2
+\begin{algorithm}[t]
+	\caption{Learning a feature}\label{alg:learnFeature}\small
+	\begin{algorithmic}[1]
+		\Require Program components $C$, graphs $G_\vec{P}$
+		\Ensure A feature $\feature$
+		\Procedure{LearnFeature}{$C,G_\vec{P}$}
+		\State
+		$\feature \gets
+				(\epsilon,([0,\infty],[0,\infty]),\epsilon)$
+		\State
+		$\feature' \gets
+				(\epsilon,([0,\infty],[0,\infty]),\epsilon)$
+		\Do
+		\State
+		$\feature \gets \feature'$
+		\State
+		$\feature' \gets \Refine(\feature,G_\vec{P}, C)$
+		\If{$\Score(\feature',C_i) \ge \gamma$}
+			\State
+			\Return $\feature'$
+		\EndIf
+		\doWhile{$ \Score(\feature',C) > \Score(\feature,C)$}
+		
+%		\While {$ (\Score(\feature',C) > \Score(\feature,C)$)}
+%		\State
+%		$\feature \gets \feature'$
+%		\If {$\Score(\feature',C) \ge \gamma$}
+%		\State
+%			\Return $\feature'$
+%		\EndIf
+%		\State
+%		$\feature' \gets \Refine(\feature,G_\vec{P}, C)$
+%                % \If {$( \Score(\feature',C_i) \ge \gamma$}
+%                % \State
+%                % \Return $\feature'$
+%                %\EndIf
+%		\EndWhile
+		\State \Return $\feature$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+\myparagraph{Learning a Feature}
+%Algorithm~\ref{alg:learnFeature} presents the algorithm that generates each feature.
+%Algorithm~\ref{alg:learnFeature} presents how a feature $\feature$ is learned.
+Algorithm~\ref{alg:learnFeature} presents how each feature $\feature$ in $\Feat$ is learned.
+%${\textsc LearnFeature}$ takes oracle components $C$ and graphs $G_\vec{P}$. 
+%It tries to generates a feature $\feature$ that maximizes the following function:
+${\textsc LearnFeature}$ takes as inputs oracle components $C$ and graphs $G_\vec{P}$,
+and generates a feature $\feature$ 
+which has a good enough score presented by the following function:
+%maximizes the following score function of a feature $\feature$:
+\[
+\Score (\feature,G_\vec{P},C) = {\sum_{P\in\vec{P}} |C \cap \sem{\feature}_{G_\vec{P} (P)}  | \over
+  \sum_{P\in\vec{P}} |\sem{\feature}_{G_\vec{P}(P)} |}
+\]
+where the score is a value between 0 and 1.
+%Intuitively, it is a score function of a feature $\feature$.
+%If a feature $\feature$ accurately selects component in oracle that $\sum_{P\in\vec{P}}\sem{\feature}_{G_\vec{P} (P)}$ belongs to $C$,
+%the score become the highest one 1.
+For example, the score is the highest value 1 
+if a feature $\feature$ accurately selects a component in oracle 
+where $\sum_{P\in\vec{P}}\sem{\feature}_{G_\vec{P} (P)}$ belongs to $C$.
+Collecting qualified feature make the learned parameter
+$\params = \myvec{\Feat_1, \Feat_2,\dots,\Feat_k}$ satisfy the learning objective.
+%The score decreases when the feature selects components which are not in $C$.
+The score decreases when the feature selects components not in $C$.
+
+Starting from the most general feature, 
+the algorithm iteratively refines a feature until the specific feature is generated.
+%At line 2, it initializes a feature as the most general one.
+%$\MaxIn(G_\vec{P})$ and $\MaxOut(G_\vec{P})$ present the
+%maximum number of incoming and outgoing edges of a node in the
+%graphs, respectively (see Appendix~\ref{sec:max}).
+At line 2, it initializes a feature $\feature$ as the most general feature $(\epsilon,([0,\infty],[0,\infty]),\epsilon)$.
+%as all nodes in any graphs belong to this feature.
+%$(\epsilon,([0,\infty],[0,\infty]),\epsilon)$ is the most general feature as all the nodes in any graph belong to it.
+At line 4--10, the algorithm iteratively calls $\Refine$ to specify the feature $\feature$ 
+into various cases and to select the best one among them:
+%$\Refine$ specifies a given feature $\feature$ into various cases and selects the best one:
+\[\Refine(\feature,G_\vec{P},C_i) =
+argmax_{\feature' \in New(\feature,G_\vec{P}) \cup Replace(\feature)}(\Score(\feature',G_\vec{P},C_i))
+\]
+where $\New(\feature,G_\vec{P})$ and $\Replace(\feature)$ produce features
+%specified from $\feature = (lst,i)$ by appending or replacing a node of the $lst$.
+specified from $\feature$ by appending or replacing an abstract node in the feature:
+%$\New(\feature,G_\vec{P})$ produces features which are specified by appending an abstract node:
+$\New(\feature,G_\vec{P})$ produces the specificed features by appending an abstract node:
+\[
+\begin{array}{lr}
+\New((\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}, \hat{n}, \seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r}),G_\vec{P}) =\\
+\{((\seq{\hat{n}',\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}, \hat{n}, \seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r})) \cup (\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}, \hat{n}, \seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r,\hat{n'}}) \mid\\ n' \in
+  \Specify(([0,\infty],[0, \infty])) \}. 
+%  \Specify(([0,\MaxIn(G_\vec{P})],[0, \MaxOut(G_\vec{P})])) \}
+\end{array}
+\]
+We do not consider $\New(\feature,G_\vec{P})$ if the length of $\feature$ is 3 (e.g., $len(\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q})+1+len(\seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r}) = 3$)
+because we found a feature $\feature$ which is longer than 3 yields bottleneck when computing $\sem{\feature}_{G_\vec{P}(P)}$.
+The function $\Specify$ takes as an input an abstract node and returns 4 cases of specified nodes:
+\[
+\begin{array}{l}
+\Specify(([n_1,n_2],[n_3,n_4])) = \\
+\{([{{n_1+n_2}\over {2}},n_2],[n_3,n_4]),
+([n_1,{{n_1+n_2} \over {2}} ],[n_3,n_4]),
+([n_1,n_2], [{{n_3+n_4}\over {2}}, n_4]),
+([n_1,n_2],[n_3,{{n_3+n_4}\over{2}} ])\}.
+    \end{array}
+\]
+Above enumeration is one of a choice in specifying an abstract node. 
+For example, we can use a more fine grained enumeration that specifies a feature into 8 cases by splits 
+an interval $[a,b]$ into 4 cases:
+$\{[{{a+b}\over {3}},b],[{2*{(a+b)}\over {3}},b], [a,{{a+b}\over {3}}], [a,{{2*(a+b)}\over {3}}]\}$.
+Employing a fine grained one, however, would increase the learning time because the algorithm searches
+about double cases of features.
+If $n_2$ or $n_4$ equals to $\infty$, they are replaced to either $\MaxIn(G_\vec{P})$ or $\MaxOut(G_\vec{P})$; 
+$\MaxIn(G_\vec{P})$ and $\MaxOut(G_\vec{P})$ represent the maximum number of incoming and outgoing edges of a node in the graphs $G_\vec{P}$ ,respectively (see Appendix~\ref{sec:max}).
+On the other hand, $\Replace(\feature)$ refines the given feature $\feature$ by specifying an abstract node inside the feature:
+\[
+\begin{array}{c}
+\Replace((\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}, \hat{n}, \seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r})) =
+  \{(\hat{\vec{p}}',\hat{n},\hat{\vec{s}}) \cup (\hat{\vec{p}},\hat{n}',\hat{\vec{s}}) \cup (\hat{\vec{p}},\hat{n},\hat{\vec{s}}') \mid \\
+\hat{\vec{p}}' =
+\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_{i-1},\hat{p}_i',\hat{p}_{i+1},\dots\hat{p}_q} \land \hat{p}_i' \in \Specify(\hat{p}_i)
+\land n' \in \Specify(n_i) \land\\
+\hat{\vec{s}}' =
+\seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_{j-1},\hat{s}_j',\hat{s}_{j+1},\dots,\hat{s}_r} \land \hat{s}_j' \in \Specify(\hat{s}_j)
+\end{array}
+\]
+where $\hat{\vec{p}}=\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}$ and $\hat{\vec{s}}=\seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r}$.
+The algorithm refines the feature $\feature$ until the function
+$\Refine$ fails to find a better feature or the refined feature has a better score than $\gamma$
+which is a hyper parameter to control the generalization of generated feature.
+If $\gamma$ is 1, the generated feature would overfit to the training programs;
+thereby, setting $\gamma$ as a lower value makes the generated feature to avoid overfitting problem.
+In our evaluation, we set $\gamma$ as 0.5. 
+%Further, we limit the maximum overall length of a feature as 3 (e.g., $len(\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q})+1+len(\seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r}) \le 3$)
+%because we found a feature $\feature$ which is longer than 3 yield bottleneck when computing $\sem{\feature}_{G_\vec{P}(P)}$.
+
+
+\begin{comment}
+\[
+\begin{array}{lr}
+\New((\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}, \hat{n}, \seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r}),G_\vec{P}) =\\
+\{((\seq{\hat{n}',\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}, \hat{n}, \seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r})) \cup (\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}, \hat{n}, \seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r,\hat{n'}}) \mid\\ n' \in
+  \Specify(([0,\infty],[0, \infty])) \}.
+%  \Specify(([0,\MaxIn(G_\vec{P})],[0, \MaxOut(G_\vec{P})])) \}
+\end{array}
+\]
+The function $\Specify$ takes an abstract node and returns 4 cases of specified nodes:
+\[
+\begin{array}{l}
+\Specify(([n_1,n_2],[n_3,n_4])) = \\\{([{{n_1+n_2}\over {2}},n_2],[n_3,n_4]),
+([n_1,{{n_1+n_2} \over {2}} ],[n_3,n_4]),
+([n_1,n_2], [{{n_3+n_4}\over {2}}, n_4]),
+([n_1,n_2],[n_3,{{n_3+n_4}\over{2}} ])\}
+\end{array}
+\]
+If $n_2$ or $n_4$ equals to $\infty$, they are replaced to $\MaxIn(G_\vec{P})$ or $\MaxOut(G_\vec{P})$; $\MaxIn(G_\vec{P})$ and $\MaxOut(G_\vec{P})$ present
+maximum number of incoming and outgoing edges of a node in the graphs $G_\vec{P}$ ,respectively (see Appendix~\ref{sec:max}).
+On the other hand, $\Replace(\feature)$ refines the given feature by
+specifying an abstract node in it:
+\[
+\begin{array}{c}
+\Replace((\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}, \hat{n}, \seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r})) =
+  \{(\hat{\vec{p}}',\hat{n},\hat{\vec{s}}) \cup (\hat{\vec{p}},\hat{n}',\hat{\vec{s}}) \cup (\hat{\vec{p}},\hat{n},\hat{\vec{s}}') \mid \\
+\hat{\vec{p}}' =
+\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_{i-1},\hat{p}_i',\hat{p}_{i+1},\dots\hat{p}_q} \land \hat{p}_i' \in \Specify(\hat{p}_i)
+\land n' \in \Specify(n_i) \land\\
+\hat{\vec{s}}' =
+\seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_{j-1},\hat{s}_j',\hat{s}_{j+1},\dots,\hat{s}_r} \land \hat{s}_j' \in \Specify(\hat{s}_j)
+\end{array}
+\]
+where $\hat{\vec{p}}=\seq{\hat{p}_0,\hat{p}_1,\dots,\hat{p}_q}$ and $\hat{\vec{s}}=\seq{\hat{s}_0,\hat{s}_1,\dots,\hat{s}_r}$.
+The algorithm refines the feature $\feature$ until the function
+$\Refine$ fails to finds a better feature or the refined feature has a better score than $\gamma$
+which is a hyper parameter to control
+generalization of generated feature.
+If $\gamma$ is 1, the generated feature would overfit to the training programs.
+Setting $\gamma$ as a lower value makes the generated feature to avoid overfitting problem.
+In our evaluation, we set $\gamma$ as 0.5. Further, we limit the maximum length of a feature as 3.
+\end{comment}
+
+\clearpage
+
+
+% \[
+% Fixed(\feature, \feature', C_i)
+% = {\sum_{P\in\vec{P}} |C_i \cap \sem{\feature}_{G_P \in \mbg_\vec{P}}  | \over  \sum_{P\in\vec{P}} |\sem{\feature}_{G_P \in \mbg_\vec{P}} | + \epsilon}
+% \ge
+% {\sum_{P\in\vec{P}} |C_i \cap \sem{\hat{G'}}_{G_P \in \mbg_\vec{P}}  | \over  \sum_{P\in\vec{P}} | \sem{\hat{G'}}_{G_P \in \mbg_\vec{P}} | + \epsilon} * \gamma
+% \]
+
+
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

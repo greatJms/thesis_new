@@ -1,0 +1,59 @@
+\chapter{Learning graph-based analysis heuristics without features~\footnote{The contents of this chapter are based on our previous work presented at \emph{OOPSLA 2020: ACM Conference on Object-Oriented Programming, Systems, Languages, and Applications}~\cite{Graphick20}}}\label{sec:Graphick}
+
+
+This chapter presents a new technique for automatically learning graph-based heuristics for pointer analysis.
+Past research has shown that exploiting the program's graph structure is a promising way of developing cost-effective analysis heuristics, promoting the recent trend of ``graph-based heuristics'' that work on the graph representations of programs obtained from a  pre-analysis. 
+Although promising, manually developing such heuristics remains challenging, requiring a great deal of expertise and laborious effort.
+In this chapter, we aim to reduce this burden by learning graph-based heuristics automatically, in particular without hand-crafted application-specific features. To do so, we present a feature language to describe graph structures and an algorithm for learning analysis heuristics within the language.
+We implemented~\ourtool~on top of \Doop~and used it to learn graph-based heuristics for object sensitivity and heap abstraction.
+The evaluation results show that our approach is general and can generate high-quality heuristics. For both instances,
+the learned heuristics are as competitive as the existing state-of-the-art heuristics designed manually by analysis experts.
+
+
+
+
+
+
+
+\tikzstyle{block} = [rectangle,   text width=3.5em, text
+centered, rounded corners, minimum height=3em]
+
+
+
+\tikzstyle{myCircle} = [circle,thick,draw=black!75   text width=3.5em, text
+centered, minimum height=3em]
+
+
+\tikzstyle{block2} = [rectangle,   text width=2em, text
+centered, rounded corners, minimum height=3em]
+
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{onlyText} = [text width =5em, text centered]
+\tikzstyle{smallOnlyText} = [text width =15em, text centered]
+\tikzstyle{None} = [text width =0em, text centered]
+\tikzstyle{longText} = [text width = 20em, text centered]
+
+%\setcopyright{rightsretained}
+
+
+\tikzstyle{block4} =
+[rectangle, draw, fill=white, text width=10.5em, text centered, rounded
+corners, minimum height=2.3em]
+\tikzstyle{block3} =
+[rectangle, draw, fill=white, text width=9em, text centered, rounded
+corners, minimum height=2.3em] \tikzstyle{line} = [draw, -latex']
+
+
+\tikzstyle{blocks} = [rectangle, draw, fill=white, text width=0.7cm, text
+centered,  text width=4em, rounded corners, minimum height=0.5cm]
+
+
+\input{Graphick/intro}
+%\input{overview_new2}
+\input{Graphick/formal}
+\input{Graphick/approach}
+\input{Graphick/evaluation}
+\input{Graphick/justification}
+\input{Graphick/limitation}
+%\input{related}
+%\input{conclusion}

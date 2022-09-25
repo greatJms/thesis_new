@@ -1,0 +1,229 @@
+% !TEX root = ./paper.tex
+
+\subsection{Simulation-Guided Learning}\label{sec:learning}
+
+The second technical contribution of this paper is simulation-guided learning that aims to remove the overhead of $\simheuristic$ while maintaining its precision. 
+To do so, from a dataset of programs $\vec{P} = \myset{P_1, P_2, \dots, P_n}$, 
+we learn the final policy, i.e., $\callheuristic$, that captures the behavior of
+$\simheuristic$ without invoking the expensive simulation procedure. 
+
+
+\myparagraph{Parameterized Policy}
+To learn a policy from data, we need to define a {\em parameterized
+  policy}, denoted $\heuristic_f$, whose behavior is
+fully controlled by the parameter $f$. The goal of learning then
+is to find an appropriate parameter from data.
+% such that
+% $\call(P, \heuristic_f(P))$ is as precise as 
+% $\call(P, \simheuristic(P))$.
+
+For parameterization, we adapt the idea of prior work~\cite{JeJeChOh17},
+where the parameter $f$ is a boolean formula over atomic features.
+We assume that a set $\mba = \myset{a_1, a_2, \dots, a_m}$ of atomic
+features is given (we explain them shortly).  
+Formally, a feature
+$a_i$ is a function from programs to predicates on invocation sites, i.e.,
+$a_i(P): \Invo_P \to \myset{\true, \false}$.
+That is, an invocation site $\invo$ in a program $P$ has feature
+$a_i$ iff $a_i(P)(\invo)$ is $\true$.
+In prior work~\cite{JeJeOh18}, atomic features are combined by a
+boolean formula $f$ to express complex, in particular disjunctive, 
+properties: 
+\[
+f \to \true \mid \false \mid a_i \in \mba \mid \neg f \mid f_1 \land
+f_2 \mid f_1 \vee f_2
+\]
+
+
+A boolean formula $f$ denotes a set of
+invocation sites. We write $\featmean{f}{P}$ for the denotation of $f$
+with respect to $P$:  $\featmean{\true}{P} = \Invo_P$,
+$\featmean{\false}{P} = \emptyset$,
+$\featmean{a_i}{P} = \myset{l \in \Invo_P \mid a_i(P)(l)}$,
+$\featmean{\neg f}{P} = \Invo_P \setminus \featmean{f}{P}$,
+$ \featmean{f_1 \land f_2}{P} = \featmean{f_1}{P} \cap
+\featmean{f_2}{P}$,
+$\featmean{f_1 \vee f_2}{P} = \featmean{f_1}{P} \cup
+                                    \featmean{f_2}{P}$.
+Then, with a boolean formula $f$, we define the parameterized policy
+$\heuristic_f$ as follows:
+\[
+\heuristic_f(P) = \featmean{f}{P}.
+\]
+
+
+
+\myparagraph{Learning Objective}
+%With the parameterized policy, we can formally state the learning objective. 
+The goal of learning is to find a formula $f$ that enables
+$\heuristic_f$ to capture the behavior of $\simheuristic$ on the training
+programs; we aim to find a formula $f$ such that 
+\begin{equation}\label{eq:learning-objective}
+  \sum_{P\in\vec{P}} \call(P, \heuristic_f(P)) \approx
+  \sum_{P\in\vec{P}} \call(P, \simheuristic(P))
+\end{equation}
+where we assume $\call$ returns the number of unproved queries
+(e.g., \#may-fail casts, where lower is more precise). 
+%\begin{comment}
+Note that our learning objective is more challenging than those considered in
+prior work~\cite{JeJeChOh17,JeJeOh18}. In prior work, the objective was
+typically to find a ``good-enough'' policy but, in our case, the
+learned policy should capture the specific behavior of the simulated
+policy.
+%\end{comment}
+
+
+\myparagraph{Learning Algorithm}
+We present a new, simulation-guided learning algorithm that can effectively solve the problem in Eq. (\ref{eq:learning-objective}). In Section~\ref{sec:eval_learning}, we show that the existing, unguided learning algorithm~\cite{JeJeOh18} is not powerful enough to solve the problem of capturing the behavior of the simulated policy ($\simheuristic$). 
+
+The overall structure of our algorithm is given in
+Algorithm~\ref{alg:overall1}.
+We invoke the algorithm by
+$\textsc{Learn}(\vec{P}, \mba \cup \neg\mba, \simheuristic)$, where
+$\neg\mba = \myset{\neg a \mid a \in \mba}$, so that the formula $f$
+is initially set to the disjunction of all atomic features and their
+negation:
+$f = a_1 \vee \neg a_1 \vee a_2 \vee \neg a_2 \cdots \vee a_m \vee
+\neg a_m$, where $a_1, a_2, \dots, a_m \in \mba$ (line 2).  Then, we
+repeat the loop at lines 4--14.  At the beginning of each 
+iteration, the formula $f$ is in disjunctive normal form; 
+$f$ is of the form $c_1 \vee c_2 \vee \dots \vee c_k$, where $c_i$ is a
+conjunctive clause.
+A single refinement step for $f$ is done by choosing a clause $c$ in $f$ (via
+$\ChooseClause$ at line 5), choosing an atomic feature (via
+$\ChooseAtom$ at line 6), and replacing $c$ in $f$ by $c \land a$
+(line 8).  If the quality of the refined formula $f'$ has been
+improved over the original formula $f$ (line 9), we set $f$ to $f'$
+and otherwise discard $f'$. This process is repeated until no more
+refinement is possible. To check this termination condition, the
+algorithm maintains $\Refiner$ that maps clauses to available
+refiners (line 3, 10, and 12). %(line 10 and 12). 
+
+
+
+\begin{algorithm}[t]
+  \caption{Overall learning algorithm}\label{alg:overall1}\small
+  \begin{algorithmic}[1]
+    \Require Training programs $\vec{P}$, features $A$, and simulated
+    policy $\simheuristic$ \Ensure A boolean formula $f$
+    \Procedure{Learn}{$\vec{P}, A, \simheuristic$} \State
+    $f \gets a_1 \vee a_2 \vee \dots \vee a_k ~(A =
+    \myset{a_1,a_2,\dots,a_k})$ \State
+    $\Refiner \gets \lambda c \in f. A \setminus \myset{a \mid a
+%    $\Refiner \gets \lambda c \in f. \mba \setminus \myset{a \mid a
+      \in c}$ \Repeat \State $c \gets \ChooseClause(f,\simheuristic,\vec{P})$ \State
+    $a \gets \ChooseAtom(c, \Refiner,\simheuristic,\vec{P})$ \State $c' \gets c \land a$
+    \State $f' \gets \mbox{Replace $c$ in $f$ by $c'$}$ \If
+    {$\BetterThan(f', f,\simheuristic,\vec{P})$} \State
+    $\Refiner \gets \Refiner[c' \mapsto \Refiner(c) \setminus
+    \myset{a}]$, $f \gets f'$ \Else \State
+    $\Refiner \gets \Refiner[c \mapsto \Refiner(c) \setminus
+    \myset{a}]$ \EndIf \Until{no more refinement is possible
+      ($\forall c.\;\Refiner(c)=\emptyset$) } \State \Return $f$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+
+
+
+
+The key feature of our algorithm is to steer the search toward the
+desired solutions by receiving guidance from the
+simulated policy ($\simheuristic$). 
+The guidance happens in the three components, 
+i.e., $\ChooseClause$, $\ChooseAtom$, and $\BetterThan$. 
+Given a formula
+$f = c_1 \vee c_2 \vee \dots \vee c_k$, we choose a clause whose
+behavior most deviates from $\simheuristic$ over the training
+programs; that is, $\ChooseClause(f, \simheuristic, \vec{P})$ chooses $c$ in $f$ that
+maximizes the difference between $\sem{c}_P$ and $\simheuristic$:
+\[
+  \begin{array}{c}
+\ChooseClause(f, \simheuristic, \vec{P}) = \argmax_{c \in f} \sum_{P \in \vec{P}} \lvert
+    \featmean{c}{P} \setminus \simheuristic(P)\rvert.
+    \end{array}
+\]
+To refine the chosen clause $c$, 
+$\ChooseAtom(c, \Refiner, \simheuristic, \vec{P})$ chooses an atom $a \in \Refiner(c)$
+that maximizes the following: 
+\[
+  \begin{array}{c}
+\sum_{P \in \vec{P}}  \lvert \simheuristic(P) \cap \featmean{c}{P} \cap \featmean{a}{P}  \rvert.
+  \end{array}
+\]
+Intuitively, it chooses the atom that most conservatively refines the clause toward
+the simulation result. To this end, it selects $a$ that maximizes
+$\simheuristic(P) \cap \sem{a}_{P}$ (refining toward the simulation result) and
+$\sem{c}_P \cap \sem{a}_P$ (conservatively refining $c$).
+%With the chosen $c$ and $a$, the formula $f$ is strengthened to $f'$
+With the chosen $c$ and $a$, the formula $f$ is specified to $f'$
+by replacing $c$ in $f$ by $c \land a$. To check whether $f'$ improves
+over $f$, we evaluate the formulas with the following objective function:
+\[
+    \begin{array}{c}
+\objective(f,\simheuristic,\vec{P}) = \sum_{P\in\vec{P}} \call(P, \heuristic_f(P) \cap
+      \simheuristic(P)).
+      \end{array}
+\]
+Given a formula, the objective function runs the analysis over the
+training programs with the intersection of the current tunneling policy
+($\heuristic_f$) and the simulated policy ($\simheuristic$). 
+The condition $\BetterThan(f', f,\simheuristic,\vec{P})$ is true iff $\objective(f',\simheuristic,\vec{P}) \le \objective(f,\simheuristic,\vec{P})$. 
+In the objective function, note that we evaluate the performance of
+$\heuristic_{f}(P) \cap \simheuristic(P)$ instead of
+$\heuristic_{f}(P)$. This is a critical step to avoid local minima.
+% The abstraction space of context tunneling is not monotone and
+% applying tunneling to more invocation sites does not imply better or
+% worse precision. 
+% Context tunneling do not have monotonicity that applying context tunneling to more do not imply a better or worse precision:
+% \[
+% I_1 \subset I_2 \centernot\implies \call(P, I_1) \le \call(P, I_2) \lor \call(P, I_2) \le \call(P, I_1).
+% \]
+% If we use $\heuristic_{f}(P)$ in the objective function, the learning may end up with local minima as
+% our algorithm searches a formula by specifying the given one $f$.
+For example, suppose we have formulas $f_1$ and $f_2$, where $f_2$ is
+obtained by refining $f_1$, and that both $\sem{f_1}_{P}$ and
+$\sem{f_2}_{P}$ are supersets of $\simheuristic(P)$
+(i.e.
+$\simheuristic(P) \subseteq \sem{f_2}_{P} \subseteq \sem{f_1}_{P}
+$). Although $f_2$ can be refined further toward $\simheuristic$,
+such refinement can be rejected as $\heuristic_{f_2}$ may have poorer
+precision than $\heuristic_{f_1}$ because tunneling abstraction is not
+monotone with respect to precision~\cite{JeJeOh18}. Thus, the 
+learning algorithm fails to make a further progress, ending up with a
+local minimum $f_1$.  With our objective function, 
+however, the learning algorithm can avoid such a local minimum because
+$\heuristic_{f_1}(P) \cap \simheuristic(P) =
+\heuristic_{f_2}(P) \cap \simheuristic(P) = \simheuristic(P)$. 
+%\textcolor{red}{
+% In Section 2 of the supplementary material, we provide a simple running example that illustrates how Algorithm 1
+% learns a formula $f$.
+%}
+%for all
+%programs $P$. 
+
+%\myparagraph{Further Optimization}
+%After the algorithm terminates, we can run the algorithm once again to
+%further optimize the learned policy. In this case, the algorithm is run with different
+%initial formula and strategies. We set the initial formula $f$ to the
+%outcome of the previous run of the algorithm.
+%Because the goal of this step is simply to maximize the analysis precision, we use the
+%objective function $\objective(f) = \sum_{P\in\vec{P}} \call(P, \heuristic_{f}(P))$.
+%% A formula $f$ that minimizes the above objective function will satisfy
+%% the learning objective with high probability.
+%$\ChooseClause$ chooses a clause $c$ that maximizes $\sum_{P \in
+%  \vec{P}} \lvert \featmean{c}{P} \rvert$.
+%$\ChooseAtom$ chooses an atom $a$ which maximizes
+%$\sum_{P \in \vec{P}}  \lvert \featmean{c \land a}{P}  \rvert$. 
+%% The feature would conservatively refine the chosen clause.
+%% The formula $f$ from
+%% this step becomes the final parameter. 
+
+
+%\end{table}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

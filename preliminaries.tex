@@ -1,0 +1,269 @@
+\chapter{Preliminaries~\footnote{The contents of Chapter~\ref{sec:Preliminaries} and~\ref{sec:Tunneling} are based on our previous work presented at \emph{OOPSLA 2018: ACM Conference on Object-Oriented Programming, Systems, Languages, and Applications}~\cite{JeJeOh18}}}\label{sec:Preliminaries}
+In this chapter, we illustrate conventional pointer analysis~\cite{Smaragdakis2015,KastrinisS13a} for Java that will be used through this thesis. 
+The baseline pointer analysis uses $k$-limited context sensitivity~\cite{KastrinisS13a,Smaragdakis2011} and allocation site based heap abstraction~\cite{Smaragdakis2015,Tan2017}.
+
+
+
+\section{Conventional $k$-Context-Sensitive Pointer Analysis}\label{pre:conventional-analysis}
+% \myparagraph{Generic Analysis} 
+Our analysis is 
+context-sensitive pointer analysis for Java~\cite{Smaragdakis2015}.
+The analysis is a flow-insensitive, field-sensitive, and subset-based
+analysis with on-the-fly call-graph construction. 
+Our analysis supports various context flavors and depths.
+For example, the analysis is able to express
+call-site-sensitivity~\cite{Shivers1988},
+object-sensitivity~\cite{Milanova2005}, hybrid
+context-sensitivity~\cite{KastrinisS13a}, and
+type-sensitivity~\cite{Smaragdakis2011} with arbitrary depths for
+calling contexts and heap contexts. In our formalism, such variations
+are presented by the following triple:
+\[
+  \langle \Flavor, \CallDepth, \HeapDepth \rangle \quad (\CallDepth \ge \HeapDepth)
+\]
+where $\Flavor$ is a function that presents the flavor of
+context-sensitivity (e.g. call-site-sensitivity, object-sensitivity,
+etc). $\CallDepth$ and $\HeapDepth$ represent the maximum context depths
+of calling and heap contexts, respectively. For example,
+$\langle \Flavorcall, 1, 0 \rangle$ presents the 1-call-site-sensitive
+analysis with context-insensitive heap. 
+% We will shortly
+% define the $\Flavor$ function for call-site-sensitivity ($\Flavorcall$),
+% object-sensitivity ($\Flavorobj$), and type-sensitivity
+% ($\Flavortype$).
+
+\myparagraph{Programs and Domains}
+
+We consider the five types of instructions in Java:
+\[
+  \lcmd \to l: \cmd, \quad \cmd \to {\it x = new~C()} \mid {\it x = y}
+  \mid {\it x = y.f} \mid {\it x.f = y} \mid {\it x = y.sig(arg)}
+\]
+where each instruction is associated with a unique label.  A labeled
+instruction ($\lcmd$) consists of a label $(l)$ and an instruction
+($\cmd$). An instruction is object allocation (${\it x = new~C()}$),
+move (${\it x = y}$), load (${\it x=y.\fld}$), store
+(${\it x.\fld = y}$), or method invocation (${\it
+  x=y.\sig(arg)}$). For simplicity, we assume every method has a
+single argument (except for the object itself).
+
+The analysis uses the following commonly used domains:
+$\mbv$ is a set of variables,
+$\Methods$ is a set of methods,
+$\mbs$ is a set of method names (signatures),
+$\mbf$ is a set of field names,
+$\mbi$ is a set of instruction labels,
+$\mbh$ is a set of abstract heaps, e.g.,
+  allocation-sites ($\mbh \subseteq \mbi$),
+$\mbt$ is a set of class types,
+$\Context$ is a set of calling contexts, and
+$\HeapContext$ is a set of heap contexts.
+$\Context$ and $\HeapContext$ will be defined with  respect to 
+the flavor of context-sensitivity (e.g., $\langle \Flavor, \CallDepth, \HeapDepth \rangle$)
+
+
+In our analysis, we additionally use four auxiliary functions: $\methof$, $\typeof$, $\classof$, and $\lookup$.
+$\methof\in \mbi \to \Methods$ maps an instruction label to its belonging method.  $\typeof \in \mbh \to \mbt$ maps an
+allocation-site to the allocated type.
+$\classof : \mbi \to \mbt$ maps an instruction to the class that contains the instruction.
+$\lookup \in \mbt \times \mbs \to \Methods$ maps a pair of a class type
+and a signature to the matching the method.
+Given a method $m$, we write $m_{\it this}$ for the `this' variable, $m_{\it param}$, for the formal parameter, and 
+$m_{\it return}$ for return variable of the method.
+
+\begin{figure}[t]
+  \[
+    \begin{array}{c}
+
+      %% alloc %%
+      \infer[]{
+      (\heap_\invo, \hctx) \in \VarPointsTo({\var}, {\ctx})
+      }{ {\it \invo: x = new~C()} \quad \ctx \in \Reachable({\methof(\invo)}) \quad
+      { \hctx = \truncateCtx{\ctx}{\HeapDepth}}} \\[1em]
+
+
+      \infer{\VarPointsTo({\fromvar}, {\ctx}) \subseteq \VarPointsTo({\tovar}, {\ctx}) }{
+      \invo: {\it x = y} \quad
+      \ctx \in \Reachable(\methof(\invo)) } \\[1em]
+
+    %% load%%
+      \infer{
+      \FldPointsTo(\heap, \hctx,{\fld}) \subseteq \VarPointsTo({\tovar}, {\ctx})}{
+      \begin{array}{c}
+        \invo:  {\it x = y.\fld} \quad \ctx \in
+        \Reachable(\methof(\invo)) \quad (\heap, \hctx) \in
+        \VarPointsTo({{\it y}}, {\ctx})
+      \end{array}
+      } \\[1em]
+
+      %% store %%
+      \infer{
+      \VarPointsTo({\it y}, {\ctx}) \subseteq \FldPointsTo(\heap, {\hctx}, {\fld})
+      }{
+      \begin{array}{c}
+        {\it \invo: x.f = y} \quad \ctx \in \Reachable(\methof(\invo))
+        \quad
+        ({\heap}, {\hctx}) \in \VarPointsTo({\it x}, {\ctx})
+      \end{array}
+      } \\[1em]
+
+      %% call %%
+      \infer[]
+      {
+      \begin{array}{c}
+        \ctx' \in \Reachable ({m}) \quad
+        ({\heap}, {\hctx}) \in  \VarPointsTo ({m_{\this}}, {\ctx'}) \\
+        \VarPointsTo({\it arg}, \ctx) \subseteq \VarPointsTo(m_{\it param}, \ctx')
+        \quad
+        \VarPointsTo(m_{\it return}, \ctx') \subseteq \VarPointsTo(x, \ctx)\\
+      (\invo, \ctx, m, \ctx') \in \CallGraph
+      \end{array}
+      }{
+      \begin{array}{c}
+       {\it \invo : x = y.{\sig}}({\it arg})
+        \quad
+        \ctx \in    \Reachable ({\methof(\invo)}) \\
+        ({\heap}, {\hctx})\in  \VarPointsTo ({\it y},\ctx) \quad
+        t = {\typeof}(\heap)  \quad m = {\lookup}(t, \sig) \\
+(e, {\pctx}, \_) = \parent(\heap,\hctx, \invo, \ctx) \quad
+        \ctx' = \truncateCtx{\appendCtx{{ \pctx}}{{e}}}{\CallDepth}
+      \end{array}
+      }
+    \end{array}
+  \]
+  \caption{Conventional context-sensitive pointer analysis}
+  \label{pre:baseline-rules}
+\end{figure}
+
+
+\myparagraph{Analysis Ourput}
+Given a program, the pointer analysis aims to compute the following information:
+\begin{itemize}
+\item
+  $\VarPointsTo: \mbv \times \Context \to \power{\mbh \times
+    \HeapContext}$
+\item
+  $\FldPointsTo: \mbh \times \HeapContext \times \mbf \to \power{\mbh
+    \times \HeapContext}$
+\item $\Reachable: \mbm \to \power{\Context}$
+\item $\CallGraph: \power{\mbi \times \Context \times \mbm \times \mbc}$
+\end{itemize}
+The function $\VarPointsTo$ maps each variable ($x \in \mbv$) with its context ($\ctx \in \Context$) to the points-to set.
+$\VarPointsTo(x,\ctx)$ denotes the set of objects and their heap
+contexts that the variable $x$ with its context $\ctx$ may point to.  
+%Other functions are used
+% as intermediate information to compute $\VarPointsTo$: given
+% $\heap \in \mbh$, $\hctx \in \HeapContext$, and $\fld
+% \in \mbf$,
+$\FldPointsTo(\heap,\hctx,\fld)$ represents the set of heap objects
+possibly pointed by the field of the heap object.
+$\Reachable(m)$ stores the set of calling contexts of $m$ under which
+the method $m$ is reachable from the entry of the program.
+$\CallGraph$ presents a set of context-sensitive call graph edges, 
+where a call edge $(\invo, \ctx_1, m, \ctx_2)$ indicates that method $m$ is called from the invocation site $\invo$ and the contexts of caller and callee methods are $\ctx_1$ and $\ctx_2$, respectively.
+
+
+
+\myparagraph{Analysis Rules}
+Figure~\ref{pre:baseline-rules} presents the analysis rules. The goal of the analysis is to find the smallest (but sound) functions of $\VarPointsTo$, $\FldPointsTo$, $\Reachable$, and $\CallGraph$.
+%  that are closed under the analysis rules, where the order is defined pointwisely.
+% \[
+%   \begin{array}{l}
+%     (\VarPointsTo, \FldPointsTo, \Reachable) \sqsubseteq (\VarPointsTo',
+%     \FldPointsTo', \Reachable')
+%     \iff \\ \qquad \forall (x,\ctx) \in \mbv \times \Context.\; \VarPointsTo(x,\ctx)
+%     \subseteq \VarPointsTo'(x,\ctx) ~\land \\
+%     \qquad \forall (\heap, \hctx, \fld) \in \mbh \times \HeapContext \times
+%     \mbf.\; \FldPointsTo (\heap, \hctx, \fld) \subseteq
+%     \FldPointsTo'(\heap,\hctx,\fld) ~\land \\
+%     \qquad \forall m \in \mbm.\; \Reachable(m)\subseteq \Reachable'(m).
+%   \end{array}
+% \]
+Rules are pointwisely defined for each instruction type.  For example, the first rule corresponds to object allocation, where an abstract heap
+$\heap_l \in \mbh$ is allocated from the instruction $l$. 
+Its heap context $\hctx$ is obtained from the context $\ctx$ of the containing method.
+$\hctx$ keeps the last $\HeapDepth$ context elements of the calling context $\ctx$, i.e.,
+%It possibly truncated so as to keep the last
+%$\HeapDepth$ context elements,
+$\hctx = \truncateCtx{\ctx}{\HeapDepth}$, where the operator
+$\truncateCtx{\cdot}{k}$ truncates contexts:
+$\truncateCtx{\langle a_1, a_2, \dots, a_n \rangle }{k} = \langle
+  a_{n-k+1}, \dots, a_n \rangle$.
+The rules for the move, load, and store instructions are intuitive. 
+
+
+The last rule for method calls needs explanation. 
+Given a method call instruction
+${\it l: x = y.\sig(arg)}$, where ${\it l}$ denotes the
+invocation-site, $\sig$ the method signature (name and type), and
+${\it arg}$ an actual parameter, we find the calling context $\ctx$
+of the caller method, $(\heap,\hctx)$ the receiver object and its heap
+context that {\it y}
+points to, $t$ the class type of the receiver object $\heap$, and $m$ 
+the callee method whose signature is $\sig$ in the class $t$. 
+Then, we create a new calling context $\ctx'$ for the callee
+method by appending ($\appendCtx{}{}$) a new context element $e$
+to the previous context $\pctx$.
+$\truncateCtx{\appendCtx{\pctx}{e}}{\CallDepth}$ makes the callee method's context keep the last $\CallDepth$ context elements
+% , i.e.,
+% $\truncateCtx{\appendCtx{\pctx}{e}}{\CallDepth}$, possibly truncated to keep the last $\CallDepth$ context elements. 
+We call the previous context $\pctx$ the ``parent'' context and the new
+one $\truncateCtx{\appendCtx{\pctx}{e}}{\CallDepth}$ the ``child''
+context.
+
+%% define C, HC
+\myparagraph{Context-Sensitivity Flavors}
+The notions of context elements and parent contexts depend on the
+particular flavor of context-sensitivity and are defined
+by $\parent$. Given a heap $\heap \in \mbh$, heap context
+$\hctx \in \HeapContext$, invocation-site ${\it invo} \in \mbi$, and calling
+context $\ctx \in \Context$ as input,
+$\parent(\heap,\hctx,{\it invo},\ctx)$ returns the current context element ($e$) to be used, the parent context ($\pctx$), and
+the parent method ($p$) where $\pctx$ is used as a calling context. Various flavors of
+context-sensitivity can be obtained by defining $\parent$
+appropriately. For example, call-site-sensitivity~\cite{Shivers1988},
+object-sensitivity~\cite{Milanova2005}, and
+type-sensitivity~\cite{Smaragdakis2011} are characterized as follows:
+\begin{align*}
+ & \parentcall (\heap, \hctx, {\it invo}, \ctx) = ( {\it invo}, \ctx,
+  \methof({\it invo})) \qquad\quad\,\,\,\,\, \mbox{(Call-site-sensitivity)} \\
+ & \parentobj (\heap, \hctx, {\it invo}, \ctx) = (\heap, \hctx,
+                                               \methof(\heap)) \qquad\quad\,\,\,\,\, \mbox{(Object-sensitivity)} \\
+ & \parenttype (\heap, \hctx, {\it invo}, \ctx) = (\classof(\heap),
+                                               \hctx, \methof(\heap))
+                                               \,\, \mbox{(Type-sensitivity)}
+\end{align*}
+That is, the defining characteristic of call-site-sensitivity is that
+it uses invocation-sites (${\it invo}$) as
+context elements, the parent context is the context ($\ctx$) of the
+caller, and the parent method is the caller ($\methof({\it
+  invo})$). In other words, in call-site-sensitivity, the new context
+is created by appending the current context element to the calling
+context of the caller method.  Object-sensitivity~\cite{Milanova2005}
+differs from call-site-sensitivity in both the context element and the
+parent context: it uses allocation-sites ($\heap$) as
+context elements and the parent context comes from the heap context
+($\hctx$) of the receiver object ($\heap$). The parent method is
+$\methof(\heap)$ because the heap context ($\hctx$)
+corresponds to the calling context of the method
+containing the
+allocation-site. Type-sensitivity~\cite{Smaragdakis2011} is similar to
+object-sensitivity except that it uses the containing classes (i.e. $\classof(\heap)$), instead
+of allocation-sites, as context elements.
+Hybrid context-sensitivity~\cite{KastrinisS13a} combines
+call-site-sensitivity ($\parentcall$) and object-sensitivity
+($\parentobj$); it uses call-site-sensitivity at static calls and
+object-sensitivity at virtual calls.
+
+
+% Note that our formalism is general enough to cover a variety of
+% existing context-sensitive analyses such as $\onecall$, $\onecallH$,
+% $\oneobjH$, $\twoobjH$, $\onetypeH$, $\twotypeH$, etc~\cite{kastrinis2013hybrid}.
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

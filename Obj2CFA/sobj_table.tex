@@ -1,0 +1,35 @@
+\begin{table}[t]
+\setlength\extrarowheight{-1pt}
+\centering
+\caption{Precision and scalability comparison between 1-hybrid-object sensitivity with tunneling (\onesobjHT) against its simulated call-site sensitivity (\simonecallH) and the call-site sensitivity obtained from learning (\sobjSimLearn). 
+%The columns Time(s) of \simonecallH~present sum of its baseline analysis cost(s) (e.g.,~\onesobjHT) and the simulated call-site sensitive analysis cost(s). 
+%All the other notations are the same with Table~\ref{tbl:eval:main}.
+}
+\label{tbl:sobj}
+\centering
+\footnotesize
+
+\begin{tabular}{@{} c l r r | c l r r @{}}
+\toprule
+ Program                  & \,  Analysis   & \multicolumn{1}{c}{\, \#fail-casts} & \multicolumn{1}{c | }{ Times(s)} & Program                     & \, Analysis   & \multicolumn{1}{c}{\, \#fail-casts} & \multicolumn{1}{c}{Time(s)} \\ \midrule
+\multirow{3}{*}{luindex} & \sobjSimLearn & 366                             & 36                           & \multirow{3}{*}{lusearch}   & \sobjSimLearn & 380                              & 35                          \\
+                         & \simonecallH  & 359                             & 67                           &                             & \simonecallH  & 373                              & 69                          \\
+                         & \onesobjHT   & 371                             & 32                           &                             & \onesobjHT   & 380                              & 33                          \\\midrule
+\multirow{3}{*}{antlr}   & \sobjSimLearn & 486                             & 54                           & \multirow{3}{*}{eclipse}    & \sobjSimLearn & 586                              & 40                          \\
+                         & \simonecallH  & 479                             & 95                           &                             & \simonecallH  & 573                              & 77                          \\
+                         & \onesobjHT   & 483                             & 48                           &                             & \onesobjHT   & 586                              & 36                          \\\midrule
+\multirow{3}{*}{xalan}   & \sobjSimLearn & 576                             & 68                           & \multirow{3}{*}{chart}      & \sobjSimLearn & 942                              & 67                          \\
+                         & \simonecallH  & 562                             & 123                          &                             & \simonecallH  & 861                              & 139                         \\
+                         & \onesobjHT   & 572                             & 59                           &                             & \onesobjHT   & 876                              & 62                          \\\midrule
+\multirow{3}{*}{bloat}   & \sobjSimLearn & 1,267                           & 456                          & \multirow{3}{*}{jython}     & \sobjSimLearn & 856                              & 194                         \\
+                         & \simonecallH  & 1,248                           & 870                          &                             & \simonecallH  & 836                              & 8,985                      \\
+                         & \onesobjHT   & 1,251                           & 375                          &                             & \onesobjHT   & 837                              & 342                         \\\midrule
+\multirow{3}{*}{jpc}     & \sobjSimLearn & 1,676                           & 131                          & \multirow{3}{*}{pmd}        & \sobjSimLearn & 721                              & 59                          \\
+                         & \simonecallH  & 1,644                           & 3,002                        &                             & \simonecallH  & 710                              & 50                          \\
+                         & \onesobjHT   & 1,593                           & 186                          &                             & \onesobjHT   & 713                              & 52                          \\\midrule
+\multirow{3}{*}{fop}     & \sobjSimLearn & 1,084                           & 123                          & \multirow{3}{*}{checkstyle} & \sobjSimLearn & 466                              & 63                          \\
+                         & \simonecallH  & 1,055                           & 959                          &                             & \simonecallH  & 468                              & 135                         \\
+                         & \onesobjHT   & 1,080                           & 94                           &                             & \onesobjHT   & 474                              & 69                          \\ \bottomrule
+\end{tabular}
+\vspace{-15pt}
+\end{table}

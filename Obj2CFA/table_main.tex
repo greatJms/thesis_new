@@ -1,0 +1,51 @@
+\begin{table}
+\setlength\extrarowheight{-1pt}
+
+\caption{Precision and cost comparison of our analysis (\ours) against various
+  context-sensitive analyses: \oneobjHT, \twoobjH, \onecallHT, and \oursim.
+}
+\label{tbl:eval:main}
+\centering
+\scriptsize
+
+\begin{tabular}{@{}c | clrrrrr@{}}
+\toprule
+                                    & program                     & \multicolumn{1}{c}{Metric} & \multicolumn{1}{c}{\ours} & \multicolumn{1}{c}{\oursim} & \multicolumn{1}{c}{\oneobjHT} & \multicolumn{1}{c}{\twoobjH} & \multicolumn{1}{c}{\onecallHT} \\ \midrule
+\multirow{12}{*}{\rotatebox[origin=c]{90}{Training programs}} & \multirow{3}{*}{luindex}    & VarPtsTo                   & 250,012                       & 245,470                      & 256,531                     & 255,545                   & 800,715                      \\
+                                    &                             & \failcasts             & 357                           & 360                          & 462                         & 496                       & 784                          \\
+                                    &                             & time elapsed(s)            & 40                            & 86                           & 37                          & 40                        & 82                           \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{lusearch}   & VarPtsTo                   & 264,728                       & 260,204                      & 271,765                     & 270,710                   & 890,529                      \\
+                                    &                             & \failcasts             & 371                           & 374                          & 469                         & 508                       & 843                          \\
+                                    &                             & time elapsed(s)            & 45                            & 94                           & 39                          & 82                        & 85                           \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{antlr}      & VarPtsTo                   & 302,226                       & 297,268                      & 309,671                     & 308,643                   & 965,445                      \\
+                                    &                             & \failcasts             & 477                           & 477                          & 570                         & 611                       & 945                          \\
+                                    &                             & time elapsed(s)            & 62                            & 123                          & 52                          & 52                        & 128                          \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{pmd}        & VarPtsTo                   & 306,462                       & 300,391                      & 329,415                     & 327,295                   & 1,116,506                    \\
+                                    &                             & \failcasts             & 707                           & 711                          & 812                         & 846                       & 1,200                        \\
+                                    &                             & time elapsed(s)            & 65                            & 128                          & 56                          & 138                       & 138                          \\\midrule\midrule
+\multirow{24}{*}{\rotatebox[origin=c]{90}{Testing programs}}  & \multirow{3}{*}{eclipse}    & VarPtsTo                   & 353,657                       & 337,496                      & 351,898                     & 345,806                   & 1,241,995                    \\
+                                    &                             & \failcasts             & 569                           & 573                          & 698                         & 729                       & 1,073                        \\
+                                    &                             & time elapsed(s)            & 48                            & 159                          & 47                          & 58                        & 136                          \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{xalan}      & VarPtsTo                   & 410,440                       & 394,522                      & 401,556                     & 400,872                   & 1,660,901                    \\
+                                    &                             & \failcasts             & 576                           & 586                          & 680                         &                           720& 1,137                        \\
+                                    &                             & time elapsed(s)            & 71                            & 590                          & 377                         & 2,288                     & 208                          \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{chart}      & VarPtsTo                   & 501,615                       & 496,676                      & 502,913                     & 500,357                   & 4,694,330                    \\
+                                    &                             & \failcasts             & 883                           & 942                          & 1,011                       & 1,055                     & 2,376                        \\
+                                    &                             & time elapsed(s)            & 96                            & 575                          & 84                          & 382                       & 805                          \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{fop}        & VarPtsTo                   & 650,218                       & 637,213                      & 726,777                     & 720,031                   & 3,467,105                    \\
+                                    &                             & \failcasts             & 1,072                         & 1,072                        & 1,253                       & 1,270                     & 1,977                        \\
+                                    &                             & time elapsed(s)            & 206                           & 407                        & 137                         & 493                       & 500                          \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{bloat}      & VarPtsTo                   & 1,136,393                     & 1,136,366                    & 1,126,688                   & 1,114,648                 & 3,454,301                    \\
+                                    &                             & \failcasts             & 1,266                         & 1,285                        & 1,374                       & 1,407                     & 1,949                        \\
+                                    &                             & time elapsed(s)            & 498                           & 3,306                        & 371                         & 2,463                     & 805                          \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{jython}     & VarPtsTo                   & 1,067,711                     & N/A                          &-                             & -                          & 3,085,401                    \\
+                                    &                             & \failcasts             & 845                           & N/A                          &  -                           &   -                        & 1,331                        \\
+                                    &                             & time elapsed(s)            & 2,731                         & N/A                          & >10,800         & >10,800       & 188                          \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{jpc}        & VarPtsTo                   & 1,304,810                     & 1,118,622                    & 1,142,496                   & 1,114,946                 & 6,667,910                    \\
+                                    &                             & \failcasts             & 1,639                         & 1,642                        & 1,795                       & 1,814                     & 2,620                        \\
+                                    &                             & time elapsed(s)            & 493                           & 699                          & 262                         & 1,737                     & 1,511                        \\\cmidrule(){2-8}
+                                    & \multirow{3}{*}{checkstyle} & VarPtsTo                   & 307,378                       & 299,101                      & 327,629                     & 314,857                   & 1,141,902                    \\
+                                    &                             & \failcasts             & 465                           & 472                          & 591                         & 620                       & 913                          \\
+                                    &                             & time elapsed(s)            & 83                            & 220                          & 99                          & 220                       & 139                          \\  \bottomrule
+\end{tabular}
+\end{table}

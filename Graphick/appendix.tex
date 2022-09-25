@@ -1,0 +1,160 @@
+%\section{Notations}\label{sec:max}
+%The function $\MaxIn(G_\vec{P})$ returns the maximum number $max\in\mbn$ of
+%incoming edges of a node in the graphs that $max$ satisfies:
+%%\[
+%%\begin{array}{c}
+%\begin{enumerate}
+%\item %There exists a node $n$ that have $max$ incoming edges:\\
+%$max$ is a node's incoming edges:
+%$\exists P\in\vec{P}. (N,E) =
+%  G_\vec{P}(P) \land \exists n\in N. |\{n' \mid (n',n)\in E\}| = max$
+%\item The node has equal or more number of
+%incomingedges than the others: \\
+%$\forall P \in \vec{P}. (N,E) = G_\vec{P}(P) \land \forall n\in N. |\{n' \mid (n',n)\in E
+%\}| \le max$
+%\end{enumerate}
+%%\end{array}
+%%\]
+%On the other hand, $\MaxOut(G_\vec{P})$ returns the maximum number $max\in\mbn$ of
+%outgoing edge of a node in the graphs:
+%\begin{enumerate}
+%\item $max$ is a node's outgoing edges: $\exists P\in\vec{P}. (N,E) = G_\vec{P}(P) \land \exists n\in N. |\{n' \mid (n,n')\in E
+%\}| = max$
+%\item The node has equal or more number of
+%incomingedges than the others: \\
+%$\forall P \in \vec{P}. (N,E) = G_\vec{P}(P) \land \forall n\in N. |\{n' \mid (n,n')\in E
+%\}| \le max$
+%\end{enumerate}
+
+% \[
+% Incoming(n,G) = |\{n' \mid (n',n)\in E \land G = (N,E) \}|
+% \]
+% \[
+% Outgoing(n,G) = |\{n' \mid (n,n')\in E \land G = (N,E) \}|
+% \]
+% \[
+% \forall n \in G' \in G_\vec{P}. Incoming(n,G) \ge Incoming(n',G')
+% \]
+% where $Incoming$ returns the number of incoming edges for each node:
+% \[
+% Incoming(n,G) = |\{n' \mid (n',n)\in E \land G = (N,E) \}|
+% \]
+% On the other hand, $\MaxOut(G_\vec{P})$ returns the maximul number of incoming edges
+% of a node $n$ in the graphs:
+% \[
+% \forall n \in G_\vec{P}. Incoming(n,G) \ge Incoming(n',G')
+% \]
+% where $Outgoing$ returns the number of the node's outgoing edges:
+% \[
+% Outgoing(n,G) = |\{n' \mid (n,n')\in E \land G = (N,E) \}|
+% \]
+
+
+
+\chapter{Proof of Theorem~\ref{THM:REDUCESPACE}}\label{sec:proof}
+
+We will show that the output of our learning algorithm is the minimal abstraction of the given program using proof by induction and contradiction.
+Let $\abs$ be the output of the learning algorithm.  
+$\abs$ is a precise abstraction because our algorithm updates $\abs$ only if the following equation holds:
+\[
+\projproved(F_P(\abs)) = \projproved(F_P(\absk)).
+\]
+Assume that $\abs'$ meets the precision constraint but smaller than $\abs$:
+\begin{equation}\label{eq:assumption}
+\projproved(F_P(\abs')) = \projproved(F_P(\absk)) \land
+\abs' \sqsubseteq \abs.
+\end{equation}
+We can prove that $\abs$ is the minimal abstraction by showing that $\abs'$ equals to $\abs$:
+%It suffices to show that:
+\begin{equation}\label{eq:goal}
+\forall i \in [0,k].\{c \mid c \in \component_P \land \abs(c) = i\} = \{c \mid c\in \component_P \land \abs'(c) = i\}.
+\end{equation}
+We prove~(\ref{eq:goal}) with induction on $i$ in decreasing order.
+\begin{itemize}
+\item (Base case) the base case is as follows:
+\begin{equation}\label{eq:base:goal}
+\{c \mid c\in \component_P \land \abs(c) = k\} = \{c \mid c\in \component_P \land \abs'(c) = k\}.
+\end{equation}
+From~(\ref{eq:assumption}), we have
+\begin{equation}\label{eq:base:obvious}
+\emptyset = \{c \mid c\in \component_P \land \abs'(c) = k\} \setminus \{c \mid c\in \component_P \land \abs(c) = k\}.
+\end{equation}
+Now, we can prove~(\ref{eq:base:goal}) by showing the following counterpart is also $\emptyset$ by the proof of contradiction:
+\begin{equation}\label{eq:base:counter}
+\{c \mid c\in \component_P \land \abs(c) = k\} \setminus \{c \mid c\in \component_P \land \abs'(c) = k\}.
+\end{equation}
+Assume that~(\ref{eq:base:counter}) is not an empty set, then it has a program component $c'$:
+\[
+c' \in (\{c \mid c\in \component_P \land \abs(c) = k\} \setminus \{c \mid c\in \component_P \land \abs'(c) = k\}).
+\]
+%Let $\abs''$ be the abstraction when $c'$ was considered in the first iteration.
+Let $\abs''$ be the abstraction when $c'$ is chosen.
+Then, we have
+\begin{equation}\label{eq:base:small}
+ \abs'\sqsubseteq \abs''.
+\end{equation}
+The abstraction $\abs''$ is less precise than $\vec{k}$:
+%not precise enough as $c'$ is rejected:
+\begin{equation}\label{eq:base:notprecise}
+\projproved(F_P(\abs''))<\projproved(F_P(\absk)).
+\end{equation}
+From~(\ref{eq:assumption}),~(\ref{eq:base:small}), and the monotonicity of analysis, we have
+\begin{equation}\label{eq:base:precise}
+\projproved(F_P(\absk)) = \projproved(F_P(\abs')) \le \projproved(F_P(\abs'')).
+\end{equation}
+Now, we have a contradiction between~(\ref{eq:base:notprecise}) and~(\ref{eq:base:precise}).
+As a result, we have:
+\begin{equation}\label{eq:base:Notobvious}
+\emptyset = (\{c \mid c\in \component_P \land \abs(c) = k\} \setminus \{c \mid c\in \component_P \land \abs'(c) = k\}).
+\end{equation}
+From~(\ref{eq:base:obvious}) and~(\ref{eq:base:Notobvious}), we prove the base case~(\ref{eq:base:goal}) is true.\\
+
+\item (Inductive case) 
+The induction hypothesis is as follows:
+\begin{equation}\label{eq:ind:hypo}
+\forall j \in [l,k].\{c \mid c \in \component_P \land \abs(c) = j\} = \{c \mid c \in \component_P \land \abs'(c) = j\}
+\end{equation}
+where $2\le l\le k$.
+From the hypothesis, we will prove that the following equation is true:
+\begin{equation}\label{eq:ind:goal}
+\{c \mid c \in \component_P \land \abs(c) = l-1\} = \{c \mid c\in \component_P \land \abs'(c) = l-1\}.
+\end{equation}
+From~(\ref{eq:assumption}) and~(\ref{eq:ind:hypo}), we have
+\begin{equation}\label{eq:ind:obvious}
+\emptyset = \{c \mid c\in \component_P \land \abs'(c) = l-1\} \setminus \{c \mid c\in \component_P \land \abs(c) = l-1\}.
+\end{equation}
+Now, we will show the following counterpart is also $\emptyset$ by the proof of contradiction:
+\begin{equation}\label{eq:ind:counter}
+\{c \mid c\in \component_P \land \abs(c) = l-1\} \setminus \{c \mid c\in \component_P \land \abs'(c) = l-1\}.
+\end{equation}
+Assume that (\ref{eq:ind:counter}) has a program component $c''$.
+Let $\abs'''$ be the abstraction when $c''$ is considered where $i$ equals to $l-1$ in the Algorithm~\ref{alg:Learnminimal}. From~(\ref{eq:ind:hypo}), we can get the following relation between $\abs'$ and $\abs'''$:
+\begin{equation}\label{eq:ind:small}
+\abs'\sqsubseteq \abs'''.
+\end{equation}
+$\abs'''$ is less precise than $\vec{k}$:
+%not precise enough as $c'$ is rejected:
+\begin{equation}\label{eq:ind:notprecise}
+\projproved(F_P(\abs'''))<\projproved(F_P(\absk)).
+\end{equation}
+From~(\ref{eq:assumption}),~(\ref{eq:ind:small}), and the monotonicity of analysis, we have
+\begin{equation}\label{eq:ind:precise}
+\projproved(F_P(\absk)) = \projproved(F_P(\abs')) \le \projproved(F_P(\abs''')).
+\end{equation}
+We also find a contradiction between~(\ref{eq:ind:notprecise}) and~(\ref{eq:ind:precise}).
+Now, we have
+\begin{equation}\label{eq:ind:Notobvious}
+\emptyset = (\{c \mid c\in \component_P \land \abs(c) = l-1\} \setminus \{c \mid c\in \component_P \land \abs'(c) = l-1\}).
+\end{equation}
+From~(\ref{eq:ind:obvious}) and~(\ref{eq:ind:Notobvious}), we can prove the following equation is true:
+\[
+\{c \mid c\in \component_P \land a_P(c) = l-1\} = \{c \mid c\in \component_P \land a_P'(c) = l-1\}.
+\]
+
+\end{itemize}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

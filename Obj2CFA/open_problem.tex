@@ -1,0 +1,164 @@
+% !TEX root = ./paper.tex
+\clearpage
+\newtheorem{openquestion}{Question}
+
+\section{Open Question: Is Complete Simulation Possible?}
+
+\subsection{High Level Description}
+
+The observation in Section~\ref{sec:counter_example}, that there exists
+a counter-example in our setting (tunneling abstraction space is a set
+of invocation site) but the counter-example is not the case in a more
+generalized abstraction space of context tunneling (pairs of
+invocation and receiver object), lead us to the following open question.
+%\begin{equation}
+\begin{openquestion}\label{openQ}
+Can we define a tunneling abstraction space $S$ (e.g., pairs of receiver
+object and invocation site) that $k$-call-site sensitivity with
+tunneling can always become equal or more precise than $k$-object
+sensitivity with tunneling?
+\end{openquestion}
+%\end{equation}
+If the above question is true (we can define such tunneling
+abstraction space), $k$-call-site sensitivity is theoretically more
+precise than $k$-object sensitivity when k-limited context sensitivity
+is generalized with context tunneling. The formal description of the
+open question is described in Section~\ref{sec:quextion:formal}. 
+
+% (in flow-insensitive but context sensitive pointer analysis)
+
+Note that the converse is not true; it is unable to define a tunneling
+abstraction space $S$ that $k$-object sensitivity with
+tunneling can always become equal or more precise than $k$-call-site
+sensitivity with tunneling. The example code in
+Figure~\ref{background:example2} is a counter-example for an arbitrary
+tunneling abstraction space. By the definition of context tunneling
+(determine whether to update context or not), the method
+{\tt id} in the example (Figure~\ref{background:example2}) can have
+the the contexts \texttt{[D]} (update context) or \texttt{[$\cdot$]}
+(inherit context) no matter what tunneling abstraction space is
+used. $k$-object sensitivity with tunneling is unable to separate the
+three method calls (invoked at the three different invocation sites)
+with the two 
+available contexts. k-call-site sensitivity, however, can separate the
+three method calls with a tunneling abstraction $\emptyset \subseteq
+S$ (always update contexts) for all tunneling abstraction space
+$S$ of context tunneling. 
+
+
+In this paper, we showed a set of invocation sites is practically (not
+theoretically) the abstraction space ($T \subseteq \Invo$) that
+k-call-site sensitivity with tunneling can simulate k-object
+sensitivity with tunneling. Our future work 
+is answering the {\sc Question~\ref{openQ}} to show that
+call-site sensitivity is theoretically more precise than
+object-sensitivity (the answer of the question is ``yes'') or the two
+contexts are still incomparable in the generalized k-limited context
+sensitivity (the answer is ``no''). 
+
+%What we show in our paper is that invocation sites 
+
+
+
+
+\subsection{Formal Description}~\label{sec:quextion:formal}
+Let $F_{P,k}^{T, \updatectx}$ be the analysis uses the context update
+function $\updatectx$, context depth $k\in\mbn$, tunneling abstraction
+$T \subseteq S$ for analyzing the program $P$:
+\begin{equation}\label{eq:analysis}
+F_{P,k}^{T, \updatectx}(\ptsto, \reachable, \callgraph) = \bigsqcup_{\inst \in \Inst_P}
+f_{k, \inst}^{T, \updatectx}(\ptsto,
+\reachable, \callgraph)
+\end{equation}
+where $f_{k, \inst}^{T, \updatectx}$ is the transfer function (simply described
+as $f_l$ in Section~\ref{sec:setting}) encoding
+the abstract semantics of instructions. Running the analysis is to compute the least fixed point of
+$F^{T, \updatectx}_{P,k}$:
+\begin{equation}\label{eq:fixpoint}
+  \fix F_{P,k}^{T, \updatectx} = F^{T, \updatectx}_{P,k}
+  (\bot_\ptsto, \bot_\reachable,\bot_\callgraph) \sqcup F^{T, \updatectx}_{P,k}  (F^{T, \updatectx}_{P,k}
+  (\bot_\ptsto, \bot_\reachable,\bot_\callgraph)) \sqcup \cdots
+\end{equation}
+where we define the bottom elements for the domains as follows:
+\[
+  \bot_\ptsto = \lambda (x,c).\emptyset, \qquad \bot_\reachable =
+\lambda m. \left\{ \begin{array}{ll} \myset{\epsilon} & \mbox{if}~m =
+                                                        \entry_P \\
+                     \emptyset & \mbox{otherwise} \end{array} \right., \qquad
+  \bot_\callgraph = \emptyset,
+\]
+%Note that the reachability map ($\reachable$) initially
+%associates the entry method with the initial context
+%$\epsilon$. 
+The fixed point computation in (\ref{eq:fixpoint})
+eventually stabilizes because the domains are
+finite and the transfer function is monotone.
+
+
+
+
+\myparagraph{Order of Analysis Precision}
+ For two analyses $F_{P,k}^{T, \updatectx}$ and
+ $F_{P,k'}^{T',\updatectx'}$ for program $P$, we say the former is more
+ precise than (or equal to) the
+ latter, denoted $F_{P,k}^{T, \updatectx} \moreprecise F_{P,k'}^{T', \updatectx'}$, if and only if
+ \[
+   \project(\fix F_{P,k}^{T, \updatectx}) \sqsubseteq \project(\fix F_{P,k'}^{T', \updatectx'})
+ \]
+ where $\project$ extracts the context-insensitive points-to
+ information from the analysis result $(\ptsto, \reachable,\callgraph)$:
+ \begin{equation}\label{eq:project}
+ \project(X, R,\callgraph) = \lambda x.\; \bigsqcup_{\ctx \in \Ctx}
+ \myset{h \mid (h, \hctx) \in X(x, \ctx)},
+ \end{equation}
+and the order between the two projected analysis results is defined as follows:
+ \[
+   \project(\fix F_{P,k}^{T, \updatectx}) \sqsubseteq \project(\fix
+   F_{P,k'}^{T', \updatectx'}) \iff \forall x\in \Var_P. \project(\fix
+   F_{P,k}^{T, \updatectx})(x) \subseteq \project(\fix
+   F_{P,k'}^{T', \updatectx'}) (x).
+ \]
+That is, an analysis is more precise than the other if it produces
+a strictly smaller points-to set for all variables.
+
+
+Now we formalize the open question. 
+Answering ``yes'' to the {\sc Question~\ref{openQ}} equals to show that the
+following proposition holds:
+\newtheorem{prop}{Proposition}
+\begin{prop}
+Let $\updatectx_{\it obj}$
+and $\updatectx_{\it call}$ be the context functions for
+object-sensitivity and call-site-sensitivity given in
+(\ref{eq:objsens}) and (\ref{eq:cfa}), respectively. 
+\begin{equation}\label{eq:conjecture}
+\exists S. \; \forall P. \; \forall k\in \mbn. \; \forall T_{\it obj}\in S. \; \exists
+T_{\it call} \in S. \; 
+F_{P,k}^{T_{\it call},\updatectx_{{\it call}}}
+\moreprecise F_{P,k}^{T_{\it obj}, \updatectx_{{\it obj}}}.
+\end{equation}
+\label{conjecture}
+\end{prop}
+That is, we can define a tunneling abstraction space $S$ that
+for a given program $P$, context depth $k$, and tunneling abstracion for
+object sensitivity $T_{\it obj} \in S$, we can find a
+corresponding tunenling abstraction for call-site sensitivity $T_{\it
+  call} \in S$ that make $k$-call-site sensitivity with tunneling
+($F_{P,k}^{T_{\it call},\updatectx_{{\it call}}}$) produce a more
+precise analysis result than the
+given object sensitivity with tunneling ($F_{P,k}^{T_{\it obj},
+  \updatectx_{{\it obj}}}$).
+If there is no such abstraction space (the answer to {\sc
+  Question~\ref{openQ}} is ``no''), call-site sensitivity and 
+object sensitivity are still incomparable in the generalized
+k-limited context sensitivity
+(we already showed it is unable to define a
+tunneling space that 
+object sensitivity with tunneling can always become equal or more
+precise than call-site sensitivity). 
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

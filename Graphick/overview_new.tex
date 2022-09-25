@@ -1,0 +1,261 @@
+\clearpage
+\section{Overview}
+In this section, we illustrate overview of our approach with an example. 
+
+\subsection{Selective Heap Abstraction \& Object-sensitivity}
+Fig~\ref{fig:example} shows an example code to illustrate heap
+abstraction and object-sensitivity heuristics in points-to analysis.
+The example program has {\tt Container} and {\tt Iterator} class which
+keeps and iterates data, respectively. 
+{\tt main} method allocates two containers to {\tt c1} and {\tt
+  c2}. {\tt c1} contains two heaps wich are allocated at {\tt A1} and
+{\tt A2} while {\tt c2} has two heaps from {\tt B1} and
+{\tt B2}.
+{\tt it1} and {\tt it2} correspond to iterator of {\tt c1} and {\tt c2}, respectively.
+There are two queries {\tt qry1} and {\tt qry2} which are asking the
+safety of down castings; the type of a element in {\tt c1} and {\tt
+  c2} is {\tt A} and {\tt B}, respectively. 
+In real execution, the castings are always safe because the type of
+elements in {\tt c1} is {\tt A} while {\tt c2} keeps elements with the
+type {\tt B}. 
+
+
+\myparagraph{2obj \& allocbased}
+First, we consider a precise analysis 2-object-sensitive analysis with
+allocation site based heap abstraction. 
+For array modeling, we use array-insensitivity which is the most
+common one~\cite{Smaragdakis2015} that do not distinguish array
+locations. In such analysis, we can prove all the safeties.
+2-object-sensitivity separates all the method calls from different
+base variables. As a result, the variables {\tt
+a} and {\tt b} at line 35 and 36 point to {\tt A1, A2} and {\tt B1,
+B2}, respectively as the analysis is array-insensitive. Note that if
+we use context-insensitive analsysis or type-based heap abstraction,
+it is unable to prove the queries. Type-based heap abstraction
+would merge the containers {\tt C1} and {\tt C2} into a type {\tt C}
+,and context-insensensitive analysis is unable to separate method calls
+from base variable {\tt c1} and {\tt c2} or {\tt it1} and {\tt it2}.
+
+
+\myparagraph{partial-2obj \& alloc-based}
+If we selectively apply allocation-based heap abstraction and
+2-object-sensitivity, we can enhance scalability while main precision.
+Let assume we apply allocation-site based heap abstraction for only
+heaps allocated from {\tt C1} and {\tt C2} while other heaps use type
+based heap abstraction. 
+
+
+
+
+
+\myparagraph{Graph and learned heuristic}
+
+
+
+%\subsection{Our learning framework}
+%\myparagraph{Learning analysis heuristic from codebases}
+%Below graph depicts how our learning framework:
+%\begin{figure}
+%\begin{center}
+%\resizebox{0.7\columnwidth}{!}{
+%	\centering
+%	\begin{tikzpicture}
+%	\node [onlyText] (codebases) {\text{codebases $\vec{P}$}};
+%	\node [onlyText, right =
+%	 4.4cm of codebases]
+%	(minimalabs) {\text{minimal abstractions}};
+%	\node [onlyText, below = 1.4cm of minimalabs,align=center] (graphs) {\text{set of graphs}};
+%	\node [onlyText, below right = 0.2 and -1.0cm of minimalabs] (mytext) {\text{transforms to} \\ \text{set of graphs}};		
+%	\node [onlyText, left = 4.4cm of graphs] (heuristic) {\text{heuristic $\heuristic$}};	
+%
+%	\path [line] (codebases) edge node[above] {$\text{learn minimal abstractions}$} (minimalabs);
+%	\path [line] (minimalabs) edge node[right] {} (graphs);	
+%	\path [line] (graphs) edge node[below] {$\text{learn heuristic graphs}$} (heuristic);
+%	\end{tikzpicture}
+%}
+%\end{center}
+%\caption{Overview}
+%\label{fig:overview}
+%\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+\begin{figure}
+	\centering
+
+	\begin{multicols}{2}
+\begin{subfigure}[t]{1.5\columnwidth}
+	\begin{multicols}{2}
+	\begin{lstlisting}[basicstyle=\small\ttfamily]
+class A{} class B{}
+class Container{
+  elem = new Object[2];//O1
+  size = 0;
+  add(Object e){
+    data[size++] = e;
+  }
+  iterator(){
+    itr = new Itr(this);//It1
+    return itr;
+  } 
+}
+class Itr{
+  Container ctner; 
+  idx = 0;
+  Iterator(Container c){
+    ctner = c;
+  }
+  Object next(){
+   return elem.data[idx++];
+  }
+}
+main(){
+ c1 = new Container();//C1
+ c2 = new Container();//C2
+
+ c1.add(new A());//A1
+ c1.add(new A());//A2
+  
+ c2.add(new B());//B1
+ c2.add(new B());//B2
+
+ Itr it1 = c1.iterator();
+ Itr it2 = c2.iterator();
+ A a = (A)it1.next();//qry1
+ B b = (B)it2.next();//qry2
+ }
+\end{lstlisting}
+\end{multicols}
+\caption{Example code}
+\label{fig:example}
+\end{subfigure}
+\begin{flushright}
+\begin{subfigure}[t]{0.5\columnwidth}
+	\begin{center}
+		\resizebox{1.\columnwidth}{!}{
+			\begin{tikzpicture}
+			\node [shape=circle,draw=black] (it) {{\tt It1}};
+			\node [shape=circle,draw=black, below right = 0.cm and 0.4cm of it] (c1) {{\tt C1}};				
+			\node [shape=circle,draw=black, above right = 0.cm and 0.4cm of it] (c2) {{\tt C2}};
+			\node [shape=circle,draw=black, right = 1.2cm of it] (o) {{\tt O1}};				
+
+
+			\node [shape=circle,draw=black, below right = 0.0cm and 0.5cm of o] (a1) {{\tt A1}};
+			\node [shape=circle,draw=black, below = 0.1cm of a1] (a2) {{\tt A2}};
+
+			\node [shape=circle,draw=black, above right = 0.0cm and 0.5cm of o] (b1) {{\tt B1}};
+			\node [shape=circle,draw=black, above = 0.1cm of b1] (b2) {{\tt B2}};
+
+
+			\path [line] (it) -- (c1);
+			\path [line] (it) -- (c2);
+
+			\path [line] (c1) -- (o);
+			\path [line] (c2) -- (o);
+				
+			\path [line] (o) -- (a1);
+			\path [line] (o) -- (a2);
+			\path [line] (o) -- (b1);
+			\path [line] (o) -- (b2);
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{\centering Points-to graph}
+\end{subfigure}~\qquad\linebreak\linebreak\linebreak
+\begin{subfigure}[t]{0.6\columnwidth}	
+	\begin{center}
+		\resizebox{1.\columnwidth}{!}{
+			\begin{tikzpicture}
+			\node [shape=circle,draw=black] (root) {{\tt root}};
+					
+			\node [shape=circle,draw=black, right =  0.4cm of root] (c2) {{\tt C2}};
+			\node [shape=circle,draw=black, above= 0.4cm of c2] (c1) {{\tt C1}};		
+			
+			\node [shape=circle,draw=black, right = 0.5cm of c2] (o) {{\tt O}};				
+			\node [shape=circle,draw=black, right = 0.4cm of c1] (it) {{\tt It}};				
+
+			\node [shape=circle,draw=black, below left = 0.8cm and 0.4cm of root] (a1) {{\tt A1}};		
+			\node [shape=circle,draw=black, right = 0.4cm of a1] (a2) {{\tt A2}};
+			\node [shape=circle,draw=black, right = 0.4cm of a2] (b1) {{\tt B1}};
+			\node [shape=circle,draw=black, right = 0.4cm of b1] (b2) {{\tt B2}};
+
+			\path [line] (root) -- (c1);
+			\path [line] (root) -- (c2);
+			\path [line] (root) -- (a1);
+			\path [line] (root) -- (a2);
+			\path [line] (root) -- (b1);
+			\path [line] (root) -- (b2);
+			\path [line] (c1) -- (it);
+			\path [line] (c1) -- (o);
+			\path [line] (c2) -- (it);
+			\path [line] (c2) -- (o);
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{\centering Object allocation graph}
+\end{subfigure}	
+\end{flushright}
+\end{multicols}
+\caption{Running example and graphs from a cheap analysis (e.g., context-insensitive)}
+\end{figure}
+
+
+
+Learned heap abstraction heuristic:
+		\begin{center}
+			\resizebox{0.7\columnwidth}{!}{
+				\begin{tikzpicture}
+				\node [block3,fill = gray] (n1) {{\tt [0,$\infty$],[0,$\infty$]}};
+				\node [block3,right = 0.8cm of n1] (n2) {{\tt [0,$\infty$],[2,$\infty$]}};
+				\node [onlyText,left = -0.5cm of n1] (lbr) {{\tt\LARGE \{ }};
+				\node [longText,left = -2.6cm of lbr] (alloc) {{\tt\LARGE Alloc based : }};
+				\node [onlyText,right = -0.5cm of n2] (rbr) {{\tt\LARGE \} }};
+				\path [line] (n1) -- (n2);
+
+				\end{tikzpicture}
+			}
+		\end{center}
+
+
+Learned context abstraction heuristic:
+		\begin{center}
+				\begin{flushleft}
+			\resizebox{0.7\columnwidth}{!}{
+				\begin{tikzpicture}
+				\node [block3] (n1) {{\tt [1,1],[2,2]}};
+				\node [block3,fill = gray,right = 0.8cm of n1] (n2) {{\tt [2,2],[0,0]}};
+				\node [onlyText,left = -0.5cm of n1] (lbr) {{\tt\LARGE \{ }};
+				\node [longText,left = -3.5cm of lbr] (alloc) {{\tt\LARGE 2obj : }};
+				\node [onlyText,right = -0.5cm of n2] (rbr) {{\tt\LARGE \} }};
+				\path [line] (n1) -- (n2);
+
+				\node [block3,fill = gray,below = 0.4cm of n1] (n11) {{\tt [1,1],[2,2]}};
+				\node [block3,right = 0.8cm of n11] (n12) {{\tt [2,2],[0,0]}};
+				\node [onlyText,left = -0.5cm of n11] (lbr1) {{\tt\LARGE \{ }};
+				\node [longText,left = -3.5cm of lbr1] (alloc1) {{\tt\LARGE 1obj : }};
+				\node [onlyText,right = -0.5cm of n12] (rbr1) {{\tt\LARGE \} }};
+				\path [line] (n11) -- (n12);
+
+				\end{tikzpicture}
+			}
+		\end{flushleft}
+		\end{center}
+
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:
+
+

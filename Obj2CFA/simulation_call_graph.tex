@@ -1,0 +1,158 @@
+% !TEX root = ./paper.tex
+
+
+
+\begin{figure*}[t]
+	\begin{multicols}{4}
+		\begin{subfigure}[b]{1.\columnwidth}
+			\begin{center}
+				\resizebox{1.\columnwidth}{!}{
+					\tikzstyle{every node}=[font=\LARGE]
+					\begin{tikzpicture}
+					\node [block] (main) {{\tt main}\\$[\cdot]$};
+					\node [block, right = 0.7cm of main] (id11) {\tt {id1}\\$[$D2$]$};
+					\node [block, above = 0.4cm of id11] (id12) {\tt {id1}\\$[$D1$]$};
+					
+					\node [block, right=0.6cm of id11] (oid1) {\tt {id}\\$[$D2$]$};
+					\node [block, right=0.6cm of id12] (oid2) {\tt {id}\\$[$D1$]$};
+					
+					\node [block, below = 0.6cm of id11] (m) {\tt {m}\\$[$D3$]$};
+					
+					\node [block, right=0.6cm of m] (nid) {\tt {id}\\$[$D3$]$};
+					
+					\path [line] (main) edge node[above] {17} (id11);
+					\path [line] (main) edge node[above left] {16} (id12);
+					\path [line] (id11) edge node[above] {5} (oid1);
+					\path [line] (id12) edge node[above] {5} (oid2);
+					\path [line] (main) edge node[below left] {18} (m);
+					\path [line] (m) edge [bend left=20] node[above] {7} (nid);
+					\path [line] (m) edge [bend right=20] node[below] {8} (nid);
+					\end{tikzpicture}
+				}
+			\end{center}
+			\vspace{7pt}
+			~\\
+			\caption{\small $1$-object sensitivity with $\Tobj = \emptyset$}
+			\label{fig:obj:callgraph}
+		\end{subfigure}
+		\vfill\null
+		\columnbreak
+		\begin{subfigure}[b]{1\columnwidth}
+			\begin{center}
+				\resizebox{1\columnwidth}{!}{
+					\begin{tikzpicture}
+					\tikzstyle{every node}=[font=\LARGE]				
+					\node [block] (main) {\tt {main}\\$[\cdot]$};
+					\node [block, right = 0.7cm of main] (id11) {\tt {id1}\\$[17]$};
+					\node [block, above = 0.4cm of id11] (id12) {\tt {id1}\\$[16]$};
+					
+					%\node [block, right = 0.4cm of id11] (oid1) {{\tt id}\\$[17]$};
+					\node [block, right = 0.4cm of id12] (oid2) {\tt {id}\\$[5]$};
+					
+					\node [block, below = 0.4cm of id11] (m) {\tt {m}\\$[18]$};
+					
+					\node [block, right=0.4cm of m] (nid1) {\tt {id}\\$[7]$};
+					\node [block, below=0.4cm of nid1] (nid2) {\tt {id}\\$[8]$};
+					
+					
+					\path [line] (main) edge node[above] {$17$} (id11);
+					\path [line] (main) edge node[above left] {$16$} (id12);
+					\path [line] (id11) edge node[below right] {$5$} (oid2);
+					\path [line] (id12) edge node[above] {$5$} (oid2);
+					\path [line] (main) edge node[below left] {$18$} (m);
+					\path [line] (m) edge node[above] {$7$} (nid1);
+					\path [line] (m) edge node[below left] {$8$} (nid2);				
+					\end{tikzpicture}
+				}
+			\end{center}
+			\vspace{5pt}
+			\caption{\small $1$-CFA with $\Tcall = \emptyset$}
+			\label{fig:CFA:callgraph}
+		\end{subfigure}
+		\vfill\null
+		\columnbreak
+		\begin{subfigure}[b]{1\columnwidth}
+			\begin{center}
+				\resizebox{1\columnwidth}{!}{
+					\begin{tikzpicture}
+					\tikzstyle{every node}=[font=\LARGE]
+					\node [block] (main) {\tt {main}\\$[\cdot]$};
+					\node [block, right = 0.7cm of main] (id11) {\tt {id1}\\$[17]$};
+					\node [block, above = 0.4cm of id11] (id12) {\tt {id1}\\$[16]$};
+					
+					\node [block, right=0.6cm of id11] (oid1) {\tt {id}\\$[17]$};
+					\node [block, right=0.6cm of id12] (oid2) {\tt {id}\\$[16]$};
+					
+					\node [block, below = 0.4cm of id11] (m) {\tt {m}\\$[18]$};
+					
+					\node [block, right=0.6cm of m] (nid) {\tt {id}\\$[18]$};
+					
+					
+					\path [line] (main) edge node[above] {$17$} (id11);
+					\path [line] (main) edge node[above left] {$16$} (id12);
+					\path [line] (id11) edge node[above] {$5$} (oid1);
+					\path [line] (id12) edge node[above] {$5$} (oid2);
+					\path [line] (main) edge node[below left] {$18$} (m);
+					\path [line] (m) edge [bend left=20]  node[above] {$7$} (nid);
+					\path [line] (m) edge [bend right=20]  node[below] {$8$} (nid);
+					
+					\end{tikzpicture}
+				}			
+			\end{center}
+			%\vspace{-10pt}
+			~\\
+			\vspace{9pt}
+			\caption{\small $1$-CFA with $\Tcall = \myset{5,7,8}$}
+			\label{fig:call:callgraph}
+		\end{subfigure}
+		\vfill\null
+		\columnbreak
+		\begin{subfigure}[b]{1\columnwidth}
+			\begin{center}
+				\resizebox{1\columnwidth}{!}{
+					\begin{tikzpicture}
+					\tikzstyle{every node}=[font=\LARGE]
+					\node [block] (main) {\tt {main}\\$[\cdot]$};
+					\node [block, right = 0.7cm of main] (id11) {\tt {id1}\\$[17]$};
+					\node [block, above = 0.4cm of id11] (id12) {\tt {id1}\\$[16]$};
+					
+					\node [block, right=0.4cm of id11] (oid1) {\tt {id}\\$[17]$};
+					\node [block, right=0.4cm of id12] (oid2) {\tt {id}\\$[16]$};
+					
+					\node [block, below = 0.4cm of id11] (m) {\tt {m}\\$[18]$};
+					
+					\node [block, right=0.4cm of m] (nid1) {\tt {id}\\$[7]$};
+					\node [block, below=0.4cm of nid1] (nid2) {\tt {id}\\$[8]$};
+					
+					
+					\path [line] (main) edge node[above] {$17$} (id11);
+					\path [line] (main) edge node[above left] {$16$} (id12);
+					\path [line] (id11) edge node[above] {$5$} (oid1);
+					\path [line] (id12) edge node[above] {$5$} (oid2);
+					\path [line] (main) edge node[below left] {$18$} (m);
+					\path [line] (m) edge node[above] {$7$} (nid1);
+					\path [line] (m) edge node[below left] {$8$} (nid2);				
+					\end{tikzpicture}
+				}
+			\end{center}
+			\vspace{5pt}
+			\caption{$1$-CFA with $\Tcall = \myset{5}$}
+			\label{fig:opt:callgraph}
+		\end{subfigure}
+		
+	\end{multicols}
+	\vspace{-25pt}
+	\caption{Call-graphs of running example produced by object sensitivity
+		and call-site sensitivity. % From left to right, our context-simulation gradually 
+		% refines call-site-sensitivity's call-graphs so the outcome is more precise than the 
+		% object-sensitivity's one
+              }
+	\label{Fig:Simulation}
+			\vspace{-12pt}
+\end{figure*}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

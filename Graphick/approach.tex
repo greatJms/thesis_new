@@ -1,0 +1,598 @@
+% !TEX root = ./paper.tex
+
+%\clearpage
+
+\section{\textsc{Graphick}}\label{sec:approach}
+
+Now, we present our approach for automatically learning graph-based analysis heuristics.
+In Section~\ref{sec:setting}, we define static analyses with $k$-limited abstractions.
+Section~\ref{sec:feat-language} presents a feature description language for directed graphs, which is important for the generality and effectiveness of our approach.
+In Section~\ref{sec:param-heuristic}, we define a parameterized abstraction heuristic based on the feature language.
+Section~\ref{sec:learning-algorithm} presents our algorithm for learning parameters of the heuristic.
+
+\subsection{Static Analyses with $k$-limited Abstractions}\label{sec:setting}
+
+Let us first model a static analysis with $k$-limited abstractions.
+Given a program $P$ to analyze, let $\component_P$ be a finite set of program components in $P$.
+For example, $\component_P$ may denote the set of methods~\cite{JeJeChOh17} or the set of allocation sites~\cite{Tan2017} in $P$.
+We define $\mca_P$ to be the set of abstractions over $\component_P$ as follows:
+\[
+\abs \in \mca_P = \component_P \to  \{0,1,\dots,k\}.
+\]
+An abstraction $\abs \in \mca_P$ maps program components to natural numbers between $0$ and $k$.
+For example, in a partially context-sensitive analysis, it assigns one of $0,1,\dots, k$ to each method call,
+indicating the amount of context sensitivity that each method is allowed to receive during the analysis.
+Abstractions are partially ordered as follows:
+\[
+\abs_1 \sqsubseteq \abs_2 \iff \forall \comp \in \component_P.\; \abs_1(\comp) \le \abs_2(\comp).
+\]
+We write $\absk$ and $\absz$ for the most precise and least precise abstractions, respectively:
+\[
+\absk = \lambda \comp \in \component_P.\; k, \qquad
+\absz = \lambda \comp \in \component_P.\; 0
+\]
+
+We assume that a set $\mbq_P$ of assertions is given together with the program $P$. For instance, $\mbq_P$ may denote the set of all type casts in the program. The goal of static analysis is to prove that assertions in $\mbq_P$ do not fail at runtime.
+We model a static analyzer as a function that takes as input an abstraction and
+produces a set of proved queries and, as a by-product, a directed graph over program components:
+\[
+F_P: \mca_P \to \power{\mbq_P}\times \mbg_P
+\]
+where $\mbg_P$ denotes the set of possible graphs. A graph $G = (N,\edges) \in \mbg_P$ consists of nodes $N = \component_P$ and edges $(\edges) \subseteq \component_P \times \component_P$.
+For example, $G$ is the object allocation graph~\cite{Li2018b} or the field points-to graph~\cite{Tan2017} depending on the purpose of the analysis.
+We use two projection functions, $\projproved$ and
+$\projgraph$, which are used for obtaining the proven queries and the graph, respectively, from the analysis output.
+
+In this paper, we generally assume  the analysis $F_P$ is monotone with respect to the abstractions in the sense that more refined abstractions imply higher analysis precision:
+\begin{equation}\label{eq:mono}
+\abs \sqsubseteq \abs' \implies \projproved(F_P(\abs)) \subseteq {\projproved}(F_P(\abs')).
+\end{equation}
+Many static analysis problems are monotone~\cite{JeJeChOh17,Liang2011learning,Liang2011,Zhang2014,Li2018a,Tan2017} and therefore our approach is directly applicable to them. For non-monotone analyses (e.g. interval analysis with widening~\cite{cha2016learning}), our approach is still applicable in practice but it does not guarantee its theoretical property (Theorem~\ref{THM:REDUCESPACE}).
+
+\subsection{Feature Description Language}\label{sec:feat-language}
+
+Our approach uses a simple and general language for describing properties of nodes in a graph.
+
+\myparagraph{Observation}
+
+
+Our feature language has been inspired from existing graph-based heuristics.
+Existing works~\cite{Li2018a,Li2018b,TanLX16} have demonstrated that the number of incoming and outgoing edges of nodes in
+graphs play key roles in designing analysis heuristics.
+For example, \cite{Li2018a} identify precision-critical method calls
+by figuring out the nodes with multiple incoming edges in precision flow graph (PFG).
+%whose nodes represent variables and heaps of programs.
+%In the main analysis, \cite{Li2018a} analyze these identified methods context-sensitively
+%while the others are analyzed context-insensitively.
+Besides the PFG, the number of incoming edges in object allocation graph (OAG) also helps to design
+effective analysis heuristics, which is used by both \cite{TanLX16}~and \cite{Li2018b}.
+The conventional 2-object-sensitive analysis produces only one heap context for objects when they have only one incoming edge in OAG.
+\cite{TanLX16}, however, design an analysis heuristic which assigns alternative multiple heap contexts to these objects for improving precision.
+When an object has lots of incoming edges, multiple contexts are applied to the methods called from the object in 2-object-sensitive analysis.
+These methods are critical for scalability in pointer analysis, and~\cite{Li2018b} identify these methods to apply alternatively coarse yet cheap contexts to improve the performance in scalability.
+Based on these observations,
+we designed a feature language that can express various combinations of the number of edges around nodes, successors, and predecessors.
+
+\myparagraph{Formal Definition}
+Let $G=(N, \edges)$ be a directed graph over program components, i.e., $N = \component_P$ and $(\edges) \subseteq \component_P \times \component_P$.
+Let $\incoming_G(n)$ and $\outgoing_G(n)$ be the numbers of incoming and outgoing edges, respectively, of node $n$ in graph $G$:
+\[
+\incoming_{G}(n) = |\myset{ p \in N \mid p \edges n }|, \qquad \outgoing_{G}(n) = |\myset{s \in N \mid n \edges s}|.
+\]
+
+A {\em feature} in our language denotes a set of nodes. We define a feature $f$ to be a triple:
+\[
+\feature \in \Feature = \aNode^* \times \aNode \times \aNode^*
+\]
+where $\aNode$ means abstract nodes:
+\[
+\begin{array}{rcl}
+\myhat{n}, \myhat{p}, \myhat{s} \in \aNode &=& \Itv \times \Itv \\
+\Itv &=& \myset{[a,b] \mid a \in \mbn, b \in \mbn \cup \myset{\infty}}
+\end{array}
+\]
+An abstract node $([a,b], [c,d]) \in \aNode$ is a pair of intervals and denotes a set of nodes as follows:
+\[
+\gamma_G(([a,b], [c,d])) = \myset{n \in N \mid a \le \incoming_G(n) \le b, c \le \outgoing_G(n) \le d}.
+\]
+We extend the definition to a sequence of abstract nodes ($\aNode^*$).
+The empty sequence $\epsilon$ denotes the empty set of nodes.
+A non-empty sequence $\seq{(\itv_0, \itv'_0), (\itv_1, \itv'_1), \dots, (\itv_m, \itv'_m)}$
+of pairs of intervals denotes sequences of nodes as follows:
+\[
+\begin{array}{l}
+\gamma_G(\seq{(\itv_0, \itv'_0),(\itv_1, \itv'_1),\cdots, (\itv_m, \itv'_m)}) = \\
+\qquad\qquad \myset{\seq{n_0,n_1,\dots,n_m} \in N^* \mid n_0 \edges n_1 \edges \cdots \edges n_m, \forall i \in [0,m].\; n_i \in \gamma_G((\itv_i, \itv'_i))}.
+\end{array}
+\]
+Finally, a feature  $(\seq{\myhat{p}_0,\myhat{p}_1,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\myhat{s}_1,\dots,\myhat{s}_r}) \in \Feature$
+ denotes a set of nodes in $\gamma_G(\myhat{n})$ whose predecessors and successors are described as
+$\seq{\myhat{p}_0,\myhat{p}_1,\dots,\myhat{p}_q}$ and $\seq{\myhat{s}_0,\myhat{s}_1,\dots,\myhat{s}_r}$, respectively:
+\[
+\begin{array}{l}
+ \gamma_G(\seq{\myhat{p}_0,\myhat{p}_1,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\myhat{s}_1,\dots,\myhat{s}_r}) =  \{ n \in \gamma_G(\myhat{n}) \mid
+\exists p_0,p_1,\dots,p_q, s_0,s_1,\dots,s_r \in N.\; \\
+\qquad
+\seq{p_0,p_1,\dots,p_q} \in \gamma_G(\seq{\myhat{p}_1,\myhat{p}_2,\dots,\myhat{p}_q}), p_q \edges n \edges s_0,
+\seq{s_0,s_1,\dots,s_r} \in \gamma_G(\seq{\myhat{s}_1,\myhat{s}_2,\dots,\myhat{s}_r}).
+\}
+\end{array}
+\]
+
+%\[
+%(\epsilon, ([0,3],[1,\infty]), \seq{([1,2],[1,1])})
+%\]
+
+For example, feature $(\epsilon,([0,3],[5,\infty]), \seq{([0,2],[0,0])} )$ describes the set of nodes that have 1) three or less incoming edges and five or more outgoing edges, and 2) a successor node with two or less incoming edges and no outgoing edges.
+For another example, the following feature
+\[
+(\seq{([0,0],[0,5]), ([1,2], [3,\infty])}, ([0,3], [100,\infty), \seq{([1,1], [2,2])})
+\]
+describes a node $n$ iff 1) $n$ has three or less incoming edges and 100 or more outgoing edges, 2) $n$ has a predecessor $p$  with one or two incoming edges and three or more outgoing edges,  3) $p$ also has a predecessor with no incoming edge and five or less outgoing edges, and 4) $n$ has a successor $s$ with a single incoming edge and two outgoing edges.
+
+
+\subsection{Parameterized Abstraction Heuristic}\label{sec:param-heuristic}
+
+In our approach, abstraction heuristics work on a graph over program components.
+That is, a heuristic $\heuristic$ is a function that takes a graph $G$ for program $P$ and produces an abstraction of $P$:
+\[
+\heuristic(G): \mbc_P \to \{0,1,\dots,k\}.
+\]
+The graph $G$ is typically obtained by running an imprecise but fast pre-analysis~\cite{TanLX16,Li2018b,Tan2017,Lu2019}. For example,
+it can be obtained by running the analysis $F_P$ with the least precise abstraction:
+\[
+G = \projgraph(F_P(\absz)).
+\]
+
+We define a {\em template} of such heuristics whose behavior is controlled by $k$ parameters $\params = \myvec{\Feat_1, \Feat_2, \dots, \Feat_k}$, where each parameter $\Feat_i \subseteq {\Feature}$ is a set of features in our language.
+We define the parameterized heuristic $\heuristic_\params$ as follows:
+\[
+\heuristic_{\params} (G) = \lambda c \in \mbc_P.\; \left\{
+\begin{array}{rcl}
+k & & \mbox{if}~c \in \gamma_G(\Feat_k) \\
+k-1 & & \mbox{if}~c \in \gamma_G(\Feat_{k-1}) \land c \not\in \gamma_G(\Feat_k) \\
+& \cdots& \\
+k- i & & \mbox{if}~c \in \gamma_G({\Feat_{k-i}}) \land c \not\in \bigcup_{k \ge j > k-i}  \gamma_G({\Feat_j}) \\
+& \cdots & \\
+1 & & \mbox{if}~c \in \gamma_G(\Feat_1) \land c\not\in \bigcup_{k \ge j > 1}\gamma_G(\Feat_j) \\
+0 & & \mbox{otherwise}
+\end{array}
+\right.
+\]
+where $\gamma_G(\Feat_i) = \bigcup_{f \in \Feat_i} \gamma_G(f)$.
+Basically, the heuristic $\heuristic_{\params}$ assigns an abstraction degree $j$ to program component $c$ if $c$ is implied by the $j^{\it th}$ parameter $\Feat_j$. If $c$ is implied by multiple parameters, the heuristic assigns the highest abstraction degree among them. For example,  when $c \in \Feat_1$ and $c \in \Feat_2$, we define $\heuristic_{\params}(G)(c) = 2$.
+
+
+
+
+
+
+\subsection{Learning Algorithm}\label{sec:learning-algorithm}
+
+Now we present an algorithm for learning parameters $\params = \myvec{\Feat_1, \Feat_2, \dots, \Feat_k}$ from a set $\vec{P} = \myset{P_1, P_2, \dots, P_n}$ of training programs.
+
+\myparagraph{Overall  Process}
+Algorithm~\ref{alg:overall-algorithm} describes the overall learning process.
+The algorithm takes training programs $\vec{P}$, static analyzer $F$, and the maximum abstraction degree $k$. As output, it produces $k$ parameters $\params = \myvec{\Feat_1, \Feat_2, \dots, \Feat_{k}}$.
+%The process consists of computing minimal abstractions for each training program and generating features that best fit them.
+Initially, parameters $\params$ are set to empty sets $\myvec{\emptyset,\emptyset,\dots,\emptyset}$ (line 2).
+At line 3, the algorithm computes a map $A_\vec{P}$ from programs in $\vec{P}$ to their {\em ideal} abstractions.
+For each training program $P_i \in \vec{P}$, $A_\vec{P}(P_i)$ denotes the desired abstraction for $P_i$ that we want our heuristic to produce for $P_i$.
+The ideal abstraction is computed by procedure $\LearnMinimalAbstraction$, which is explained shortly.
+At line 4, we run a pre-analysis (e.g. $F_P(\absz)$) to transform each training program $P$ into its graph representation:
+ $G_\vec{P}$ is a map from programs in $\vec{P}$ to their graph representations.
+At lines 5 and 6, the algorithm
+uses procedure $\LearnSetOfFeatures$ to learn each parameter $\Feat_i~(1 \le i \le k)$, which denotes the set of nodes in the graphs in $G_\vec{P}$ that should receive the abstraction degree $i$.
+Although $\Feat_i$ is obtained iteratively,
+there is no dependency between loop iterations and therefore the $k$ different tasks at lines 5 and 6 can be run in parallel to reduce the learning cost.
+At line 8, the learned parameters $\myvec{\Feat_1, \Feat_2,\dots, \Feat_k}$ are returned as final output.
+
+\begin{algorithm}[t]
+	\caption{Overall learning algorithm}\label{alg:overall-algorithm}
+	\begin{algorithmic}[1]
+		\Require Training programs $\vec{P}$, static analyzer $F$, maximum abstraction degree $k$
+		\Ensure Parameters $\myvec{\Feat_1,\Feat_2,\dots,\Feat_k}$
+		\Procedure{Learn}{$\vec{P}, F, k$}
+		\State
+		$\myvec{\Feat_1,\Feat_2,\dots,\Feat_k} \gets \myvec{\emptyset,\emptyset,\dots,\emptyset}$
+		\State
+		$A_\vec{P} \gets \lambda P \in \vec{P}. {\LearnMinimalAbstraction}(P,F,k)$ \Comment{minimal abstractions}
+		\State
+		$G_\vec{P} \gets \lambda P\in \vec{P}.{\projgraph}(F_P(\absz))$ \Comment{graphs from pre-analysis}
+		\For{$i=1$ to $k$}
+		\State
+			$\Feat_i \gets \LearnSetOfFeatures(i,A_\vec{P},G_\vec{P})$
+		\EndFor
+		\State \Return $\myvec{\Feat_1,\Feat_2,\dots,\Feat_k}$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[t]
+	\caption{Learning minimal abstraction}\label{alg:Learnminimal}
+	\begin{algorithmic}[1]
+		\Require Program $P$, static analyzer $F$, maximum abstraction degree $k$
+		\Ensure A minimal abstraction for $P$
+		\Procedure{\LearnMinimalAbstraction}{$P,F,k$}
+		\State
+		$C \gets \component_{P}$
+		\State
+		$\abs \gets \lambda c. k$
+		\For{$i=k$ to 1}
+		\State
+		$C' \gets C$
+		\While {$C' \neq \emptyset$}
+			\State
+			$c' \gets pick(C')$
+			\State
+			$C' \gets C' \setminus \{c'\}$
+			\State
+			$\abs' \gets \lambda c. {\it if}~c=c'~{\it then}~i-1~{\it else}~\abs(c)$
+			\If {${\projproved}(F_P(\absk)) = {\projproved}(F_P(\abs'))$}
+				\State
+				$\abs \gets \abs'$
+			\EndIf
+		\EndWhile
+		\State
+		$C \gets C \setminus \{c \mid \abs(c) = i\}$
+		\EndFor
+		\State \Return $\abs$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+\myparagraph{Learning Minimal Abstraction}
+
+
+The objective of learning is to find a set of parameters $\params=\myvec{\Feat_1,\Feat_2, \dots, \Feat_k}$ with which the heuristic $\heuristic_\params$ can produce ideal abstractions for training programs.
+We define ideal abstractions to be minimal abstractions~\cite{Liang2011learning} and therefore the learning objective is as follows:
+\[
+\mbox{Find $\params = \myvec{\Feat_1, \Feat_2,\dots,\Feat_k}$
+ such that $\forall P_i \in \vec{P}. \heuristic_\params(G_i)$ is a minimal abstraction for $P_i$.}
+\]
+where $G_i$ is a graph obtained by running a pre-analysis on $P_i$ (e.g. $G_i = \projgraph(F_{P_i}(\absz))$).
+The definition of minimal abstractions is as follows:
+\begin{definition}[Minimal Abstraction~\cite{Liang2011learning} ]\label{def:minimalAbs}
+An abstraction $\abs$ is a minimal abstraction for program $P$ if
+\begin{enumerate}
+\item $\abs$ is precise: ${\projproved}(F_P(\abs)) = {
+    \projproved}(F_P(\absk))$, and
+\item $\abs$ is minimal: $(\abs'\sqsubseteq \abs \land {\projproved}(F_P(\abs')) = {
+    \projproved}(F_P(\abs))) \implies \abs' = \abs$.
+\end{enumerate}
+\end{definition}
+
+
+
+
+Algorithm~\ref{alg:Learnminimal} presents our algorithm for efficiently computing a minimal abstraction for program $P$.
+Our algorithm is similar to the \textsc{ScanCoarsen} algorithm by~\cite{Liang2011learning}, but ours is more efficient than the prior algorithm as we exploit the high-level structure of $k$-limited abstractions to reduce the search space.
+The algorithm by \cite{Liang2011learning} first transforms $k$-limited abstractions into binary abstractions (where $k$ is 1), losing the opportunity to leverage the properties of the search space induced by monotone $k$-limited analyses.
+As a result, the size of search space is $(k+1)^{|\mbc_P|}$ for the existing algorithm~\cite{Liang2011learning}.
+%We safely reduce the space to $k\cdot |\mbc_P|$.
+We safely reduce the space to $k\cdot 2^{|\mbc_P|}$.
+
+
+At line 2, we set $C$ to all program components $\component_P$.
+%Searching minimal abstractions over the codebases $\vec{P}$ poses a huge search space
+%%$(k+1)^C$ where $C$ presents all program components in the codebases.
+%$(k+1)^C$ where $C$ presents all program components in $\vec{P}$.
+%%Our algorithm reduces the search space into $k*C$ while guarantees to find minimal abstractions.
+%Our algorithm reduces the search space into $k*C$ but guarantees to find minimal abstractions.
+%At line 2, $C_i$ gets all the program components.
+The algorithm begins with the most precise abstraction (line 3).
+%$A_\vec{P}$ starts from the most precise one; it always assigns $k$.
+At lines 4--15, it considers each of the abstraction degrees $1, 2, \dots, k$ in reverse.
+Iterating the abstraction degrees in reverse (from $k$ to $1$) is important to reduce the search space safely.
+%it searches for the components that requires $i$ degree,
+%where $i$ is equal to $k$ at a start point and decreases as the loop iterates.
+%$i$ start from the biggest one $k$ and it decreases over the iterations.
+%In the first iteration, it finds program component that need $k$ abstraction degree.
+At lines 6--13, it iteratively picks a program component (line 7) and assigns the lower abstraction degree $i-1$ to it (line 9).
+%At line 10, the algorithm checks if the refined abstraction still preserves the precision.
+%If it is, the algorithm finds that the program component needs a lower abstraction degree.
+At line 10, the algorithm checks if the refined abstraction still preserves the precision;
+if so, the lower abstraction degree is sufficient for that program component.
+%If it loses precision, it finds that the component need $k$.
+Otherwise, the program component needs the degree $i$ to preserve the precision.
+At the end of the iteration (line 14), we exclude from $C$ the program components that are determined to require the current degree $i$ (i.e. $\myset{c \mid \abs(c) = i}$).
+%it subtracts the components from $C_i$.
+%The algorithm ends after it learns program components that need $1$.
+%It assigns $0$ to the remaining ones.
+In the worst case (when the minimal abstraction is $\lambda c.0$), our algorithm iterates
+$k\cdot |C|$ times where the search space for each degree $i$ is
+$2^C$ and we have $k$ different degrees.
+Although the algorithm considers a significantly smaller search space than the original one, it still
+guarantees to find a minimal abstraction:
+\begin{theorem}\label{THM:REDUCESPACE}
+%The abstraction $A_\vec{P}$ returned from
+Algorithm~\ref{alg:Learnminimal} returns a minimal abstraction for the input program $P$.
+\end{theorem}
+\begin{proof}
+See Appendix~\ref{sec:proof}.
+\end{proof}
+
+%Our algorithm can be considered as a generalized version of \textsc{ScanCoarsen} by~\cite{Liang2011learning}; the prior algorithm corresponds to a special case of our algorithm when $k$ is 1.
+
+%Our algorithm is a generalized one from~\cite{Liang2011learning}.
+%Our algorithm is a generalized version of~\cite{Liang2011learning}.
+%The prior algorithm corresponds to a special case of our algorithm that
+%$i$ is $1$ because it considers binary abstractions which assigns either
+%0 or 1 to each program component.
+%%Our one, however, is generalized to
+%Ours, however, is generalized to find a minimal abstraction where an abstraction assign $0~k$ to each
+%program component.
+
+%\newpage
+\begin{algorithm}[t]
+	\caption{Learning a set of features}\label{alg:learnFeatures}%\small
+	\begin{algorithmic}[1]
+		\Require Abstraction level $i$, minimal abstractions $A_\vec{P}$, graphs $G_\vec{P}$
+		\Ensure A set $\Feat$ of features
+		\Procedure{\LearnSetOfFeatures}{$i,A_\vec{P},G_\vec{P}$}
+		\State
+		$C \gets \{c \mid P \in \vec{P}, c \in \component_P, A_\vec{P}(P)(c) = i\}$
+		\State
+		$\Feat \gets \emptyset$
+                \While {$C \not = \emptyset $}
+                \State $\feature \gets {\LearnFeature}(C,G_\vec{P})$ %\Comment Learn abstract graph
+                \State $\Feat \gets \Feat \cup \myset{\feature}$
+                \State $C \gets C \setminus  \{c \mid P\in\vec{P}, c\in \component_P, c \in \gamma_{G_\vec{P}(P)}(f) \}$
+                \EndWhile
+                \State \Return $\Feat$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+%
+%
+%\begin{algorithm}
+%	\caption{Learning a feature}\label{alg:learnFeature}%\small
+%	\begin{algorithmic}[1]
+%		\Require Program components $C$, graphs $G_\vec{P}$
+%		\Ensure A feature $\feature$
+%
+%				\Procedure{\LearnFeature}{$C,G_\vec{P}$}
+%		\State
+%		$\feature \gets
+%				(\epsilon,([0,\infty],[0,\infty]),\epsilon)$
+%
+%		\While{$ (\Score(\feature,C) < \gamma$}
+%		\State $\feature' \gets \Refine(\feature,G_\vec{P},C)$
+%		\If {$ (\Score(\feature',C) > \Score(\feature,C)$)}
+%		\State	$\feature \gets \feature'$
+%		\Else
+%		\State {\bf break}
+%		\EndIf
+%%		\If {$\Score(\feature',C) \ge \gamma$}
+%%		\State
+%%			\Return $\feature'$
+%%		\EndIf
+%%		\State
+%%		$\feature' \gets \Refine(\feature,G_\vec{P}, C)$
+%%                % \If {$( \Score(\feature',C_i) \ge \gamma$}
+%%                % \State
+%%                % \Return $\feature'$
+%%                %\EndIf
+%		\EndWhile
+%		\State \Return $\feature$
+%		\EndProcedure
+%
+%	\end{algorithmic}
+%\end{algorithm}
+
+\algdef{SE}[DOWHILE]{Do}{doWhile}{\algorithmicdo}[1]{\algorithmicwhile\ #1}%
+%Ver. 2
+\begin{algorithm}[t]
+	\caption{Learning a feature}\label{alg:learnFeature}\small
+	\begin{algorithmic}[1]
+		\Require Program components $C$, graphs $G_\vec{P}$
+		\Ensure A feature $\feature$
+		\Procedure{LearnFeature}{$C,G_\vec{P}$}
+		\State
+		$\feature \gets
+				(\epsilon,([0,\infty],[0,\infty]),\epsilon)$
+		\State
+		$\feature' \gets
+				(\epsilon,([0,\infty],[0,\infty]),\epsilon)$
+		\Do
+		\State
+		$\feature \gets \feature'$
+		\State
+		$\feature' \gets \Refine(\feature, C)$
+		\If{$\Score(\feature',C) \ge \hyper$}
+			\State
+			\Return $\feature'$
+		\EndIf
+		\doWhile{$ \Score(\feature',C) > \Score(\feature,C)$}
+		
+		\State \Return $\feature$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+\myparagraph{Learning a Set of Features}
+Algorithm~\ref{alg:learnFeatures} describes the algorithm for learning a set of features.
+It takes the abstraction level $i$, minimal abstractions $A_\vec{P}$, and graphs $G_\vec{P}$ as input.
+It returns as output a set of features $\Feat$ that best describe the nodes assigned the abstraction level $i$ according to minimal abstractions in $A_{\vec{P}}$.
+%Thereby, the returned features can cover the components that are assigned the degree $i$:\TODO{Revise}
+%\[ \forall P\in\vec{P}. \{c \mid P \in \vec{P}, c \in \component_P, A_\vec{P}(P)(c) = i\}
+%\subseteq \{ c \mid P\in \vec{P}, c\in \component_P, c \in \hyper_{G_\vec{P}(P)}(\Feat) \}.
+%\]
+At line 2, it collects all program components $C$ (e.g. nodes) whose abstraction degrees are $i$ according to minimal abstractions.
+At line 3, it initializes $\Feat$  to be the empty set.
+At lines 4--8, the algorithm iteratively calls ${\LearnFeature}$ to generate a feature.
+The algorithm adds the generated features to $\Feat$ until the
+features cover all program components, and returns $\Feat$ as learned features when $\Feat$ does so.
+
+
+
+
+\myparagraph{Learning a Feature}\label{sec:gamma}
+Algorithm~\ref{alg:learnFeature} presents how each feature $\feature$ in $\Feat$ is learned.
+%${\textsc LearnFeature}$ takes oracle components $C$ and graphs $G_\vec{P}$.
+%It tries to generates a feature $\feature$ that maximizes the following function:
+${\LearnFeature}$ takes as input components $C$ and graphs $G_\vec{P}$,
+and aims to generate a feature $\feature$ that maximizes the following score function:
+\[
+\Score (\feature,C) = {\sum_{P\in\vec{P}} |C \cap \gamma_{G_\vec{P}(P)}({\feature})  | \over
+  \sum_{P\in\vec{P}} |\gamma_{G_\vec{P}(P)}(\feature) |}
+\]
+where the score is a real number between 0 and 1.
+%Intuitively, it is a score function of a feature $\feature$.
+%If a feature $\feature$ accurately selects component in oracle that $\sum_{P\in\vec{P}}\sem{\feature}_{G_\vec{P} (P)}$ belongs to $C$,
+%the score become the highest one 1.
+Intuitively, the score describes how accurately a feature describes the program components in $C$.
+For example, the score becomes the highest value 1
+when
+$\forall{P \in \vec{P}}.\; \gamma_{G_{\vec{P}}(P)}(f) \subseteq C$.
+%Collecting qualified feature make the learned parameter
+%$\params = \myvec{\Feat_1, \Feat_2,\dots,\Feat_k}$ satisfy the learning objective.
+%The score decreases when the feature selects components which are not in $C$.
+The score decreases as the feature selects components not in $C$.
+
+The algorithm starts from the most general feature, i.e., $(\epsilon,([0,\infty],[0,\infty]),\epsilon)$, and
+iteratively refines it until the feature becomes sufficiently informative, meaning that the score of the refined feature becomes higher than the hyper parameter $\hyper$.
+The value of $\hyper$ has great impacts on the performance of learned heuristics, and
+we discuss how we determine the value of $\hyper$ in Section~\ref{sec:hyper_param}.
+%as all nodes in any graphs belong to this feature.
+%$(\epsilon,([0,\infty],[0,\infty]),\epsilon)$ is the most general feature as all the nodes in any graph belong to it.
+At lines 4--10, the algorithm iteratively calls $\Refine$ to make the current feature $\feature$ more specific.
+When no more improvement is possible (i.e. $\Score(f', C) \le \Score(f,C)$), the loop terminates and the algorithm returns the current feature $f$.
+We define the refinement function $\Refine$ as follows:
+\[
+\Refine(\feature,C) =
+\argmax_{f' \in \Append(f) \cup \Replace(f)}
+\Score(\feature',C)
+\]
+where $\Append(\feature)$ and $\Replace(\feature)$ produce new features that are more specific than $\feature$.
+From the set of new features, $\Refine$ chooses the one with the highest score.
+$\Append(\feature)$ denotes the features that are obtained by appending an abstract node to $\feature$:
+\begin{multline*}
+	\Append((\seq{\myhat{p}_0,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\dots,\myhat{s}_r})) =\\
+	\myset{(\seq{\myhat{a}', \myhat{p}_0,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\dots,\myhat{s}_r}), (\seq{\myhat{p}_0,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\dots,\myhat{s}_r,\myhat{a}'}) \mid\\ \myhat{a}' \in \Specify(([0,\infty],[0,\infty])) }
+\end{multline*}
+where the function $\Specify$ denotes a strategy for making a feature more specific.
+In experiments, we used the following strategy:
+\[
+\begin{array}{l}
+\Specify(([a,b],[c,d])) =
+\myset{
+([\frac{a+b}{2},b],[c,d]),
+([a,\frac{a+b}{2}],[c,d]),
+([a,b],[\frac{c+d}{2},d]),
+([a,b],[c,\frac{c+d}{2}])
+}
+\end{array}
+\]
+where, if $b$ (resp., $d$) equals to $\infty$, it is replaced by the maximum number of incoming (resp., outgoing) edges in the training graphs ($G_\vec{P}$).
+
+The definition of $\Specify$ is a design choice.
+For example, we can consider the following definition for $\Specify$:
+\begin{multline*}
+\Specify(([a,b],[c,d])) = \\
+\myset{
+([\mbox{{\it a+$\frac{b-a}{3}$}},b ],[c,d]),
+([a,\mbox{{\it b-$\frac{b-a}{3}$}}],[c,d]),
+([a,b],[\mbox{{\it c+$\frac{d-c}{3}$}},d ]),
+([a,b],[c,\mbox{{\it d-$\frac{d-c}{3}$}} ])
+}.
+\end{multline*}
+With the above definition, we can still find desirable features for the training set.
+It, however, takes more iterations to obtain such features because it specifies the interval value of features more carefully than the one we used.
+%[{{\it $a$+$\frac{b-a}{3}$}},$b$ ] and [$a$,{{\it $b$-$\frac{b-a}{3}$}}]
+%It is a more careful than the one we used because [{{\it $a$+$\frac{b-a}{3}$}},$b$ ] and [$a$,{{\it $b$-$\frac{b-a}{3}$}}] are more general %intervals than $[\frac{a+b}{2},b]$ and $[a,\frac{a+b}{2}]$, respectively.
+%Using this $\Specify$, we can also find qualified features for the training set, but it needs more iterations to produce such features.
+%Thus, we choose $\Specify$ with the intervals $[\frac{a+b}{2},b]$ and $[a,\frac{a+b}{2}]$ to minimize the learning cost.
+
+On the other hand, $\Replace(\feature)$ denotes the features that are obtained by replacing one of the abstract nodes in $\feature$ by more specific ones:
+\[
+\begin{array}{l}
+\Replace((\seq{\myhat{p}_0,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\dots,\myhat{s}_r})) =\\
+\qquad
+\begin{array}{l@{~}l}
+& \myset{(\seq{ \myhat{p}_0,\dots,\myhat{p}_q}, \myhat{n}', \seq{\myhat{s}_0,\dots,\myhat{s}_r}) \mid \myhat{n}' \in \Specify(\myhat{n}) } \\
+ \cup&\myset{(\seq{ \myhat{p}'_0,\dots,\myhat{p}'_q}, \myhat{n}, \seq{\myhat{s}_0,\dots,\myhat{s}_r}) \mid
+j \in [0,q], \myhat{p}'_j \in \Specify(\myhat{p}_j), \forall i \not= j.\; \myhat{p}'_j = \myhat{p}_j} \\
+\cup & \myset{(\seq{ \myhat{p}_0,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}'_0,\dots,\myhat{s}'_r}) \mid
+j \in [0,r], \myhat{s}'_j \in \Specify(\myhat{s}_j), \forall i \not= j.\; \myhat{s}'_j = \myhat{s}_j}
+\end{array}
+\end{array}
+\]
+
+\myparagraph{Example}
+With an example, we explain how an actual feature used in our evaluation (Section~\ref{sec:eval_heap}) is generated where $\hyper$ is 0.5.
+\begin{enumerate}
+\item Our algorithm starts from the most general feature $f$:
+\begin{center}
+\resizebox{0.18\columnwidth}{!}{
+	\begin{tikzpicture}
+	\node [block3,fill = gray] (n2) {{\tt\Large [0,$\infty$],[0,$\infty$]}};
+	\end{tikzpicture}
+	}.
+\end{center}
+\item It enumerates 12 cases of refined features from $f = (\epsilon,([0,\infty],[0,\infty]),\epsilon)$ (e.g., 8 cases of \Append($f$) and 4 cases of \Replace($f$)).
+It chooses the following feature produced from \Replace($f$):
+\begin{center}
+\resizebox{0.18\columnwidth}{!}{
+	\begin{tikzpicture}
+	\node [block3,fill = gray] (n2) {{\tt\Large [0,97],[0,$\infty$]}};
+	\end{tikzpicture}}
+\end{center}
+ which has the highest score 0.06 among the 12 cases of features.
+\item Because the score is less than $0.5$,
+it refines the feature again to the following specific one, which comes from $\Append(\epsilon,([0,97],[0,\infty]),\epsilon),$ with the same manner:
+\begin{center}
+\resizebox{0.4\columnwidth}{!}{
+	\begin{tikzpicture}
+	\node [block3,fill = gray] (n2) {{\tt\Large [0,97],[0,$\infty$]}};
+	\node [block3,right = 0.8cm of n2] (n3) {{\tt\Large [97,$\infty$],[0,$\infty$]}};
+	\path [line] (n2) -> (n3);
+	\end{tikzpicture}
+	}
+\end{center}
+where the feature has score 0.23.
+\item To find a better one, it refines the feature further; it enumerates 16 cases of refined features (e.g., 8 cases for replacing and 8 cases for appending a node). The following feature is selected:
+\begin{center}
+\resizebox{0.4\columnwidth}{!}{
+	\begin{tikzpicture}
+	\node [block3,fill = gray] (n2) {{\tt\Large [0,97],[0,$\infty$]}};
+	\node [block4,right = 0.8cm of n2] (n3) {{\tt\Large [97,$\infty$],[140,$\infty$]}};
+	\path [line] (n2) -> (n3);
+	\end{tikzpicture}
+	}
+\end{center}
+where the score is 0.37.
+\item In the next iteration, it finally finds an informative feature which has a score 0.55:
+\begin{center}
+\resizebox{0.4\columnwidth}{!}{
+	\begin{tikzpicture}
+	\node [block3,fill = gray] (n2) {{\tt\Large [0,48],[0,$\infty$]}};
+	\node [block4,right = 0.8cm of n2] (n3) {{\tt\Large [97,$\infty$],[140,$\infty$]}};
+	\path [line] (n2) -> (n3);
+	\end{tikzpicture}
+	}.
+\end{center}
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

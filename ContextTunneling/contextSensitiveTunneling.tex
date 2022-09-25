@@ -1,0 +1,31 @@
+\section{Context sensitive Context Tunneling}
+\begin{comment}
+\begin{figure}
+\begin{multicols}{2}
+\begin{lstlisting}
+0:   Class A{} Class B{}
+1:   Object id1(Object v, int i){
+2:     return v;
+3:   }
+4:   Object id2(Object v, int i){
+5:     return id1(v);
+6:   }
+7:  void main(){
+8:    A a1 = (A)id1(new A());//Q1
+9:    B b1 = (B)id1(new B());//Q2
+10:   A a1 = (A)id2(new A());//Q1
+11:   B b1 = (B)id2(new B());//Q2
+12:   return;}
+\end{lstlisting}
+(a) Example Code\\
+\begin{center}
+
+
+\includegraphics[width=6cm,height=6cm,keepaspectratio]{figures/ctxTunnel.pdf}\\
+(c) Context-sensitive tunneling
+\end{center}
+\end{multicols}
+\caption{Tunneling considering context}
+\label{fig:ExampleCode}
+\end{figure} 
+\end{comment}

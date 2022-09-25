@@ -1,0 +1,137 @@
+
+\begin{figure*}
+\begin{center}
+\begin{subfigure}[t]{\columnwidth}
+%\begin{multicols}{2}
+\centering
+\begin{lstlisting}[multicols=2, xleftmargin=20pt]
+class SyncBox {
+  Box box;
+    SyncBox(Box box) {
+      this.box = box;
+    }
+  Object get() {
+    synchronized(this) {
+      Box b = this.box;
+      Object o = b.get();
+      return o;
+    }
+  }
+}
+class Box {
+  Object item;
+  Box(Object item) {
+    this.item = item;
+  }
+  Object get() {
+    Object it = this.item;
+    return it;
+  }
+}
+void main() {
+  String s1 = new String("A");//S1
+  Box b1 = new Box(s1);//B1
+  SBox sb1 = new SyncBox(b1);//SB1
+  Object o1 = sb1.get();
+
+  String s2 = new String("B");//S2
+  Box b2 = new Box(s2);//B2
+  SBox sb2 = new SyncBox(b2);//SB2
+  Object o2 = sb2.get();
+}
+\end{lstlisting}
+%\end{multicols}
+\caption{Example code}
+\label{fig:unwrappedflow:code}
+\end{subfigure}
+\begin{multicols}{2}
+	\begin{subfigure}[b]{\columnwidth}
+		\begin{center}
+			\resizebox{\columnwidth}{!}{
+				\begin{tikzpicture}
+                                 \tikzstyle{every node}=[font=\Large]
+				\node [block] (main) {\tt {main}\\$[\cdot]$};
+
+				\node [block, left = 1.28cm of main] (D1) {\tt {Box}\\$[$B1$]$};
+				\node [block, below = 0.6cm of D1] (D2) {\tt {Box}\\$[$B2$]$};
+				
+				\node [block, right = 0.4cm of D2] (C1) {\tt {SBox}\\$[$SB1$]$};
+				\node [block, right = 0.4cm of C1] (C2) {\tt {SBox}\\$[$SB2$]$};
+												
+				\node [block2, right=0.4cm of C2] (Cget1) {\tt {SBox.get}\\$[$SB1$]$};
+				\node [block2, above=0.6cm of Cget1] (Cget2) {\tt {SBox.get}\\$[$SB2$]$};
+
+				\node [block2, right=0.4cm of Cget1] (Dget1) {\tt {Box.get}\\$[$B1$]$};
+				\node [block2, right=0.4cm of Cget2] (Dget2) {\tt {Box.get}\\$[$B2$]$};
+
+				
+				\path [line] (main) edge node[above] {$26$} (D1);
+				\path [line] (main) edge node[above] {$31$} (D2);
+				
+				\path [line] (main) edge node[left] {$27$} (C1);
+				\path [line] (main) edge node[right] {$32$} (C2);
+
+				\path [line] (main) edge node[above] {$28$} (Cget1);
+				\path [line] (main) edge node[above] {$33$} (Cget2);
+
+				\path [line] (Cget1) edge node[above] {$9$} (Dget1);
+				\path [line] (Cget2) edge node[above] {$9$} (Dget2);
+
+				
+				\end{tikzpicture}
+			}
+		\end{center}
+		\caption{$1$-object sensitivity with $T_{\it obj}=\emptyset$}
+		\label{fig:unwrappedflow:1obj}
+	\end{subfigure}
+	\vfill\null
+	\columnbreak
+	\begin{subfigure}[b]{\columnwidth}
+		\begin{center}
+			\resizebox{\columnwidth}{!}{
+				\begin{tikzpicture}
+                                 \tikzstyle{every node}=[font=\Large]
+				\node [block] (main) {\tt {main}\\$[\cdot]$};
+				
+				\node [block, left = 1.28cm of main] (D1) {\tt {Box}\\$[26]$};
+				\node [block, below = 0.6cm of D1] (D2) {\tt {Box}\\$[31]$};
+				
+				\node [block, right = 0.4cm of D2] (C1) {\tt {SBox}\\$[27]$};
+				\node [block, right = 0.4cm of C1] (C2) {\tt {SBox}\\$[32]$};
+				
+				\node [block2, right=0.4cm of C2] (Cget1) {\tt {SBox.get}\\$[28]$};
+				\node [block2, above=0.6cm of Cget1] (Cget2) {\tt {SBox.get}\\$[33]$};
+				
+				\node [block2, right=0.4cm of Cget1] (Dget1) {\tt {Box.get}\\$[28]$};
+				\node [block2, right=0.4cm of Cget2] (Dget2) {\tt {Box.get}\\$[33]$};
+				
+				
+				\path [line] (main) edge node[above] {$26$} (D1);
+				\path [line] (main) edge node[above] {$31$} (D2);
+				
+				\path [line] (main) edge node[left] {$27$} (C1);
+				\path [line] (main) edge node[right] {$32$} (C2);
+				
+				\path [line] (main) edge node[above] {$28$} (Cget1);
+				\path [line] (main) edge node[above] {$33$} (Cget2);
+				
+				\path [line] (Cget1) edge node[above] {$9$} (Dget1);
+				\path [line] (Cget2) edge node[above] {$9$} (Dget2);
+				
+
+				
+				\end{tikzpicture}
+			}
+			
+		\end{center}
+		\caption{$1$-call-site sensitivity with $T_{\it call}=\myset{9}$}
+		\label{fig:unwrappedflow:1call}
+	\end{subfigure}
+\end{multicols}
+%\vspace{-20pt}
+\caption{Unwrapped flow pattern~\cite{Li2018a} and call-graphs produced by
+1-object sensitivity and 1-call-site sensitivity with context tunneling. 
+In the call-graphs, \texttt{SBox} denotes \texttt{SyncBox}.}
+\label{fig:unwrappedflow}
+\end{center}
+\end{figure*}

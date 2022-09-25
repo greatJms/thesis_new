@@ -1,0 +1,66 @@
+\clearpage
+\section{Learned Heuristic}
+
+\begin{figure}[t]
+	\begin{center}
+		\resizebox{1\columnwidth}{!}{
+			\begin{tikzpicture}
+			\node [shape=ellipse,draw=black,fill=gray] (src0) {{\tt $(\top, [100,\infty])$}};% Src
+			
+			\node [shape=ellipse,draw=black, below right = 0.4 and -0.6cm of src0] (src1) {{\tt $(\top, [100,\infty])$}};% 1
+			\node [shape=ellipse,draw=black, left = 0.4cm of src1,fill=gray] (this11) {{\tt $(a, b)$}};% 1			
+			\node [onlyText, right = 0.4cm of src1] (text1) {\text{6 combinations}};
+			
+			
+			
+			\node [shape=ellipse,draw=black, below = 0.4cm of this11,fill=gray] (this22) {{\tt $(a_1, b_1)$}};% 1
+			\node [shape=ellipse,draw=black, right = 0.4cm of this22] (this21) {{\tt $(a_2, b_2)$}};% 1
+			\node [shape=ellipse,draw=black, right = 0.4cm of this21] (src2) {{\tt $(\top, [100,\infty])$}};% 1
+			\node [onlyText, right = 0.4cm of src2] (text1) {\text{6 combinations}};
+
+
+			\node [shape=ellipse,draw=black, below = 0.4cm of this22,fill=gray] (this33) {{\tt $(a_1, b_1)$}};% 1
+			\node [shape=ellipse,draw=black, right = 0.4cm of this33] (this32) {{\tt $(a_2, b_2)$}};% 1
+			\node [shape=ellipse,draw=black, right = 0.4cm of this32] (this31) {{\tt $(a_3, b_3)$}};% 1			
+			\node [shape=ellipse,draw=black, right = 0.4cm of this31] (src3) {{\tt $(\top, [100,\infty])$}};% 1
+			\node [onlyText, right = 0.4cm of src3] (text1) {\text{3 combinations}};
+
+
+			\node [shape=ellipse,draw=black, below = 0.4cm of this33,fill=gray] (this44) {{\tt $(a_1, b_1)$}};% 1
+			\node [shape=ellipse,draw=black, right = 0.4cm of this44] (this43) {{\tt $(a_2, b_2)$}};% 1
+			\node [shape=ellipse,draw=black, right = 0.4cm of this43] (this42) {{\tt $(a_3, b_3)$}};% 1			
+			\node [shape=ellipse,draw=black, right = 0.4cm of this42] (this41) {{\tt $(a_4, b_4)$}};% 1			
+			\node [shape=ellipse,draw=black, right = 0.4cm of this41] (src4) {{\tt $(\top, [100,\infty])$}};% 1
+			\node [onlyText, right = 0.4cm of src4] (text1) {\text{1 combinations}};
+						
+			
+%			\node [shape=circle,draw=black, right = 0.4cm of m] (f) {{\tt f}};
+%			\node [shape=circle,draw=black, below = 0.4cm of m] (d) {{\tt d}};
+%			\node [shape=circle,draw=black, below = 0.4cm of f] (h) {{\tt h}};
+%			
+			\path [line] (this11) -- (src1);
+
+			\path [line] (this21) -- (src2);
+			\path [line] (this22) -- (this21);
+
+			\path [line] (this31) -- (src3);
+			\path [line] (this32) -- (this31);
+			\path [line] (this33) -- (this32);			
+
+			\path [line] (this41) -- (src4);
+			\path [line] (this42) -- (this41);
+			\path [line] (this43) -- (this42);
+			\path [line] (this44) -- (this43);
+			
+%			\path [line] (m) edge [bend right=20] (f);
+%			\path [line] (f) edge [bend left=20] (h);
+%			\path [line] (f) edge [bend right=20] (h);
+%			\path [line] (m) edge [bend left=20] (d);
+%			\path [line] (m) edge [bend right=20] (d);
+%			\path [line] (m) edge (d);
+			
+			\end{tikzpicture}
+		}
+	\end{center}
+	\caption{Learned heuristic for heap abstraction}
+\end{figure}~\\

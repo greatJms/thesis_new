@@ -1,0 +1,379 @@
+% !TEX root = ./paper.tex
+
+\section{Evaluation}
+In this section, we experimentally evaluate our technique for learning graph-based heuristics.
+We aim to answer the following research questions:
+
+\begin{itemize}
+\item {\bf Effectiveness and Generality:}
+How effectively does the learned heuristic perform compared to the state-of-the-art heuristics?
+Is it generally applicable for different analysis tasks without manual effort for designing application-specific features?
+
+\item {\bf Learning Algorithm:}
+How much does the learning cost?
+How does the hyper-parameter $\hyper$ affect the performance of the learned heuristics?
+
+% i.e.,
+%~\Scaler~\cite{Li2018b},~\Zipper~\cite{Li2018a},~\Data~\cite{JeJeChOh17},~\Mahjong~\cite{Tan2017}?
+\item {\bf Learned Insight:}
+Does our approach produce explainable heuristics?
+What are the insights learned from the generated heuristics?
+\end{itemize}
+
+\myparagraph{Overall Setting}
+We implemented our approach, as a tool \OurCtx, on top of \Doop~\cite{BravenboerS09},
+a pointer analysis framework for Java that has been widely used in prior works
+~\cite{Smaragdakis2014,JeJeChOh17,JeJeOh18,Tan2017,TanLX16}.
+%In particular, we applied our approach to learn heap abstraction and context-sensitivity heuristics from FPG and OAG, respectively.
+%We implemented our technique on the two different artifacts~\cite{Tan2017,Li2018b}, the state-of-the-art context-sensitivity and heap abstraction heuristics, to demonstrate the effectiveness of our learned heuristics on both heuristics.
+For the precision and scalability metrics, we follow existing works~\cite{Tan2017,Li2018a,Li2018b,JeJeChOh17} and use the number of may-fail casts alarms and the time spent on each analysis.
+We also use the number of polymorphic call sites (i.e. call sites whose targets are not uniquely determined by each pointer analysis) and call-graph edges as additional precision metrics. For all precision metrics, the lower is the better.
+%Polymorphic call sites present call sites that are not disambiguated into monomorphic calls.
+We set the time budget as 3 hours (10,800 sec) for all analyses.
+For the hyper-parameter $\hyper$, we chose the one among various values (e.g., 0.1, 0.2, ..., 0.9) via cross validation (we explain how this is done in section~\ref{sec:learning_alg}).
+For each feature, we limit it to have at most three nodes due to scalability.
+All the experiments were done on a machine with i7 CPU and 64 GB RAM running Ubuntu 16.04 (64bit).
+We used the OpenJDK (1.6.0\_24) library.
+
+
+%\myparagraph{Benchmarks}
+We used a total of 17 programs: 10 programs (luindex, lusearch, antlr, pmd$_{m}$, chart, eclipse, fop, bloat, xalan, and jython) from the DaCapo 2006-10-MR2 benchmark suite~\cite{Blackburn2006}
+and 7 programs (pmd$_{s}$, jedit, briss, soot, findbugs, JPC, and checkstyle) obtained from the artifacts provided by~\cite{Tan2017} and~\cite{Li2018b}.
+%Here, we used two different versions of pmd where pmd$_{m}$ is a program in Dacapo benchmarks used in~\cite{Tan2017}, and pmd$_{s}$ is an open-source application used in~\cite{Li2018b}.
+Here, we used two different versions of pmd where pmd$_{m}$ is a small program used by~\cite{Tan2017}, and pmd$_{s}$ is an open-source application used by~\cite{Li2018b}.
+We split the benchmark programs into training, validation, and test sets.
+The training and validation sets are used for learning a heuristic, and the test set is used for evaluating the performance of the learned heuristic.
+For the training set, we used relatively small benchmarks, because our algorithm includes a process
+to obtain minimal abstractions and this task is too expensive to run for large programs.
+The validation set is used for choosing the hyper-parameter $\hyper$; we chose the one that leads the heuristic to the best performance on the validation set.
+%After training heuristics with various values of $\hyper$, we chose the one which shows the best performance on a validation program {\tt findbugs}.
+%We discuss the importance of the value of $\hyper$ later in detail.
+
+
+\subsection{Effectiveness and Generality}
+We demonstrate the effectiveness and generality of our technique by comparing it with two state-of-the-art graph-based heuristics: \Scaler~\cite{Li2018b} and \Mahjong~\cite{Tan2017}.
+
+%comparing the performance of the generated heuristics to existing context-sensitivity heuristics and heap abstraction heuristics.
+
+\subsubsection{Comparison with Scaler}\label{sec:comparescaler}
+%\textcolor{black}{
+\myparagraph{Setting}
+\Scaler~is a context-sensitivity heuristic that works on the object allocation graph (OAG)~\cite{Li2018b}. From the OAG, it infers a policy to assign one of 2-object-sensitivity, 2-type-sensitivity, 1-type-sensitivity, and context-insensitivity to each method.
+We used the same pre-analysis of \Scaler~to obtain the OAG and let our technique produce a heuristic.
+We set $\CallDepth$ in Section~\ref{sec:param-context} to 3, where 0, 1, 2, and 3 correspond to context-insensitivity, 1-type-sensitivity, 2-type-sensitivity, and 2-object-sensitivity, respectively.
+Unlike \Scaler, our heuristic assigns a context for each heap allocation site.
+It poses $4^N$ possibilities where $N$ denotes the number of allocation-sites in the program.
+%}
+%as Scaler does.}
+% that assigns one of the four context-sensitivity options to each method call.
+%To compare with existing context-sensitivity heuristics, we learned such heuristics using the object-allocation-graphs (OAG) on which the state-of-the-art context-sensitivity heuristic \Scaler~was developed.
+%For fair comparison, our learned heuristic,~\OurCtx, assigns either 2-object-sensitivity, 2-type-sensitivity, 1-type-sensitivity, or context-insensitive analysis to each method call as \Scaler~does.
+%We also apply 2-object-sensitivity if receiver objects have a type \emph{java.util.*}, like \Scaler~does to preserve the precision.
+%In our framework, since we explained that object-sensitivity heuristics assign different depth (e.g., 0,1, or 2) of context to each method call, these four analysis heuristics correspond to 3, 2, 1, and 0, respectively.
+%This abstraction still satisfies the monotonicity as 2-object-sensitivity is strictly more precise than 2-type-sensitivity~\cite{Smaragdakis2011}.
+
+Although the primary  objective in this evaluation is to compare with \Scaler, we evaluated two more heuristics as well: \Zipper~\cite{Li2018a} and \Data~\cite{JeJeChOh17}.
+\Zipper~is another graph-based context-sensitivity heuristic that works on the precision flow graph (PFG).
+\Data~is not graph-based, but we include it because \Data~is currently the state-of-the-art data-driven pointer analysis algorithm (with hand-crafted features).
+%n object-sensitivity heuristic from machine learning technique with hand crafted features~\cite{JeJeChOh17}.
+%the three graph-based heuristics \OurCtx,\Scaler, and \Zipper~use context-insensitive analysis as a pre-analysis to obtain a graph.
+%Meanwhile, \Data~is another object-sensitivity heuristic from machine learning technique with hand crafted features~\cite{JeJeChOh17}.
+In short, we compare the following pointer analysis algorithms: %to demonstrate the effectiveness of our learned context-sensitivity heuristic:
+
+\begin{itemize}
+\item \Scaler: A hand-crafted graph-based object-sensitivity heuristic for OAG~\cite{Li2018b}
+\item \OurCtx: Our learning-based graph-based object-sensitivity heuristic for OAG
+\item \Zipper: A hand-crafted graph-based object-sensitivity heuristic for PFG~\cite{Li2018a}
+\item \Data: A state-of-the-art learning-based object-sensitivity heuristic~\cite{JeJeChOh17}
+\item \twoobjH: The 2-object-sensitivity with 1-context-sensitive heap (precision upper bound)
+\item \Insens: The context-insensitive analysis (scalability upper bound)
+\end{itemize}
+%  All heuristics use allocation-site-based heap abstraction.
+%Our framework generated 195 features in total as an object-sensitivity heuristic (e.g., 68 features for 2-object-sensitivity, 28 for 2-type-sensitivity, and 99 features for 1-type-sensitivity).
+%The learning procedure takes about 220 hours in total, where 168 hours are for getting minimal abstractions over the training programs
+%and 52 hours for generating the features.
+
+
+%To compare~\OurCtx~with~\Scaler,
+We used three programs (luindex, lusearch, antlr) as the training set, one program (findbugs) as the validation set,
+and the remaining thirteen programs (pmd$_{s}$, chart, eclipse, jedit, briss, soot, jython, pmd$_{m}$, fop, bloat, JPC, checkstyle, xalan) as the test set.
+We chose findbugs as a validation program because it is a popular Java application and
+requires suitable heuristics to be analyzed cost-effectively.
+For example, \twoobjH~does not terminate on this program even after thousands of seconds or more.
+
+
+\myparagraph{Results}
+\input{Graphick/tbl_ctx}
+\input{Graphick/additional_table_ctx}
+
+
+%\myparagraph{Result of context-sensitivity heuristic}
+Table~\ref{tbl:contextAbstraction} and~\ref{appendix:ctx} present the performance of the context-sensitivity heuristics described above.
+The number in a parenthesis for graph-based heuristics (i.e. \OurCtx, \Zipper, and \Scaler)
+represents the sum of time spent on performing the pre-analysis (i.e. context-insensitive analysis) and running the heuristics on the graphs for extracting context abstractions.
+
+The results show that our technique can automatically generate a cost-effective heuristic that performs as competitive as the state-of-the-art object-sensitivity heuristics.
+%In comparison to the baseline heuristic~\Scaler, which employs the same graph OAG, \OurCtx~consistently shows a better precision than \Scaler~
+%with some losses in scalability.
+Compared to the baseline heuristic~\Scaler, which employs the same graph OAG, \OurCtx~%consistently
+shows a better precision than \Scaler~
+with some losses in scalability for the test programs pmd$_{s}$, eclipse, and briss.
+For example, \OurCtx~reports 101 less may-fail casts alarms than \Scaler~ for the test program pmd$_{s}$
+while taking 216 more seconds.
+In addition, \OurCtx~shows better performance in both precision and scalability than \Scaler~on the test programs (except pmd$_m$) in Table~\ref{appendix:ctx}.
+For example, in jedit, \OurCtx~produces 201 less alarms with 35\% less analysis time.
+In comparison to \Zipper, \OurCtx~consistently outperforms in scalability.
+For example, \OurCtx~successfully analyzed pmd$_{s}$, jedit, and briss with remarkably less costs when \Zipper~fails to analyze them within the time budget.
+In comparison to \Data, the result shows that \OurCtx~performs far better in precision.
+%Although \Data~presents better scalability than \OurCtx, it produces about 100$\sim$300 \TODO{concrete numbers} more alarms for the testing programs.
+Although \Data~presents better scalability than \OurCtx, it produces more than 92 alarms for the test programs pmd$_{s}$, eclipse, jedit and briss.
+Compared to \twoobjH, \OurCtx~ shows better performance in scalability for the majority of test programs which \twoobjH~fails to analyze within the given time budget (3 hours).
+
+\subsubsection{Comparison with Mahjong}\label{sec:eval_heap}
+\myparagraph{Setting}
+%To show the generality of our framework,
+%we additionally evaluated our technique to learn a graph-based heap abstraction heuristic from field points-to graph (FPG) which the state-of-the-art heap abstraction heuristic \Mahjong~uses.
+
+\Mahjong~is a graph-based heap abstraction heuristic that works on the field points-to graph (FPG)~\cite{Tan2017}.
+From the FPG, which is obtained by running a context-insensitive pre-analysis, \Mahjong~infers a policy that determines whether to merge objects allocated in different allocation sites.
+We used the same pre-analysis to obtain the FPG and let our technique produce a heap abstraction heuristic.
+Unlike \Mahjong, our heap abstraction heuristic (i.e. \OurHeap) assigns `{\it type}' (type-based heap abstraction) or `{\it alloc}' (allocation-site-based heap abstraction) to each heap allocation-site which poses
+$2^N$ possibilities where $N$ denotes the number of allocation-sites in the program.
+%\todored{needs more explanation how $2^\mbh$ possibilities are selected...}
+We compare the following four analyses:
+\begin{itemize}
+\item \Mahjong: The state-of-the-art graph-based heap abstraction heuristic~\cite{Tan2017}
+\item \OurHeap: Our learning-based graph-based heap abstraction heuristic
+\item \AllocBased: The uniform allocation-site-based heap abstraction (precision upper bound)
+\item \TypeBased: The uniform type-based heap abstraction (scalability upper bound)
+\end{itemize}
+Following \Mahjong~\cite{Tan2017}, all analyses above use 3-object-sensitivity with 2-context-sensitive heap.
+
+For this evaluation, we used the same benchmark programs in the section~\ref{sec:comparescaler}.
+We used four programs (luindex, lusearch, antlr, pmd$_{m}$) as the training set and
+twelve programs (fop, chart, bloat, xalan, JPC, checkstype, eclipse, pmd$_{s}$, jecit, briss, soot, jython) as the test set.
+We also used findbugs as a validation program.
+% as we did for the comparison with~\Scaler
+%From the 17 benchmarks, we used four programs (luindex, lusearch, antlr, pmd$_{m}$) as the training set.
+
+
+\input{Graphick/tbl_heap}
+
+\input{Graphick/additional_table_heap}
+
+
+
+\myparagraph{Results}
+%\myparagraph{Result of the heap-abstraction heuristic}
+Table~\ref{tbl:heapAbstraction} and~\ref{appendix:heap} show that our technique can produce a competitive graph-based heap abstraction heuristic from the FPG.
+In comparison with \Mahjong, \OurCtx~shows a far better scalability while losing precision a bit.
+\Mahjong~produced the same number of may-fail-casts with the most precise one, \AllocBased,
+but it was unable to analyze large programs like {chart} and {bloat} within the time budget (3 hours).
+Although \OurCtx~produced more alarms (103 at most) than \Mahjong, it successfully analyzed programs (i.e. chart and bloat) which \Mahjong~failed to analyze.
+% within the given time budget.}
+Currently, the overhead, the time taken by extracting an abstraction from the FPG, of our heuristic is bigger than \Mahjong~because \Mahjong~designed an efficient algorithm to produce an abstraction from FPG while ours is not optimized to minimize it. %, which is our future work to reduce the overhead.
+The results, however, still demonstrate that \OurCtx~is competitive and has a strength in scalability compared to the state-of-the-art technique as it successfully analyzed the large programs, {chart} and {bloat}, which \Mahjong~ cannot handle.
+
+
+
+\subsection{Learning Algorithm}\label{sec:learning_alg}
+
+\myparagraph{Learning Cost }
+
+To learn a context-sensitivity heuristic, our learning algorithm took 169 hours in total, where 144 hours are for getting minimal abstractions over the training programs and 25 hours for generating features.
+To learn a heap abstraction heuristic, the algorithm took 107 hours, where 72 hours are for minimal abstraction generation and 35 hours for feature generation.
+We note that, although the learning algorithm is expensive, it saves more expensive human costs by automating the manual process of designing analysis heuristics that would take weeks or months.
+
+
+\begin{figure}
+	\centering
+	\begin{multicols}{2}
+	\begin{subfigure}[t]{1.\columnwidth}
+	\centering
+	\includegraphics[width=6.3cm]{Graphick/figures/ctx_gamma.pdf}
+	\caption{Object-sensitivity heuristic}
+	\end{subfigure}
+~\columnbreak
+
+	\begin{subfigure}[t]{1.\columnwidth}
+	\centering	
+	\includegraphics[width=6.3cm]{Graphick/figures/heap_gamma.pdf}
+	\caption{Heap abstraction heuristic}
+	\end{subfigure}
+	\end{multicols}
+	\caption{How score of learned heuristic changes over the value of $\hyper$.}
+	\label{fig:gamma}
+\end{figure}
+
+
+\myparagraph{Choosing Hyper-Parameter $\hyper$}\label{sec:hyper_param}
+
+Through our evaluation, we observed that the value of the hyper-parameter $\hyper$ plays an important role in the performance of the learned heuristic.
+Figure~\ref{fig:gamma} depicts how performance of learned heuristics changes over the values of  $\hyper$.
+The X-axis presents the value of $\hyper$ set to learn each heuristic, and
+the Y-axis presents scores that we measured for performance of each heuristic $\heuristic_{\hyper}$ according to
+${\sum_{P\in\vec{P}}\projproved(F_P(\heuristic_{\hyper}(G)))}\over{\sum_{P\in\vec{P}}
+  \projcost(F_P(\heuristic_{\hyper}(G)))}$ where $\projcost$ denotes analysis time.
+This score function presents the number of queries proved per second; thereby, more precise and scalable the analysis,
+higher the score.
+The red dotted and black solid lines present how the scores change over
+the training programs $\vec{P}$ %(e.g., $\vec{P}$ = \{{\tt luindex,lusearch,antlr}\})
+and the validation program, respectively.
+For the training programs, the score of the learned heuristic increases as the higher $\hyper$ is given
+because the heuristic becomes more fitted to the training programs.\footnote{It learned a bit bad heuristic when $\hyper$ is 0.9 in
+  object-sensitivity heuristic because it is
+difficult to generate specific features that satisfy such high precision
+constraints; it eventually generates a general feature that include lots
+of nodes.}
+In our evaluation, both learned heuristics, however, perform the best on the validation program when $\hyper$ is 0.5;
+thus, \OurCtx~in Table~\ref{tbl:contextAbstraction} and Table~\ref{tbl:heapAbstraction} corresponds to $\heuristic_{0.5}$.
+
+
+%This occurs because the learned heuristics become overfitted to the training programs as the value of $\hyper$ increases;
+%thus, simply increasing $\hyper$ is not an answer to achieve the best performance on validation and testing programs.
+
+
+
+
+
+
+
+%\subsection{Learning Adequacy}
+
+%\subsection{Insights from Generated Features}
+\subsection{Learned Insights}
+
+The learning algorithm generated 197 features in total for the object-sensitivity heuristic (68 features for 2-object-sensitivity, 29 for 2-type-sensitivity, and 100 features for 1-type-sensitivity). It generated 96 features for the heap abstraction heuristic.
+
+\input{Graphick/tbl_features_tmp}
+
+\myparagraph{Top-5 Features}
+Figure~\ref{fig:features} describes the most informative features generated by our technique for each abstraction degree and their concretization in the given graphs.
+The second column \textsf{Top 5 Features}, in decreasing order of \textsf{portion}, presents top 5 features which have the greatest number of precision-critical nodes satisfying the features with scores above 0.5.
+For example, the first feature in 1type contains 47\% nodes of the total precision-critical nodes which are to be applied 1-type-sensitivity,
+and has a score of 0.57.
+If a feature is too general (e.g., $(\epsilon, ([0,\infty],[0,\infty]), \epsilon)$), it is excluded even with a large portion (e.g., 100\%)
+because its score is under 0.5.
+Similarly, if a feature is too specific, it is also excluded because it includes a small number of precision-critical nodes even with a good score.
+For the features, the gray colored abstract nodes correspond to the target one $\hat{n}$ in each feature
+(e.g., $(\seq{\myhat{p}_0,\myhat{p}_1,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\myhat{s}_1,\dots,\myhat{s}_r}) \in \Feature$).
+Other nodes are predecessors or successors of the target abstract nodes (e.g., $\myhat{p}_0$, $\myhat{s}_0$, and $\myhat{s}_1$).
+For each feature, we show the number of satisfying nodes over the total precision-critical nodes in the given graphs (\textsf{portion}) and the scores (\textsf{score}).
+The right most column, \textsf{Concretization}, illustrates the visualized concretization for each first feature in \textsf{Top 5 Features} column,
+%in the real graphs over the training programs, where the gray colored nodes correspond to the target nodes of the first feature.
+where the gray colored nodes correspond to the target abstract nodes of the first feature.
+For space reasons, we draw each node to have at most 13 incoming and outgoing edges although it can have more than 13 edges.
+
+
+\input{Graphick/tbl_principle}
+
+\myparagraph{Insights}
+
+The generated features during the learning process provide hints on designing analysis heuristics from the graphs.
+For example, we investigated the features of the heap abstraction heuristic in Figure~\ref{fig:features} and found two commonalities in them.
+First,  the features have the form of $(\epsilon,\hat{n}, \hat{\vec{s}})$ where $\hat{\vec{s}}$ is not $\epsilon$,
+which implies that we should consider successors more than predecessors when designing heap abstraction heuristics from points-to graph.
+The second commonality is that $\hat{\vec{s}}$ or $\hat{n}$ tends to include an abstract
+node $\aNode$ that presents nodes with lots of outgoing edges, i.e., $\aNode =
+(itv,[b,\infty])$ where the number $b$ is about $3\%$ of the total nodes in a graph of a training program.
+From these observations, we manually designed a graph-based heap abstraction heuristic which
+assigns allocation-site based heap abstraction to the target nodes
+if at least $3\%$ of the total nodes in FPG belong to either the target node or its successor nodes
+(i.e. $\heuristic = \seq{\{ (\epsilon,([0,\infty],[b',\infty]),\epsilon)
+	,(\epsilon,\top,\seq{([0,\infty],[b',\infty])})
+	,(\epsilon,\top,\seq{\top,([0,\infty],[b',\infty])})
+	,\dots
+	\}
+}$ where $\top$ equals to the most general one $([0,\infty],[0,\infty])$ and $b'$ is 3\% of the total nodes in the given graph).
+Otherwise, the heuristic assigns type-based heap abstraction to the others.
+%where $\top$ equals to the most general abstract node $([0,\infty],[0,\infty])$, and $b$ equals to 3\% of the total nodes in the given graph).
+Table~\ref{tbl:principle} demonstrates the performance of the manually-crafted heuristic.
+In comparison to \AllocBased, it reduces about 99\% of analysis cost while producing only 2\% more alarms.
+%Compared to the baseline heuristic~\AllocBased,
+
+
+
+Intuitively, the nodes with lots of successors in FPG should be analyzed precisely because merging the objects with others would produce lots of spurious analysis results.
+For example, if there exists an object with lots of field objects which we want to merge with another one with a few field objects,
+it eventually produces lots of spurious results stating that the both heaps can have lots of field objects.
+%Such insight is related with that of \Mahjong~which merges the two objects if they have the same types of successors because,
+%statically, an object having lots of successors is hard to have exactly the same types of successors with other objects.
+Such insight is related with that of \Mahjong~which merges the objects if their successors have the same type;
+statistically, if an object has lots of successors, there hardly exist the other objects with exactly the same types of successors.
+Surprisingly, it is easy to find such insight through the features generated by our technique.
+Note that this insight is general as it is not dependent to Java programs.
+For example, when analyzing a C program, it is a required task not to merge such heaps with others as it would produce lots of spurious results.
+
+%\textcolor{black}{
+%\myparagraph{Graphick vs Scaler}
+%Interestingly, Figure~\ref{fig:features} shows that the insight learned statistically can differ from the logic-based insight
+%through the difference between \OurCtx~and \Scaler~in deciding which nodes to analyze more precisely.
+Interestingly, Figure~\ref{fig:features} also shows the difference between the statistically-learned insight behind \OurCtx~and the logical insight behind \Scaler~in deciding which nodes to analyze more precisely.
+Based on the logical insight, \Scaler~relies heavily on the number of incoming edges
+as that number in the object allocation graph indicates %{\color{red}{
+how many contexts will be constructed in object sensitivity.%}}
+~\ourtool, however, treats the number of neighbor nodes' outgoing edges more importantly, as shown in Figure 6.
+Such differences result in the performance gap between the two object-sensitivity heuristics.
+%which shows better performance in both precision and scalability than the logic-based insight.
+%}
+
+%\textcolor{red}{
+\myparagraph{Generality of learned heuristic}
+We found the learned heuristic for object sensitivity is general to the hybrid-context sensitivity~\cite{kastrinis2013hybrid}. Table~\ref{tbl:hybrid} presents the performance of the conventional 2-hybrid-context sensitivity (\twosobjH) and
+2-hybrid-context sensitivity with the learned heuristic (\ourtool) used in Section~\ref{sec:comparescaler}.
+%when using 6 DaCapo benchmark programs as testing programs.
+The table shows that \ourtool~is also cost-effective compared to \twosobjH. For example, on a test program bloat,
+\ourtool~produces only 22 more alarms while reducing about 90\% of analysis costs.
+%}
+
+
+
+\begin{table}[]
+\setlength\extrarowheight{-1pt}
+\caption{Performance comparison between conventional 2-hybrid-context-sensitivity (\twosobjH) and 2-hybrid-context-sensitivity with our learned heuristic for 2-object-sensitivity (\ourtool).}
+\label{tbl:hybrid}
+\centering\footnotesize
+\begin{tabular}{@{}clrrrrrr@{}}
+\toprule
+                          & \multicolumn{1}{c}{} & \multicolumn{1}{c}{pmd$_m$} & \multicolumn{1}{c}{chart} & \multicolumn{1}{c}{eclipse} & \multicolumn{1}{c}{xalan} & \multicolumn{1}{c}{fop} & \multicolumn{1}{c}{bloat}  \\ \midrule
+\multirow{2}{*}{\ourtool} & \#may-fail casts     & 220                      & 867                       & 2,880                        & 479                       & 1,408                    & 1,147                      \\
+                          & analysis time (s)    & 45+(78)                  & 83(+76)                   & 1,426(+105)                  & 185(+57)                  & 245(+85)                & 215(+30)                  \\ \midrule
+\multirow{2}{*}{\twosobjH}    & \#may-fail casts     & 220                      & 757                       & -                       & 447                          &  1,295                       & 1,125                          \\
+                          & analysis time (s)    & 42                       & 195                       & >10,800                            & 428                          & 818                        & 2,238                           \\
+%\midrule
+%\multirow{2}{*}{\Insens}   & \#may-fail casts     & 679                      & 1,810                      & 4190                        & 1,182                      & 2,458                    & 1,924                      \\
+%                          & analysis time (s)    & 23                       & 48                        & 91                          & 37                        & 53                      & 20                        \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\iffalse
+\textcolor{red}{
+%\myparagraph{Graphick vs Scaler}
+Further, we could derive interesting differences between \ourtool~and Scaler in deciding which nodes to analyze more precisely.
+Given an object allocation graph, Scaler relies heavily on the number of incoming edges
+%into the target node in determining the context.
+as the number of incoming edges reveals how each context will be constructed in object-sensitivity.
+\ourtool, however, considers the number of neighbor nodes' outgoing edges more as shown in Figure 6,
+which is statistically learned from training data.
+%\ourtool~statistically found the consideration on the number of outgoing edges benefits the learned heuristic more.
+%This results show that the logical insight (\Scaler) can be different from the statistical insight (\ourtool).
+%\todored{more than just difference... any other insights..? why considering the outgoing more?}
+}
+\fi
+
+
+%
+%For example, Scaler is a heuristic that heavily reasons about the number of incoming edges' to target nodes for context decision. \ourtool, however, considers the number of neighbor nodes' outgoing edges more as shown in Figure 6. We will discuss this observation in the revised paper.
+%}
+
+
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:

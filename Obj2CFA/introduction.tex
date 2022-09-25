@@ -1,0 +1,179 @@
+% !TEX root = ./paper.tex
+
+\section{Introduction}\label{sec:introduction}
+
+\iffalse
+\begin{quote}
+  {\it ``Since its introduction, object sensitivity has emerged as the
+  dominant flavor of context sensitivity for object-oriented
+  languages.''} 
+\begin{flushright}
+---\cite{Smaragdakis2015}
+  \end{flushright}
+\end{quote}
+\noindent
+%\textcolor{red}{
+%Pointer analysis is a foundation of many static analyses, which safely 
+%estimates the objects that each variable points-to in real executions.
+%Such information plays key roles in various software engineering techniques like 
+%bugfinders~\cite{Sui2014},
+%%bugfinders~\cite{Naik2006,NaikPSG09,Blackshear2015,Sui2014,Livshits2003},
+%symbolic execution~\cite{Kapus2019}, and program repair tools~\cite{memfix,Gao2015,vfix2019}. The success of the above software engineering tools heavily depends on the performance of the underlying points-to analysis.}
+Context sensitivity is critically important for static program analysis of
+object-oriented programs.  A context-sensitive analysis associates
+local variables and heap objects with context information of method
+calls, computing analysis results separately for different
+contexts. This way, context sensitivity prevents analysis information
+from being merged along different call chains. For object-oriented and
+higher-order languages, it is well-known that context sensitivity is
+the primary means for increasing analysis precision without blowing up
+analysis cost~\cite{Smaragdakis2015,Thiessen2017,Lhotak2006,
+  KastrinisS13a, Smaragdakis2014, Li2018a, JeJeChOh17, %liang2005evaluating,
+  Sridharan2006}.
+\fi
+
+There have been two major flavors of context sensitivity, namely {\em
+  call-site sensitivity}~\cite{Sharir1981,Shivers1988} and {\em object
+  sensitivity}~\cite{Milanova2002,Milanova2005}, which differ in the
+choice of context information. The traditional $k$-call-site-sensitive
+analysis~\cite{Sharir1981} uses a sequence of $k$ call-sites as the
+context of a method. By contrast, object sensitivity uses
+allocation-sites as context elements: in a virtual call, e.g., {\tt
+  a.foo()}, an object-sensitive analysis uses the allocation-site of
+the receiver object ({\tt a}) as the context of {\tt foo}. The standard
+$k$-object-sensitive
+analysis~\cite{Milanova2002,Milanova2005,Smaragdakis2011} maintains a
+sequence of $k$ allocation-sites, comprising the allocation-site of
+the receiver object, the allocation-site of the receiver's allocator,
+and so on.
+
+
+\myparagraph{The Status Quo}
+Since its inception, object sensitivity has been established as the
+dominant context abstraction for object-oriented
+languages~\cite{Smaragdakis2015}.  Ever since \cite{Milanova2002,
+  Milanova2005} proposed object sensitivity, its superiority over
+other flavors of context sensitivity has been reinforced by a large
+amount of 
+research~\cite{Lhotak2008,BravenboerS09,Smaragdakis2011,TanLX16,
+  JeJeChOh17,Lu:2019:PYF}.  Among others, \cite{Lhotak2006} and
+\cite{BravenboerS09} conducted extensive experiments to conclude
+that object sensitivity significantly outperforms other alternatives
+including call-site sensitivity.  As a result, object sensitivity has
+become an indispensable component of program analysis tools for
+object-oriented languages~\cite{Fink2008,Zhang2014,NaikAW06,GordonKPGNR_NDSS15,Feng2014,vfix2019}.
+
+
+In contrast, the use of call-site sensitivity has been constantly
+discouraged for object-oriented
+programs~\cite{TanLX16,JeJeChOh17,Li2018a,Lhotak2006,
+  Smaragdakis2011, Smaragdakis2014, Milanova2002, Milanova2005}.  For
+example, \cite{Milanova2002, Milanova2005} judged call-site
+sensitivity as ``ill-suited" for object-oriented programs,
+\cite{KastrinisS13a} claimed that call-site sensitivity should be
+avoided because it is both imprecise and expensive, and
+\cite{Smaragdakis2014} asserted call-site sensitivity is never
+cost-effective. %as it is unscalable beyond the smallest context depth ($k=1$).  
+As a result, call-site sensitivity has become obsolete in practice and
+virtually not used anymore in program analysis tools for
+object-oriented programs: 
+\textit{``... object-sensitive analyses have
+  almost completely supplanted traditional call-site-sensitive
+  analyses for object-oriented languages''}~\cite{Smaragdakis2011}.
+
+%\textcolor{red}{
+%The status quo has been established on the empirical evaluation results showing superiority of object sensitivity compared to call-site sensitivity.
+%For a majority of programs, even 1-object sensitivity 
+%has been more precise and scalable than 2-call-site sensitivity.
+%When analyzing a program (lusearch) in our benchmark, for example, 1-object sensitivity produces 27\% more precise abstraction (points-to set) 
+%within 82\% fewer analysis time(s) than 2-call-site sensitivity.
+%}
+%%\minseok{Detailed data}
+
+\myparagraph{This Work}
+We challenge this commonly-accepted wisdom by showing that call-site
+sensitivity is generally superior to object sensitivity %context abstraction
+even for object-oriented programs.  Our key insight
+is that the previously established superiority of object sensitivity over
+call-site sensitivity is valid only when we impose a particular restriction that
+the analysis should keep the {\em most recent} $k$ context elements,
+but it no longer holds in a more general setting where the restriction
+is eliminated. Notably, the relative superiority of object sensitivity
+and call-site sensitivity gets inverted when they are generalized with
+context tunneling~\cite{JeJeOh18}, where the analysis is free to use
+an arbitrary $k$-length subsequence of context strings.  In this
+generalized setting, we show that call-site sensitivity is able to {\em
+  simulate} object sensitivity, but object sensitivity is not powerful
+enough to simulate call-site sensitivity.
+We note that our aim is not to debunk the previously known result. Instead, we claim that what is currently known only persists in a limited circumstance and the converse holds when the assumption is generalized. 
+
+
+%\TODO{Say that the key challenge here is how to find the appropriate tunneling policy that makes CFA more precise than Obj and we address the challenge using an obj-guided approach}
+To support the claim, %Exploiting this insight, 
+we present \ourtechnique, a practical technique for transforming
+%state-of-the-art 
+object sensitivity into more precise,
+context-tunneled call-site sensitivity.  Our technique takes as input
+an arbitrary object-sensitive analysis with context tunneling and produces as output a
+context-tunneling policy that enables call-site sensitivity to exceed
+the precision limit of the baseline object sensitivity without
+increasing $k$. Our key technical contributions to achieve this goal are the simulation and
+simulation-guided learning procedures.  By the simulation procedure, we infer a context-tunneling policy
+with which call-site sensitivity can simulate the baseline object
+sensitivity.  The resulting call-site sensitivity, however,  is 
+impractical since it requires running the baseline object-sensitive
+analysis as a pre-analysis.  The learning phase aims to remove
+this burden by capturing the behavior of the simulated policy using
+a dataset of programs.
+
+
+%We experimentally prove our claim for pointer analysis. 
+%Experimental results show that our technique is practical and advances
+%the state-of-the-art significantly.  
+We implemented our technique in
+Doop~\cite{BravenboerS09}, a popular pointer analysis framework for
+Java.
+We transformed a state-of-the-art object-sensitive pointer analysis
+into the matching call-site-sensitive analysis. 
+Evaluation with
+real-world Java applications shows that the resulting call-site-sensitive analysis 
+ significantly improves the original object-sensitive analysis in terms of both precision and scalability. 
+Remarkably, our context-tunneled 1-call-site-sensitive
+analysis is even more precise than the traditional 3-object-sensitive
+analysis with much smaller costs,  which confirms our claim that call-site sensitivity can be superior to object sensitivity in the generalized setting. 
+
+%\textcolor{red}{
+%Note that we do not intend to say that previous results are wrong. Rather, we would like to say that call-site sensitivity should be reconsidered from now on because, though object sensitivity is superior to call-site sensitivity in the traditional k-limited setting, call-site sensitivity can be better than object sensitivity in a more general setting with context tunneling. We think that this message contrasts with what has been known in the program-analysis community.
+%}
+
+%which is far beyond the reach of
+%modern object-sensitive analyses in practice.
+
+
+\myparagraph{Contributions} We summarize our contributions below.
+\begin{itemize}[leftmargin=1.3em]
+\item %{\bf Claim} (Section~\ref{sec:insight}): 
+
+We make a novel claim that call-site sensitivity is generally superior to object sensitivity; when the notion of $k$-limiting is
+  generalized with context tunneling, call-site sensitivity can simulate object sensitivity almost completely, but not vice versa.
+
+\item %{\bf Technique} (Section~\ref{sec:technique}):  
+	We present \ourtechnique, a new technique for transforming a
+context-tunneled $k$-object-sensitive analysis into a more precise, context-tunneled
+  $k$-call-site-sensitive analysis. % via simulation and learning.
+  Specifically, we make two technical contributions: the simulation (Section~\ref{sec:simulation}) and simulation-guided learning (Section~\ref{sec:learning}) procedures, both of which are vital to achieving the goal. 
+
+\item %{\bf Experimental Proof} (Section~\ref{sec:result}): 
+We experimentally prove our claim by applying \ourtechnique~to a
+  state-of-the-art object-sensitive pointer analysis for Java. 
+Our implementation and data are publicly available~\footnote{\url{https://github.com/kupl/OBJ2CFA}}.
+\end{itemize}	
+
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:
