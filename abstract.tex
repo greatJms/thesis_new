@@ -1,13 +1,13 @@
 % !TEX root = ./thesis.tex
 %\todoTBD{19 Nov. \st{abstract}}
-This thesis presents {\em data-driven pointer analysis}, a novel approach for automatically generating analysis strategies that make pointer analysis precise and scalable. 
+This thesis presents {\em data-driven pointer analysis}, a novel approach for automatically generating analysis heuristics that make pointer analysis precise and scalable. 
 Pointer analysis is a fundamental program analysis technique that has wide application in diverse software engineering tools. The success of the engineering tools is eventually dependent on the quality of the underlying pointer analysis.
 However, developing a qualified pointer analysis is challenging.
-A cost-effective pointer analysis requires good analysis heuristics such as qualified context-sensitivity and heap abstraction strategies where
-such heuristics have been manually designed by experts with their domain knowledge.
-However, developing qualified analysis strategies is a non-trivial and laborious task even for the experts; the manually designed heuristics often end up with suboptimal results in practice.
-To mitigate this problem, we present {\em data-driven pointer analysis} that automatically generates good analysis strategies, including heap abstraction, selective context-sensitivity, and context tunneling heuristics.
-Our experimental results show that our {\em data-driven pointer analysis} successfully produced qualified heuristics for pointer analysis that the learned heuristics outperform the existing manually designed heuristics.
+A cost-effective pointer analysis requires good analysis heuristics such as qualified context-sensitivity and heap abstraction heuristics; 
+experts have manually designed such heuristics with their domain knowledge.
+However, developing qualified analysis heuristics is a non-trivial and laborious task even for the experts; the manually designed heuristics often end up with suboptimal results in practice.
+To mitigate this problem, we present {\em data-driven pointer analysis} that automatically generates good analysis heuristics, including heap abstraction, selective context-sensitivity, and context tunneling heuristics.
+Our experimental results show that our {\em data-driven pointer analysis} successfully produced qualified heuristics that make the pointer analysis precise and scalable.
 
 
 

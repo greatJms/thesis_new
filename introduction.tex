@@ -1,25 +1,27 @@
 \listoftodos
 \chapter{Overview}
 \section{Problems}
-Pointer analysis is one of the most important program analysis techniques that approximates memory locations that each pointer variable may points to at runtime.
+Pointer analysis is one of the most important program analysis techniques that approximates memory locations that each pointer variable may point to at runtime.
 The pointer analysis results play key roles in diverse software engineering tools such as
 bug finder~\cite{Naik2006,NaikPSG09,Blackshear2015,Sui2014,Livshits2003}, security analyzers~\cite{Avots2005,Arzt2014,Tripp2009,Yan2017,Grech17},
 program verifiers~\cite{Fink2008}, symbolic executors~\cite{Kapus2019}, and program repair tools~\cite{memfix,Gao2015,vfix2019,saver2020}. 
 The success of these tools eventually depends on the performance (e.g., precision and scalability) of the underlying pointer analysis.
 
 Developing a cost-effective pointer analyzer, however, is challenging.
-To become practical, pointer analyers need good analysis heuristics. 
-For example, suitable context~\cite{KastrinisS13a,Li2018b,Li2018a,Smaragdakis2014,Tan2020,Lu:2019:PYF,JeJeChOh17} and heap abstraction~\cite{Tan2017,TanLX16} strategies are essential for accurately and efficiently analyzing object-oriented programs. 
-Context abstraction strategies determine contexts for each method call to distinguish variables and objects in different calling contexts for precision and merge variables and objects in the same contexts for efficiency. 
-Heap abstraction strategies determine how to model each heap object where a representative strategy is modeling the object with their allocation sites~\cite{Tan2017}.
-Developing such analysis heuristics, however, is challenging and needs laborious tasks. Further, the manually designed analysis heuristics often show suboptimal performance in practice.
+Pointer analyzers need good analysis heuristics to become practical. 
+For example, suitable context~\cite{KastrinisS13a,Li2018b,Li2018a,Smaragdakis2014,Tan2020,Lu:2019:PYF,JeJeChOh17} and heap abstraction~\cite{Tan2017,TanLX16} heuristics are essential for accurately and efficiently analyzing object-oriented programs. 
+Context abstraction heuristics determine contexts for each method call to distinguish variables and objects in different calling contexts for precision or merge variables and objects in the same contexts for efficiency. 
+Heap abstraction heuristics determine how to model each heap object. A representative heap abstraction strategy is modeling all the objects with their allocation sites~\cite{Tan2017}.
+Developing such analysis heuristics, however, is challenging and needs laborious tasks. 
+
+To mitigate this problem, we present {\em data-driven pointer analysis} that automatically generates qualified pointer analysis heuristics.
+From a given pointer analyzer, training set (e.g., small training programs), and atomic features, {\em data-driven pointer analysis} learns context tunneling, selective context sensitivity, and heap abstraction heuristics that make the pointer analysis precise and scalable.
+The training process learns qualified heuristics, where a heuristic is described as a combination of atomic features, that perform well for the training set (e.g., training programs). The learnt heuristics will be used for analyzing other unknown programs.
+% Further, the manually designed analysis heuristics often show suboptimal performance in practice.
 
 
 
 \section{Contributions}
-To mitigate this problem, we present {\em data-driven pointer analysis} that automatically generates qualified analysis heuristics.
-From a given pointer analyzer, training set (e.g., small training programs), {\em data-driven pointer analysis} learns context tunneling, selective context sensitivitiy, and heap abstraction heuristics that make the pointer analysis cost-effective.
-The training process searches models, describing heuristics, that perform well for the training programs. The learnt ones will be used for analyzing other unknown programs in practice.
 This thesis makes the following three key contributions:
 
 
@@ -28,31 +30,29 @@ This thesis makes the following three key contributions:
 \item {\bf Data-driven context tunneling~\cite{JeJeOh18}:}
   We present data-driven context tunneling, a new approach for making $k$-limited context-sensitive pointer analysis precise and scalable.
   Unlike, conventional $k$-limited context sensitivity that always updates contexts that the method calls keep the most recent $k$ context elements, context tunneling makes the method calls keep the most important $k$ context elements by selectively updating contexts.
-  The main challeng when applying context tunneling is to develop tunneling strategy that determine whether to update contexts. We present data-driven approach for automatically generating this tunneling strategies. The evaluation results show that the learned tunneling heuristics successfully keep important context elements that make the pointer analysis precise and scalable.
+  The main challeng when applying context tunneling is to develop tunneling heuristics that determine whether to update contexts. We present data-driven approach for automatically generating this tunneling heuristics. The evaluation results show that the learned tunneling heuristics successfully keep important context elements that make the pointer analysis precise and scalable.
 
 
 \item {\bf Learning a precise call-site sensitivity from given object sensitivity~\cite{JeOh22}:}
-We present \ourtechnique~that automatically transforms a given object sensitivity with tunneling into a more precise call-site sensitivity with tunneling. \minseok{ToDo}
+We present \ourtechnique~that automatically transforms a given object sensitivity with tunneling into a more precise call-site sensitivity with tunneling. 
 \ourtechnique~consists of the simulation and
-simulation-guided learning.  
-Simulation procedure investigate an analysis result of the given object sensitivity and infers a context-tunneling policy
-with which call-site sensitivity can become more precise than the given object sensitivity.
+simulation-guided learning. For a given object sensitivity, 
+simulation investigates the analysis result of the given object sensitivity and infers a context-tunneling policy that can make 
+call-site sensitivity become more precise than the given object sensitivity.
 The scalability of simulated call-site sensitivity, however, is 
-limited as it requires running the baseline object-sensitive
+limited. Simualtion requires running the baseline object-sensitive
 analysis beforehand; call-site sensitivity is unable to be more scalable than the given object sensitivity.
-The learning procedure aims to remove
-this overhead by learning the behavior of the simulated call-site sensitivity using
-a dataset of programs. 
-The learnt model produces tunneling policies for call-site sensitivity without running the given object sensitivity.
+The goal of learning procedure is to remove this overhead. 
+With a training set (programs), it learns the behavior of the simulated call-site sensitivity.
+The learned heuristics enable a call-site sensitivity cost-effectively analyze a program without running an object sensitivity.
 
 
 
 \item {\bf Learning graph-based analysis techniques without features~\cite{Graphick20}:}
-We present \ourtool~for automatically learning graph-based analysis techniques without application specific features.
-The success of {\em data-driven pointer analysis} heavily depends on the quality of features used in the training procedure~\cite{JeJeChOh17,ChOhHeYa17}; 
-employing good features is essential for learning cost-effective analysis techniques.
-Developing qualified features, however, is also a challenging and requires laborious tasks.
-To reduce this burden, we designed a feature language and a learning algorithm that learns analysis heuristics. 
+We present \ourtool~for automatically learning graph-based analysis heuristics without application-specific features.
+The success of {\em data-driven pointer analysis} heavily depends on the quality of features used in the training procedure~\cite{JeJeChOh17,ChOhHeYa17}; good features are essential for learning cost-effective analysis techniques.
+Developing qualified features, however, is also challenging and requires a laborious task.
+To reduce this burden, we designed a feature language and an algorithm that synthesizes suitable features for {\em data-driven pointer analysis}.
 Instead of using given features, \ourtool~automatically generates qualified features with the feature language during the training phase; the learnt analysis techniques are combinations of the generated features. 
 
 
@@ -66,8 +66,8 @@ Chapter~{\ref{sec:Preliminaries}} provides preliminaries illustrating pointer an
 Chapter~{\ref{sec:Tunneling}} presents our new analysis technique context tunneling. 
 Chapter~{\ref{sec:Obj2CFA}} presents our method for transforming an object sensitivity into a more precise call-site sensitivity.
 Chapter~{\ref{sec:Graphick}} presents our method for learning graph-based analysis techniques without features.
-Chapter~{} discusses closed related works and
-Chapter~{} concludes.
+Chapter~{\ref{sec:Related}} discusses closed related works and
+Chapter~{\ref{sec:Conclusion}} concludes.
 %
 %
 %In static analysis of object-oriented programs, object sensitivity
