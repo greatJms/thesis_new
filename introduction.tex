@@ -28,9 +28,9 @@ This thesis makes the following three key contributions:
 
 \begin{itemize}
 \item {\bf Data-driven context tunneling~\cite{JeJeOh18}:}
-  We present data-driven context tunneling, a new approach for making $k$-limited context-sensitive pointer analysis precise and scalable.
-  Unlike, conventional $k$-limited context sensitivity that always updates contexts that the method calls keep the most recent $k$ context elements, context tunneling makes the method calls keep the most important $k$ context elements by selectively updating contexts.
-  The main challeng when applying context tunneling is to develop tunneling heuristics that determine whether to update contexts. We present data-driven approach for automatically generating this tunneling heuristics. The evaluation results show that the learned tunneling heuristics successfully keep important context elements that make the pointer analysis precise and scalable.
+We present data-driven context tunneling, a new approach for making $k$-limited context-sensitive pointer analysis precise and scalable.
+Unlike conventional $k$-limited context sensitivity that always updates contexts that the method calls keep the most recent $k$ context elements, context tunneling makes the method calls keep the most important $k$ context elements by selectively updating contexts.
+The main challenge when applying context tunneling is to develop tunneling heuristics that determine whether to update contexts. We present a data-driven approach for automatically generating tunneling heuristics. The evaluation results show that the learned tunneling heuristics successfully keep important context elements that make the pointer analysis precise and scalable.
 
 
 \item {\bf Learning a precise call-site sensitivity from given object sensitivity~\cite{JeOh22}:}
@@ -40,9 +40,9 @@ simulation-guided learning. For a given object sensitivity,
 simulation investigates the analysis result of the given object sensitivity and infers a context-tunneling policy that can make 
 call-site sensitivity become more precise than the given object sensitivity.
 The scalability of simulated call-site sensitivity, however, is 
-limited. Simualtion requires running the baseline object-sensitive
+limited. Simulation requires running the baseline object-sensitive
 analysis beforehand; call-site sensitivity is unable to be more scalable than the given object sensitivity.
-The goal of learning procedure is to remove this overhead. 
+The goal of the learning procedure is to remove this overhead. 
 With a training set (programs), it learns the behavior of the simulated call-site sensitivity.
 The learned heuristics enable a call-site sensitivity cost-effectively analyze a program without running an object sensitivity.
 
