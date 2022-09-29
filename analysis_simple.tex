@@ -164,7 +164,7 @@ The transfer function for method calls is less standard as it should
 account for context tunneling. 
 To support context tunneling~\cite{JeJeOh18}, we assume a context-tunneling space $\mbs$ is given. 
 The space $\mbs$ can be defined in various ways and the choice does not affect the soundness of the analysis. 
-In this paper, we simply define the space to be the set of all invocation sites, i.e., $\mbs = \Invo_P$ and let $T \subseteq \mbs$ be a tunneling abstraction given before the analysis. 
+In this chapter, we simply define the space to be the set of all invocation sites, i.e., $\mbs = \Invo_P$ and let $T \subseteq \mbs$ be a tunneling abstraction given before the analysis. 
 For method call ${\it x =
 y.m^p_r(a)}$, 
 the transfer function, $f^{T, U}_{\inst, k}$,  first generates the callee's context $\ctx'$ using the context-update function $\updatectx$, $\ctx' = \updatectx(\ctx, T, X, l, y, k)$, which takes information available at the

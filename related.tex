@@ -1,1 +1,162 @@
 \chapter{Related Work}
+
+In this chapter, we discuss related works closely related to this thesis.
+
+
+
+
+\section{Data-driven program analysis}
+This thesis belongs to the family of techniques known as data-driven static analysis~\cite{Oh2015, CHA20181,cha2016learning,JeJeChOh17,heo2016unsound,He20pldi}.
+Learning analysis policies has been popular in recent 
+works~\cite{Bielik2017,Peleg2016,Oh2015,JeJeChOh17,Jeon2019,Singh2018cav,heo2017unsound,Heo2019resource,Grigore2016,He2020,WeiR15,Graphick20}.
+Data-driven static analysis leverages machine learning to produce favorable program analysis heuristics automatically.
+\cite{Oh2015}~proposed a data-driven technique based on Bayesian optimization to learn flow- and context-sensitivity heuristics.
+They designed features for variables and functions in C programs to learn flow- and context-sensitivity heuristics which are presented as linear combinations of the features.
+Later, the linear-model approach was extended to capture disjunctive program properties~\cite{JeJeChOh17}.
+This thesis extensively uses the disjunctive model; Chapter~\ref{sec:Tunneling} and~\ref{sec:Obj2CFA} leverages the disjunctive model for describing context tunneling heuristics.
+\cite{Heo2016learning} proposed a supervised learning algorithm to learn variable clustering strategy in the Octagon domain
+where the learned heuristics determine whether to keep relation between variables during analysis.
+\cite{He20pldi} introduced a data-driven approach \Lait~that learns neural policies for removing substantially redundant constraints that need not be computed in numeric program analysis.
+\cite{Singh2018cav}~leveraged reinforcement learning to speed up numeric analysis with the Polyhedra domain.
+The prior works above require manually designed features to learn suitable heuristics.
+%\cite{WeiR15} figure out 8 high-level characteristics of functions
+%in JavaScript which are relevant to precision or scalability of the analysis.
+%\cite{cha2016learning} proposed a white box learning algorithm to generate analysis heuristics, which determine widening thresholds, without running analyzers.
+Closely related to Chapter~\ref{sec:Graphick}, \cite{ChOhHeYa17}~also automatically generated features for data-driven static analysis.
+Given programs, it runs a program reducer to convert the programs into small feature programs which only maintain the query-related program components,
+and generates features for data-driven static analysis from data-flow graphs obtained from the feature programs.
+Not to mention that the technique is specialized for C programs, it is hardly applicable to learning context-sensitivity heuristics because reducing programs spanning multiple procedures into reasonably small feature programs while maintaining the query-related components is challenging~\cite{ChOhHeYa17}. In this thesisr, we present a new technique based on a feature language, which does not have such a limitation and is effectively applicable to context-sensitive analysis for Java.
+
+
+
+
+\section{Context-Sensitive Analysis} To our knowledge, all
+existing techniques for context-sensitive analyses
+(e.g.~\cite{Sharir1981,Milanova2002,Shivers1988,
+  Whaley2004,Milanova2005,Smaragdakis2011, Khedker2008,
+  Karkare2007,kastrinis2013hybrid,WeiR15,Smaragdakis2014,JeJeChOh17,Oh2014,TanLX16,PadhyeK13})
+suffer from the problem we tackle in this paper. All of those
+techniques update the calling contexts at every call-site and
+therefore may lose important context elements when $k$-limiting is used.  For example,
+techniques for varying context depths
+adaptively~\cite{WeiR15,JeJeChOh17,Oh2014, Smaragdakis2014} have proven
+their effectiveness for tuning the performance of context-sensitivity.  However,
+the primary goal of these techniques is to selectively analyze methods
+with appropriate $k$ values, rather than to be selective in context
+construction.
+
+% , instead of blindly applying $k$-context depth for all program
+% parts and waste resources, making good prediction models that assign
+% promising context depth for each method
+% invocation. \cite{Smaragdakis2014} uses a manually-designed
+% heuristic to identify ``break-even points'' of context sensitivity
+% with pre-analysis, and then the main analysis selectively applies
+% context-sensitivity with the prediction. \cite{JeJeChOh17}
+% introduced a disjunctive model and a learning algorithm to infer
+% such heuristics automatically from codebase. However, as far as
+% those techniques rely on conventional $k$-limited
+% context-sensitivity at their core, they suffer from the same problem
+% that our paper concerns.
+
+The technique, called \Bean, by~\cite{TanLX16} is similar to ours in
+that it aims to improve precision of $k$-object-sensitive points-to
+analysis without increasing $k$. The idea is to identify ``redundant''
+context elements by running a pre-analysis and building a so-called
+object allocation graph. An object allocation graph is analogous to a
+call-graph in call-site-sensitivity and captures how context strings
+are generated during an object-sensitive analysis. The technique
+identifies redundant nodes in the graph, which can be removed without
+reducing the number of distinct contexts; in fact, this technique
+guarantees to result same or more distinct contexts than conventional
+analysis with same $k$. The redundant nodes are excluded when
+selecting heap contexts for an object. The main focus of \Bean~is in
+choosing good heap contexts and therefore it still suffers from the
+core problem we tackle in this paper; that is, \Bean~always append the
+last context element to the parent context on method calls (i.e. it
+uses the last rule in Figure~\ref{pre:baseline-rules}, not
+Figure~\ref{fig:tunneling-rules}). As the result, when $k=1$ for
+example, \Bean~analyzes every method under the same calling context as
+the ordinary $1$-object-sensitive analysis. The goal of context
+tunneling is to mitigate this problem.
+
+Merging equivalent contexts~\cite{Xu2008} or abstract heaps~\cite{Tan2017} also have been studied to
+increase scalability of context-sensitive points-to analysis. \cite{Xu2008} first defines a fine-grained
+notion of context equivalence that guarantees to increase scalability without losing original analysis's
+precision, which is $\infty$-context-sensitivity. Based on the equivalence, the paper introduces its abstracted
+version to extend scalability even further at the cost of precision. \cite{Tan2017} merges two
+abstract heaps if their fields-points-to-graphs indicate that any field access sequence (i.e.,
+$o.f.g.\cdots .h$) ends up with same typed objects for two graphs. This approach demonstrated that it brings
+little or no negative impact on precision but scales deep context
+sensitive analysis.
+
+
+
+
+
+
+
+
+
+
+\myparagraph{Object Sensitivity}
+Our work deviates significantly from past works on improving context-sensitive analyses for object-oriented programs. 
+While almost all past works took the ``safe'' direction of building upon object 
+sensitivity~\cite{Smaragdakis2011,SridharanDCST12,TanLX16,Li2018b,Smaragdakis2014,Li2018a,JeJeChOh17,Liang2011,Liang2011learning,Lu:2019:PYF}, our
+work calls for attention to call-site sensitivity.
+
+
+%Since the introduction~\cite{Milanova2002,Milanova2005}, 
+Over the past decades, a large amount of  research
+ has been devoted to improving object sensitivity.
+For example, \cite{Smaragdakis2011} proposed a variant of object sensitivity, called type sensitivity, which is more scalable than object sensitivity with little compromise on precision.
+\cite{SridharanDCST12} proposed parameter sensitivity that uses parameter values as contexts rather than the values of receiver objects.
+\cite{TanLX16} presented a technique to make $k$-object-sensitive analyses more precise 
+without increasing $k$.
+\cite{Thiessen2017} proposed a new variation of object sensitivity
+that combines CFL-reachability and $k$-limited approach. 
+%to take advantage of both approaches. 
+%Li et al.~\cite{Li2018b} proposed a method for improving the scalability of object sensitivity.
+\cite{Xu2008} improved scalability of object sensitivity by identifying and merging equivalent contexts.
+
+% Although we applied our framework to conventional object sensitivity only,
+% our framework is also applicable to other context variations of object sensitivity.
+
+Selective object sensitivity has been particularly popular for boosting object 
+sensitivity~\cite{Smaragdakis2014,Li2018a,Li2018b,JeJeChOh17,WeiR15,Liang2011,Liang2011learning,Lu:2019:PYF}.  As 
+applying deep object sensitivity to
+all methods does not scale to large programs, several techniques have
+been proposed to apply deeper contexts only to a set of methods
+that are likely to benefit.
+For example, \cite{Smaragdakis2014} proposed a technique that runs a
+pre-analysis and identifies the methods that should not receive
+context sensitivity. \cite{JeJeChOh17} developed a machine learning
+algorithm that can produce method-selection heuristics automatically
+and showed that the data-driven approach outperforms existing
+hand-crafted approaches. 
+As we showed in Section~\ref{sec:SelectiveCtx}, selective context sensitivity is
+%has proven 
+effective at improving the scalability of call-site sensitivity as
+well~\cite{Smaragdakis2014,Oh2014,ZipperJournal20}, which would make our 
+technique more practical. 
+
+
+
+
+
+\myparagraph{Call-Site Sensitivity}
+Call-site sensitivity has received little attention in static analysis of object-oriented languages. 
+However, call-site sensitivity has been studied extensively in other contexts~\cite{Thakur2019,Oh2014, Khedker2008,Khedker2012,Zhang2014, Sridharan2006,Sridharan2005,Dan17,Tripp2009}.
+For example, several works developed techniques to run the most precise, 
+$\infty$-call-site-sensitive analysis.
+\cite{Khedker2008} used value contexts to identify 
+redundant contexts that are worthless to maintain and remove them
+to scale up the full call strings analysis without precision loss.
+In a similar context, \cite{Thakur2019} proposed a way to handle the scalability issue by reducing
+comparison costs involved in value contexts.
+Another line of works aimed to improve scalability of call-site
+sensitivity~\cite{Whaley2004,Sridharan2006,Sridharan2005,Dan17,Xu2009}.
+For example, \cite{Whaley2004} used binary decision diagrams to represent context strings efficiently, and 
+\cite{Sridharan2006} proposed a refinement-based demand-driven
+analysis based on CFL-reachability, where the idea is to remove client-irrelevant part of the program.
+It is challenging to compare ours with the demand-driven approaches~\cite{Sridharan2006,Boomerang16} because our technique is currently formulated on top of a whole-program analysis and does not consider the CFL-reachability formulation. 
+

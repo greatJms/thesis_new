@@ -33,7 +33,7 @@ Besides those generality issues, the training process of \ourtool~is time-consum
 %which seems to be costly.
 
 Despite those limitations, we believe \ourtool~can be useful in practice. %for other settings as well in practice.
-First of all, note that in this paper we showed the effectiveness of \ourtool~in a realistic (yet particular) setting, where we used a real-world pointer analysis framework and benchmarks.
+First of all, note that in this chapter we showed the effectiveness of \ourtool~in a realistic (yet particular) setting, where we used a real-world pointer analysis framework and benchmarks.
 In particular, we do not believe the expensive training phase of \ourtool~is a serious limitation in practice, because it is not only fully automatic but also rather cheap compared to the much more expensive process of handcrafting analysis heuristics or features by human experts.
 %\ourtool~can automate the manual process that typically requires weeks or months to develop a single heuristic.
 %All the processes of generating the heuristics are fully automated, which can dramatically reduce the
@@ -43,7 +43,7 @@ In particular, we do not believe the expensive training phase of \ourtool~is a s
 %designing cost-effective heuristics from the given graph, which typically takes weeks or months.
 %Moreover, all the processes of generating the heuristics are fully automated, which can dramatically reduce the
 %burdens of human-involving tasks.
-The learned heuristic is dependent on the training data but, as we showed in this paper (Section~\ref{sec:justify}), using a small number of real programs is likely to provide a sufficient amount of actual training data (e.g., allocation sites) in practice. Also, the selection of training programs did not require careful engineering efforts in our case.
+The learned heuristic is dependent on the training data but, as we showed in this chapter (Section~\ref{sec:justify}), using a small number of real programs is likely to provide a sufficient amount of actual training data (e.g., allocation sites) in practice. Also, the selection of training programs did not require careful engineering efforts in our case.
 The context length $\CallDepth$ is rather limited (2-object-sensitivity), but 2-object-sensitive pointer analysis is generally considered to be highly precise in practice~\cite{Li2018a}.
 
 For the issue on target clients, we showed that training heuristics using the may-fail-cast client
