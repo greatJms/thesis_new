@@ -1,1 +1,32 @@
-\chapter{Conclusion}
+\chapter{Conclusion}\label{sec:Conclusion}
+We prsent data-driven pointer analysis, a novel technique for generating anlaysis heuristics that make pointer analysis precise and scalable. 
+To this end, we present three key ideas: data-driven context tunneling, \ourtechnique, \Graphick. Data-driven context tunneling automatically generate qualfied tunneling heuristics that enable the pointer analysis to keep important $k$ context elements. \ourtechnique~automatically transforms an object sensitivity into a more precise call-site sensitivity. \Graphick~automatically learns graph-based heuristics without application specific features. The evaluation results show that the automatically generated analysis heuristics significantly improved the precision and scalability of pointer analysis. 
+
+
+
+% the pointer analysis with the learned heuristics significantly improved the precision and scalability of pointer analysis.
+
+%We present context tunneling that enable pointer analysis keep the most important $k$ context elements. We 
+
+%\ourtechnique
+
+
+% We studied {\em data-driven symbolic execution}, a brand new solution for
+% the difficulty of manually crafting critical techniques of symbolic
+% execution: search heuristic, input space reduction, and state-pruning.
+% The key idea of our data-driven approach is to
+% automatically learn how to generate a promising solution based on data (e.g.,
+% test-cases) accumulated during symbolic execution. Experimental results show
+% that this ``machine-tuned'' technique outperforms existing ``hand-tuned''
+% techniques in both code coverage and bug detection on a wide range of
+% open-source C programs. We hope that our data-driven approach can supplant
+% the laborious and less rewarding task of manually generating diverse
+% heuristics of symbolic execution.
+
+% As future work, it would be possible to extend data-driven
+% symbolic execution in two folds. First, we will continuously replace
+% manually-tuned yet unstable techniques of symbolic execution (e.g., seed
+% selection and parameter tuning) with automatically-tuned and stable ones via data-driven approach.
+% Second, we will integrate four different techniques, including $\paradyse$,
+% $\conmeleon$, $\contest$, and $\ourtool$, into a publicly available tool so
+% that end-users can easily employ our technique.
