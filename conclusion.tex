@@ -1,6 +1,9 @@
 \chapter{Conclusion}\label{sec:Conclusion}
-We prsent data-driven pointer analysis, a novel technique for generating anlaysis heuristics that make pointer analysis precise and scalable. 
-To this end, we present three key ideas: data-driven context tunneling, \ourtechnique, \Graphick. Data-driven context tunneling automatically generate qualfied tunneling heuristics that enable the pointer analysis to keep important $k$ context elements. \ourtechnique~automatically transforms an object sensitivity into a more precise call-site sensitivity. \Graphick~automatically learns graph-based heuristics without application specific features. The evaluation results show that the automatically generated analysis heuristics significantly improved the precision and scalability of pointer analysis. 
+This thesis explore data-driven pointer analysis, a novel technique for generating analysis heuristics that make pointer analysis precise and scalable. 
+To this end, we present three key ideas: data-driven context tunneling, \ourtechnique, \Graphick. We present context tunneling that shifts the context abstraction paradigm from the most recent $k$ into the most important $k$.
+Data-driven context tunneling automatically generates qualified tunneling heuristics that enable the pointer analysis to keep important $k$ context elements. \ourtechnique~challenged the commonly accepted knowledge, object sensitivity is superior to call-site sensitivity for object-oriented programs. \ourtechnique~automatically transforms an object sensitivity into a more precise call-site sensitivity. We present \Graphick~to remove the burden of designing features. \Graphick~automatically learns graph-based heuristics without application-specific features. The evaluation results show that the automatically generated analysis heuristics significantly improved the precision and scalability of pointer analysis. 
+%We believe data-driven pointer analysis
+
 
 
 

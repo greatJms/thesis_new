@@ -339,36 +339,13 @@ The table shows that \ourtool~is also cost-effective compared to \twosobjH. For 
 \multirow{2}{*}{\ourtool} & \#may-fail casts     & 220                      & 867                       & 2,880                        & 479                       & 1,408                    & 1,147                      \\
                           & analysis time (s)    & 45+(78)                  & 83(+76)                   & 1,426(+105)                  & 185(+57)                  & 245(+85)                & 215(+30)                  \\ \midrule
 \multirow{2}{*}{\twosobjH}    & \#may-fail casts     & 220                      & 757                       & -                       & 447                          &  1,295                       & 1,125                          \\
-                          & analysis time (s)    & 42                       & 195                       & >10,800                            & 428                          & 818                        & 2,238                           \\
+                          & analysis time (s)    & 42                       & 195                       & $>$ 10,800                            & 428                          & 818                        & 2,238                           \\
 %\midrule
 %\multirow{2}{*}{\Insens}   & \#may-fail casts     & 679                      & 1,810                      & 4190                        & 1,182                      & 2,458                    & 1,924                      \\
 %                          & analysis time (s)    & 23                       & 48                        & 91                          & 37                        & 53                      & 20                        \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-
-\iffalse
-\textcolor{red}{
-%\myparagraph{Graphick vs Scaler}
-Further, we could derive interesting differences between \ourtool~and Scaler in deciding which nodes to analyze more precisely.
-Given an object allocation graph, Scaler relies heavily on the number of incoming edges
-%into the target node in determining the context.
-as the number of incoming edges reveals how each context will be constructed in object-sensitivity.
-\ourtool, however, considers the number of neighbor nodes' outgoing edges more as shown in Figure 6,
-which is statistically learned from training data.
-%\ourtool~statistically found the consideration on the number of outgoing edges benefits the learned heuristic more.
-%This results show that the logical insight (\Scaler) can be different from the statistical insight (\ourtool).
-%\todored{more than just difference... any other insights..? why considering the outgoing more?}
-}
-\fi
-
-
-%
-%For example, Scaler is a heuristic that heavily reasons about the number of incoming edges' to target nodes for context decision. \ourtool, however, considers the number of neighbor nodes' outgoing edges more as shown in Figure 6. We will discuss this observation in the revised paper.
-%}
-
-
 
 
 

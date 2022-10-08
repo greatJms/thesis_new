@@ -1,4 +1,4 @@
-% !TEX root = ./paper.tex
+% !TEX root = ../thesis.tex
 
 %\textcolor{red}{
 %The heuristics produced by \ourtool~ may not be general when the downstream clients for training steps are substantially different from those in evaluation.
@@ -84,8 +84,55 @@ The clients we used in our evaluation (i.e. may-fail-casts, poly-call-sites, and
 %\textcolor{blue}{Tone down the claim of Graphick as "an approach to learn heuristics for "object-sensitive" pointer analysis" instead of "a general-purpose approach to context-sensitive pointer analysis". In particular, argue convincingly how GraphicK can be used realistically in a production setting, given that (a) its training phase is time-consuming, (b) the learned predictor is dependent on the training data and the analyser F used, and (3) the context-length k used in the training phase is rather limited.}
 
 
+\newcommand{\callSL}{{\it 1callH+SL}}
+
+\newcommand{\BatonUnity}{{\it Baton-Unity}}
+
+\newcommand{\callSLG}{{\it 1callH+SLG}}
+
+
+
+
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+\begin{table}[]
+    \caption{Performance comparison of \callSL, \callSLG, and \BatonUnity~\cite{Tan2021}.}\label{tbl:unifyAll}
+    \begin{tabular}{@{}crrrcrrr@{}}
+    \toprule
+    Program                  & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\#fail-cast} & \multicolumn{1}{c}{Time} & Program                   & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\#fail-cast} & \multicolumn{1}{c}{Time} \\ \midrule
+    \multirow{3}{*}{luindex} & \callSL                     &       225                          &   33                       & \multirow{3}{*}{lusearch} & \callSL                     &  231                               &   36                       \\
+                             & \callSLG                    & 228                             & 29                       &                           & \callSLG                    & 243                             & 29                       \\
+                             & \BatonUnity                  & 284                             & 41                       &                           & \BatonUnity                  & 287                             & 69                       \\\midrule
+    \multirow{3}{*}{antlr}   & \callSL                     &  360                               &   77                       & \multirow{3}{*}{xalan}    & \callSL                     &    460                             & 92                         \\
+                             & \callSLG                    & 373                             & 60                       &                           & \callSLG                    & 474                             & 69                       \\
+                             & \BatonUnity                  & 416                             & 62                       &                           & \BatonUnity                  & 524                             & 408                      \\\midrule
+    \multirow{3}{*}{eclipse} & \callSL                     &                                 &                          & \multirow{3}{*}{fop}      & \callSL                     &   1344                              &  375                        \\
+                             & \callSLG                    & 2833                            & 2942                     &                           & \callSLG                    & 1413                            & 221                      \\
+                             & \BatonUnity                  & 2834                            & 3847                     &                           & \BatonUnity                  & 1440                            & 284                      \\\midrule
+    \multirow{3}{*}{chart}   & \callSL                     &   778                              &  82                        & \multirow{3}{*}{bloat}    & \callSL                     &  1125                               &    456                      \\
+                             & \callSLG                    & 837                             & 65                       &                           & \callSLG                    & 1154                            & 298                      \\
+                             & \BatonUnity                  & 855                             & 171                      &                           & \BatonUnity                  & 1132                            & 612                      \\ \bottomrule
+    \end{tabular}
+    \end{table}
+
+
+\subsection{Applying \ourtool~to \callSL}
+As we showed that selective context sensitivity and context tunneling can be combined (Section~\ref{sec:SelectiveCtx}), we can apply \ourtool~to our state-of-the-art context tunneled call-site-sensitivity \callSL~in Section~\ref{sec:performance}. We implement \ourtool~on top of \callSL. We used 8 Dacapo benchmarks $\{$luindex, lusearch, antlr, xalan, eclipse, fop, chart, bloat $\}$ for comparing the performance. The selective heuristic (\ourtool) is trained with two small programs luindex and lusearch.
+
+
+Table~\ref{tbl:unifyAll} shows the performance of \callSL~and \callSL~with \ourtool~denoted \callSLG. We additionally use \BatonUnity~for comparing the performance of our data-driven pointer analysis (\callSL~and \callSLG) against manually crafted pointer analysis. \BatonUnity~is a state-of-the-art hand-crafted pointer analysis~\cite{Tan2021} which uses a combination of three hand-crafted heuristics~\cite{Li2018b,ZipperJournal20}. We use 8 Java programs in Dacapo benchmarks for comparison.
+
+
+As Table~\ref{tbl:unifyAll} shows, \ourtool~improved the scalability of \callSL~about 25\%. In particular, \callSLG~is 41\% more scalable than \callSL~in fop. Compared to the state-of-the-art hand-crafted pointer analysis \BatonUnity, \callSLG~is overall more precise and scalable than \BatonUnity. Except for bloat, \callSLG~is more precise and scalable than the other seven benchmarks.
+
+
+
+
 
 %%% Local Variables:
 %%% mode: latex
-%%% TeX-master: "paper"
+%%% TeX-master: "../thesis"
 %%% End:
