@@ -104,16 +104,16 @@ The clients we used in our evaluation (i.e. may-fail-casts, poly-call-sites, and
     \toprule
     Program                  & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\#fail-cast} & \multicolumn{1}{c}{Time} & Program                   & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\#fail-cast} & \multicolumn{1}{c}{Time} \\ \midrule
     \multirow{3}{*}{luindex} & \callSL                     &       225                          &   33                       & \multirow{3}{*}{lusearch} & \callSL                     &  231                               &   36                       \\
-                             & \callSLG                    & 228                             & 29                       &                           & \callSLG                    & 243                             & 29                       \\
+                             & \callSLG                    & 228                             & 29                       &                           & \callSLG                    & 234                             & 29                       \\
                              & \BatonUnity                  & 284                             & 41                       &                           & \BatonUnity                  & 287                             & 69                       \\\midrule
     \multirow{3}{*}{antlr}   & \callSL                     &  360                               &   77                       & \multirow{3}{*}{xalan}    & \callSL                     &    460                             & 92                         \\
                              & \callSLG                    & 373                             & 60                       &                           & \callSLG                    & 474                             & 69                       \\
                              & \BatonUnity                  & 416                             & 62                       &                           & \BatonUnity                  & 524                             & 408                      \\\midrule
-    \multirow{3}{*}{eclipse} & \callSL                     &                                 &                          & \multirow{3}{*}{fop}      & \callSL                     &   1344                              &  375                        \\
-                             & \callSLG                    & 2833                            & 2942                     &                           & \callSLG                    & 1413                            & 221                      \\
+    \multirow{3}{*}{eclipse} & \callSL                     & 2761                                &  5958                        & \multirow{3}{*}{fop}      & \callSL                     &   1344                              &  375                        \\
+                             & \callSLG                    & 2833                            & 2942                     &                           & \callSLG                    & 1402                            & 221                      \\
                              & \BatonUnity                  & 2834                            & 3847                     &                           & \BatonUnity                  & 1440                            & 284                      \\\midrule
     \multirow{3}{*}{chart}   & \callSL                     &   778                              &  82                        & \multirow{3}{*}{bloat}    & \callSL                     &  1125                               &    456                      \\
-                             & \callSLG                    & 837                             & 65                       &                           & \callSLG                    & 1154                            & 298                      \\
+                             & \callSLG                    & 828                             & 65                       &                           & \callSLG                    & 1154                            & 298                      \\
                              & \BatonUnity                  & 855                             & 171                      &                           & \BatonUnity                  & 1132                            & 612                      \\ \bottomrule
     \end{tabular}
     \end{table}
@@ -126,7 +126,7 @@ As we showed that selective context sensitivity and context tunneling can be com
 Table~\ref{tbl:unifyAll} shows the performance of \callSL~and \callSL~with \ourtool~denoted \callSLG. We additionally use \BatonUnity~for comparing the performance of our data-driven pointer analysis (\callSL~and \callSLG) against manually crafted pointer analysis. \BatonUnity~is a state-of-the-art hand-crafted pointer analysis~\cite{Tan2021} which uses a combination of three hand-crafted heuristics~\cite{Li2018b,ZipperJournal20}. We use 8 Java programs in Dacapo benchmarks for comparison.
 
 
-As Table~\ref{tbl:unifyAll} shows, \ourtool~improved the scalability of \callSL~about 25\%. In particular, \callSLG~is 41\% more scalable than \callSL~in fop. Compared to the state-of-the-art hand-crafted pointer analysis \BatonUnity, \callSLG~is overall more precise and scalable than \BatonUnity. Except for bloat, \callSLG~is more precise and scalable than the other seven benchmarks.
+As Table~\ref{tbl:unifyAll} shows, \ourtool~improved the scalability of \callSL~about 28\% on average. In particular, \callSLG~is 50\% more scalable than \callSL~in eclipse. Compared to the state-of-the-art hand-crafted pointer analysis \BatonUnity, \callSLG~is overall more precise and scalable than \BatonUnity. Except for bloat, \callSLG~is more precise and scalable than the other seven benchmarks.
 
 
 
