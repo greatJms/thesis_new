@@ -110,7 +110,7 @@ The clients we used in our evaluation (i.e. may-fail-casts, poly-call-sites, and
                              & \callSLG                    & 373                             & 60                       &                           & \callSLG                    & 474                             & 69                       \\
                              & \BatonUnity                  & 416                             & 62                       &                           & \BatonUnity                  & 524                             & 408                      \\\midrule
     \multirow{3}{*}{eclipse} & \callSL                     & 2761                                &  5958                        & \multirow{3}{*}{fop}      & \callSL                     &   1344                              &  375                        \\
-                             & \callSLG                    & 2833                            & 2942                     &                           & \callSLG                    & 1402                            & 221                      \\
+                             & \callSLG                    & 2875                            & 2983                     &                           & \callSLG                    & 1402                            & 221                      \\
                              & \BatonUnity                  & 2834                            & 3847                     &                           & \BatonUnity                  & 1440                            & 284                      \\\midrule
     \multirow{3}{*}{chart}   & \callSL                     &   778                              &  82                        & \multirow{3}{*}{bloat}    & \callSL                     &  1125                               &    456                      \\
                              & \callSLG                    & 828                             & 65                       &                           & \callSLG                    & 1154                            & 298                      \\
@@ -126,7 +126,7 @@ As we showed that selective context sensitivity and context tunneling can be com
 Table~\ref{tbl:unifyAll} shows the performance of \callSL~and \callSL~with \ourtool~denoted \callSLG. We additionally use \BatonUnity~for comparing the performance of our data-driven pointer analysis (\callSL~and \callSLG) against manually crafted pointer analysis. \BatonUnity~is a state-of-the-art hand-crafted pointer analysis~\cite{Tan2021} which uses a combination of three hand-crafted heuristics~\cite{Li2018b,ZipperJournal20}. We use 8 Java programs in Dacapo benchmarks for comparison.
 
 
-As Table~\ref{tbl:unifyAll} shows, \ourtool~improved the scalability of \callSL~about 28\% on average. In particular, \callSLG~is 50\% more scalable than \callSL~in eclipse. Compared to the state-of-the-art hand-crafted pointer analysis \BatonUnity, \callSLG~is overall more precise and scalable than \BatonUnity. Except for bloat, \callSLG~is more precise and scalable than the other seven benchmarks.
+As Table~\ref{tbl:unifyAll} shows, \ourtool~improved the scalability of \callSL~about 28\% on average. In particular, \callSLG~is 50\% more scalable than \callSL~in eclipse. Compared to the state-of-the-art hand-crafted pointer analysis \BatonUnity, \callSLG~is overall more precise and scalable than \BatonUnity. Except for bloat and eclipse, \callSLG~is more precise and scalable than the other seven benchmarks.
 
 
 
