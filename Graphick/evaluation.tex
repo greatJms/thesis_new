@@ -60,7 +60,7 @@ We demonstrate the effectiveness and generality of our technique by comparing it
 \myparagraph{Setting}
 \Scaler~is a context-sensitivity heuristic that works on the object allocation graph (OAG)~\cite{Li2018b}. From the OAG, it infers a policy to assign one of 2-object-sensitivity, 2-type-sensitivity, 1-type-sensitivity, and context-insensitivity to each method.
 We used the same pre-analysis of \Scaler~to obtain the OAG and let our technique produce a heuristic.
-We set $\CallDepth$ in Section~\ref{sec:param-context} to 3, where 0, 1, 2, and 3 correspond to context-insensitivity, 1-type-sensitivity, 2-type-sensitivity, and 2-object-sensitivity, respectively.
+We set $\CallDepth$ in Section~\ref{sec:graphick:param} to 3, where 0, 1, 2, and 3 correspond to context-insensitivity, 1-type-sensitivity, 2-type-sensitivity, and 2-object-sensitivity, respectively.
 Unlike \Scaler, our heuristic assigns a context for each heap allocation site.
 It poses $4^N$ possibilities where $N$ denotes the number of allocation-sites in the program.
 %}

@@ -9,7 +9,7 @@ The success of these tools eventually depends on the performance (e.g., precisio
 
 Developing a cost-effective pointer analyzer, however, is challenging.
 Pointer analyzers need good analysis heuristics to become practical. 
-For example, suitable context~\cite{KastrinisS13a,Li2018b,Li2018a,Smaragdakis2014,Tan2020,Lu:2019:PYF,JeJeChOh17} and heap abstraction~\cite{Tan2017,TanLX16} heuristics are essential for accurately and efficiently analyzing object-oriented programs. 
+For example, suitable context~\cite{KastrinisS13a,Li2018b,Li2018a,Smaragdakis2014,Tan2021,Lu:2019:PYF,JeJeChOh17} and heap abstraction~\cite{Tan2017,TanLX16} heuristics are essential for accurately and efficiently analyzing object-oriented programs. 
 Context abstraction heuristics determine contexts for each method call to distinguish variables and objects in different calling contexts for precision or merge variables and objects in the same contexts for efficiency. 
 Heap abstraction heuristics determine how to model each heap object. A representative heap abstraction strategy is modeling all the objects with their allocation sites~\cite{Tan2017}.
 Developing such analysis heuristics, however, is challenging and needs laborious tasks. 
