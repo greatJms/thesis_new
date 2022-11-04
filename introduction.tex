@@ -33,7 +33,7 @@ Unlike conventional $k$-limited context sensitivity that always updates contexts
 The main challenge when applying context tunneling is to develop tunneling heuristics that determine whether to update contexts. We present a data-driven approach for automatically generating tunneling heuristics. The evaluation results show that the learned tunneling heuristics successfully keep important context elements that make the pointer analysis precise and scalable.
 
 
-\item {\bf Learning a precise call-site sensitivity from given object sensitivity~\cite{JeOh22}:}
+\item {\bf Learning a precise call-site sensitivity from a given object sensitivity~\cite{JeOh22}:}
 We present \ourtechnique~that automatically transforms a given object sensitivity with tunneling into a more precise call-site sensitivity with tunneling. 
 \ourtechnique~consists of the simulation and
 simulation-guided learning. For a given object sensitivity, 
@@ -48,7 +48,7 @@ The learned heuristics enable a call-site sensitivity cost-effectively analyze a
 
 
 
-\item {\bf Learning graph-based analysis techniques without features~\cite{Graphick20}:}
+\item {\bf Learning graph-based analysis techniques without hand-crafted features~\cite{Graphick20}:}
 We present \ourtool~for automatically learning graph-based analysis heuristics without application-specific features.
 The success of data-driven pointer analysis heavily depends on the quality of features used in the training procedure~\cite{JeJeChOh17,ChOhHeYa17}; good features are essential for learning cost-effective analysis techniques.
 Developing qualified features, however, is also challenging and requires a laborious task.
