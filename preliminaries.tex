@@ -4,10 +4,9 @@ The baseline pointer analysis uses $k$-limited context sensitivity~\cite{Kastrin
 
 
 
-\section{Conventional $k$-Context-Sensitive Pointer Analysis}\label{pre:conventional-analysis}
+\section{Conventional Pointer Analysis}\label{pre:conventional-analysis}
 % \myparagraph{Generic Analysis} 
-Our analysis is 
-context-sensitive pointer analysis for Java~\cite{Smaragdakis2015}.
+Our analysis is $k$-context-sensitive pointer analysis using allocation-site-based heap abstraction.
 The analysis is a flow-insensitive, field-sensitive, and subset-based
 analysis with on-the-fly call-graph construction. 
 Our analysis supports various context flavors and depths.
