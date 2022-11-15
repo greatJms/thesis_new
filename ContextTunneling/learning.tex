@@ -580,12 +580,12 @@ and they constitute the initial workset $W$.
 In the loop at lines 5--13, we iterate to refine each seed feature.
 At line 6, the $\ChooseSeed$ function chooses the seed feature that
 has the highest potential:
-\[
-  \ChooseSeed(i,\params, F, \vec{P}, W)=\argmax_{a\in W}\big\lvert
+\begin{multline*}
+  \ChooseSeed(i,\params, F, \vec{P}, W) = \\ \argmax_{a\in W}\big\lvert
   {\bigcup_{P\in \vec{P}}{ \precision(F_P(\heuristic_{\params{[f_i
           \mapsto f_i \vee a]}}(P)))} \setminus
     \precision(F_P(\heuristic_{\params}(P))) }\big\rvert
-\]
+\end{multline*}
 Among the seed features in $W$, we pick a feature $a \in W$ that
 maximizes the number of queries provable with the feature
 (i.e. $\params[f_i \mapsto f_i \vee a]$) but unprovable withtout it

@@ -590,24 +590,24 @@ significant impact on the final quality of learned heuristics.
 It depicts how the precision of the current
 heuristic changes over time during the learning
 algorithm.  The x-axis reports progress of the learning procedure\footnote{We collected refinements that passed the condition at line 10 in Algorithm~\ref{alg:learning} for better understanding.} and
-the y-axis reports the precision in terms of the number of unproven
+the y-axis reports the precision in terms of the number of unproven 
 queries on the training set of programs (lower is better). Note that
 our algorithm (black solid line) repeatedly explores parameters that
 are much worse than the current one but doing so enables to find a good
 parameter in the end. With the greedy strategy (red dotted line), the
 algorithm converges to suboptimal outcomes. Crucially, the heuristics
 learned by this greedy algorithm could not beat the conventional
-2-context-sensitive approaches on test programs.
+2-context-sensitive approaches on test programs. 
 
 \begin{figure}[t]
   \centering
-  \begin{subfigure}[b]{.45\textwidth}
+  \begin{subfigure}[b]{.48\textwidth}
   \includegraphics[width=\textwidth]{ContextTunneling/figures/sobj_ours_greedy.pdf}
   \caption{Hybrid context-sensitivity}
   \label{fig:greedy_sobj}
   \end{subfigure}
   ~
-  \begin{subfigure}[b]{.45\textwidth}
+  \begin{subfigure}[b]{.48\textwidth}
   \includegraphics[width=\textwidth]{ContextTunneling/figures/type_ours_greedy.pdf}
   \caption{Type-sensitivity}
   \label{fig:greedy_type}

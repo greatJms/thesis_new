@@ -1,5 +1,42 @@
 %\newpage
 
+\begin{figure}[t]
+  \[
+    \begin{array}{c}
+      \infer[]
+      {
+      \begin{array}{c}
+        \ctx' \in \Reachable ({m}) \quad
+        ({\heap}, {\hctx}) \in  \VarPointsTo ({m_{\this}}, {\ctx'}) \\
+        \VarPointsTo({\it arg}, \ctx) \subseteq \VarPointsTo(m_{\it param}, \ctx')
+        \quad
+        \VarPointsTo(m_{\it return}, \ctx') \subseteq \VarPointsTo(x, \ctx)\\
+        (\invo, \ctx, m, \ctx') \in \CallGraph
+      \end{array}
+      }{
+      \begin{array}{c}
+        {\it \invo : x = y.\sig({\it arg})} \quad
+        \ctx \in    \Reachable ({\methof(\invo)}) \\
+        ({\heap}, {\hctx})\in  \VarPointsTo ({\it y},\ctx) \quad
+        t = {\typeof}(\heap)  \quad m = {\lookup}(t, \sig) \\
+(e, {\pctx}, p) = \parent(\heap,\hctx, \invo, \ctx) \quad
+        \ctx' = \left\{
+        \begin{array}{l@{\quad}l}
+          \truncateCtx{\appendCtx{{ \pctx}}{{e}}}{\CallDepth}
+          & \mbox{if}~(p,m)\not\in \TunnelingRelation \\
+          \truncateCtx{\pctx}{\CallDepth}     & \mbox{if}~(p,m)
+                                                \in \TunnelingRelation
+        \end{array}
+                                                          \right.
+      \end{array}
+                                                          }
+    \end{array}
+  \]
+  \caption{Context-sensitive pointer analysis with tunneling}
+\label{fig:tunneling-rules}
+\end{figure}
+
+
 \section{Pointer Analysis with Context Tunneling} \label{sec:tunneling}
 Now, we formally describe the idea of context tunneling on the top the analysis rule in Figure~\ref{pre:baseline-rules}.
 %\subsection{Analysis with Context Tunneling}\label{sec:tunneling-analysis}
@@ -51,41 +88,6 @@ The goal of Section~\ref{tunneling:learning} is to address this challenge
 with a data-driven technique that automatically learns a good
 tunneling heuristic from data.
 
-\begin{figure}[t]
-  \[
-    \begin{array}{c}
-      \infer[]
-      {
-      \begin{array}{c}
-        \ctx' \in \Reachable ({m}) \quad
-        ({\heap}, {\hctx}) \in  \VarPointsTo ({m_{\this}}, {\ctx'}) \\
-        \VarPointsTo({\it arg}, \ctx) \subseteq \VarPointsTo(m_{\it param}, \ctx')
-        \quad
-        \VarPointsTo(m_{\it return}, \ctx') \subseteq \VarPointsTo(x, \ctx)\\
-        (\invo, \ctx, m, \ctx') \in \CallGraph
-      \end{array}
-      }{
-      \begin{array}{c}
-        {\it \invo : x = y.\sig({\it arg})} \quad
-        \ctx \in    \Reachable ({\methof(\invo)}) \\
-        ({\heap}, {\hctx})\in  \VarPointsTo ({\it y},\ctx) \quad
-        t = {\typeof}(\heap)  \quad m = {\lookup}(t, \sig) \\
-(e, {\pctx}, p) = \parent(\heap,\hctx, \invo, \ctx) \quad
-        \ctx' = \left\{
-        \begin{array}{l@{\quad}l}
-          \truncateCtx{\appendCtx{{ \pctx}}{{e}}}{\CallDepth}
-          & \mbox{if}~(p,m)\not\in \TunnelingRelation \\
-          \truncateCtx{\pctx}{\CallDepth}     & \mbox{if}~(p,m)
-                                                \in \TunnelingRelation
-        \end{array}
-                                                          \right.
-      \end{array}
-                                                          }
-    \end{array}
-  \]
-  \caption{Context-sensitive pointer analysis with tunneling}
-\label{fig:tunneling-rules}
-\end{figure}
 
 %%% Local Variables:
 %%% mode: latex

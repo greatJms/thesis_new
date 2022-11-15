@@ -53,7 +53,9 @@
 
 \chapter{Proof of Theorem~\ref{THM:REDUCESPACE}}\label{sec:proof}
 
-We will show that the output of our learning algorithm is the minimal abstraction of the given program using proof by induction and contradiction.
+%{\textsc LearningMinimalAbstraction}\label{alg:Learnminimal}
+
+We will show that the output of Algorithm~\ref{alg:Learnminimal} in Section~\ref{sec:learning-algorithm} is the minimal abstraction of the given program using proof by induction and contradiction.
 Let $\abs$ be the output of the learning algorithm.  
 $\abs$ is a precise abstraction because our algorithm updates $\abs$ only if the following equation holds:
 \[

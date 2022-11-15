@@ -1,12 +1,12 @@
 \chapter{Preliminaries~\footnote{The contents of Chapter~\ref{sec:Preliminaries} and~\ref{sec:Tunneling} are based on our previous work presented at \emph{OOPSLA 2018: ACM Conference on Object-Oriented Programming, Systems, Languages, and Applications}~\cite{JeJeOh18}}}\label{sec:Preliminaries}
-In this chapter, we illustrate conventional pointer analysis~\cite{Smaragdakis2015,KastrinisS13a} for Java that will be used through this thesis. 
-The baseline pointer analysis uses $k$-limited context sensitivity~\cite{KastrinisS13a,Smaragdakis2011} and allocation site based heap abstraction~\cite{Smaragdakis2015,Tan2017}.
+In this chapter, we illustrate conventional pointer analysis~\cite{Smaragdakis2015,KastrinisS13a} on which our data-driven techniques are developed on.
 
 
 
 \section{Conventional Pointer Analysis}\label{pre:conventional-analysis}
 % \myparagraph{Generic Analysis} 
-Our analysis is $k$-context-sensitive pointer analysis using allocation-site-based heap abstraction.
+The baseline pointer analysis uses $k$-limited context sensitivity~\cite{KastrinisS13a,Smaragdakis2011} and allocation-site-based heap abstraction~\cite{Smaragdakis2015,Tan2017}.
+%Our analysis is $k$-context-sensitive pointer analysis using allocation-site-based heap abstraction.
 The analysis is a flow-insensitive, field-sensitive, and subset-based
 analysis with on-the-fly call-graph construction. 
 Our analysis supports various context flavors and depths.
@@ -193,7 +193,7 @@ The rules for the move, load, and store instructions are intuitive.
 
 The last rule for method calls needs explanation. 
 Given a method call instruction
-${\it l: x = y.\sig(arg)}$, where ${\it l}$ denotes the
+${\it l}:x = y.\sig(arg)$, where ${\it l}$ denotes the
 invocation-site, $\sig$ the method signature (name and type), and
 ${\it arg}$ an actual parameter, we find the calling context $\ctx$
 of the caller method, $(\heap,\hctx)$ the receiver object and its heap
@@ -264,5 +264,5 @@ object-sensitivity at virtual calls.
 
 %%% Local Variables:
 %%% mode: latex
-%%% TeX-master: "paper"
+%%% TeX-master: "thesis"
 %%% End:

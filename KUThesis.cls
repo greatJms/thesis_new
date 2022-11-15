@@ -171,7 +171,7 @@
 }
 
 \AtEndDocument{                             % \end{document}와 함께 실행
-  \bibliography{bibs/refs.bib,bibs/heap_refs.bib,bibs/prl.bib}
+  \bibliography{bibs/refs.bib}
   \addevenpage
   \if@isFinal
     \refstepcounter{dummy}

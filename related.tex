@@ -1,7 +1,7 @@
 \chapter{Related Work}
 \label{sec:Related}
 
-In this chapter, we discuss related works closely related to this thesis.
+In this chapter, we discuss the prior works closely related to this thesis.
 
 
 
@@ -23,10 +23,10 @@ The prior works above require manually designed features to learn suitable heuri
 %\cite{WeiR15} figure out 8 high-level characteristics of functions
 %in JavaScript which are relevant to precision or scalability of the analysis.
 %\cite{cha2016learning} proposed a white box learning algorithm to generate analysis heuristics, which determine widening thresholds, without running analyzers.
-Closely related to Chapter~\ref{sec:Graphick}, Chae et al.~\cite{ChOhHeYa17}~also automatically generated features for data-driven static analysis.
+Closely related to Chapter~\ref{sec:Graphick} of this thesis, Chae et al.~\cite{ChOhHeYa17}~also automatically generated features for data-driven static analysis.
 Given programs, it runs a program reducer to convert the programs into small feature programs which only maintain the query-related program components,
 and generates features for data-driven static analysis from data-flow graphs obtained from the feature programs.
-Not to mention that the technique is specialized for C programs, it is hardly applicable to learning context-sensitivity heuristics because reducing programs spanning multiple procedures into reasonably small feature programs while maintaining the query-related components is challenging~\cite{ChOhHeYa17}. In this thesisr, we present a new technique based on a feature language, which does not have such a limitation and is effectively applicable to context-sensitive analysis for Java.
+Not to mention that the technique is specialized for C programs, it is hardly applicable to learning context-sensitivity heuristics because reducing programs spanning multiple procedures into reasonably small feature programs while maintaining the query-related components is challenging~\cite{ChOhHeYa17}. In Capther~\ref{sec:Graphick} of this thesis, we present a new technique based on a feature language, which does not have such a limitation and is effectively applicable to context-sensitive analysis for Java.
 
 
 
@@ -35,8 +35,8 @@ Not to mention that the technique is specialized for C programs, it is hardly ap
 existing techniques for context-sensitive analyses
 (e.g.~\cite{Sharir1981,Milanova2002,Shivers1988,
   Whaley2004,Milanova2005,Smaragdakis2011, Khedker2008,
-  Karkare2007,WeiR15,Smaragdakis2014,JeJeChOh17,Oh2014,TanLX16,PadhyeK13})
-suffer from the problem we tackle in this paper. All of those
+  Karkare2007,WeiR15,Smaragdakis2014,JeJeChOh17,Oh2014,TanLX16})
+suffer from the problem we tackle in Chapter~\ref{sec:Tunneling} of this thesis. All of those
 techniques update the calling contexts at every call-site and
 therefore may lose important context elements when $k$-limiting is used.  For example,
 techniques for varying context depths
@@ -57,7 +57,7 @@ construction.
 % such heuristics automatically from codebase. However, as far as
 % those techniques rely on conventional $k$-limited
 % context-sensitivity at their core, they suffer from the same problem
-% that our paper concerns.
+% that our thesis concerns.
 
 The technique, called \Bean, by Tan et al.~\cite{TanLX16} is similar to ours in
 that it aims to improve precision of $k$-object-sensitive points-to
@@ -72,7 +72,7 @@ guarantees to result same or more distinct contexts than conventional
 analysis with same $k$. The redundant nodes are excluded when
 selecting heap contexts for an object. The main focus of \Bean~is in
 choosing good heap contexts and therefore it still suffers from the
-core problem we tackle in this paper; that is, \Bean~always append the
+core problem we tackle in this thesis; that is, \Bean~always append the
 last context element to the parent context on method calls (i.e. it
 uses the last rule in Figure~\ref{pre:baseline-rules}, not
 Figure~\ref{fig:tunneling-rules}). As the result, when $k=1$ for
@@ -83,7 +83,7 @@ tunneling is to mitigate this problem.
 Merging equivalent contexts~\cite{Xu2008} or abstract heaps~\cite{Tan2017} also have been studied to
 increase scalability of context-sensitive points-to analysis. Xu and Rountev~\cite{Xu2008} first defines a fine-grained
 notion of context equivalence that guarantees to increase scalability without losing original analysis's
-precision, which is $\infty$-context-sensitivity. Based on the equivalence, the paper introduces its abstracted
+precision, which is $\infty$-context-sensitivity. Based on the equivalence, the thesis introduces its abstracted
 version to extend scalability even further at the cost of precision. Tan et al.~\cite{Tan2017} merges two
 abstract heaps if their fields-points-to-graphs indicate that any field access sequence (i.e.,
 $o.f.g.\cdots .h$) ends up with same typed objects for two graphs. This approach demonstrated that it brings
@@ -99,7 +99,7 @@ sensitive analysis.
 
 
 \myparagraph{Object Sensitivity}
-Our work deviates significantly from past works on improving context-sensitive analyses for object-oriented programs. 
+Section~\ref{sec:Obj2CFA} of this thesis deviates significantly from past works on improving context-sensitive analyses for object-oriented programs. 
 While almost all past works took the ``safe'' direction of building upon object 
 sensitivity~\cite{Smaragdakis2011,SridharanDCST12,TanLX16,Li2018b,Smaragdakis2014,Li2018a,JeJeChOh17,Liang2011,Liang2011learning,Lu:2019:PYF}, our
 work calls for attention to call-site sensitivity.
@@ -127,10 +127,11 @@ been proposed to apply deeper contexts only to a set of methods
 that are likely to benefit.
 For example, Smaragdakis et al.~\cite{Smaragdakis2014} proposed a technique that runs a
 pre-analysis and identifies the methods that should not receive
-context sensitivity. Jeong et al.~\cite{JeJeChOh17} developed a machine learning
-algorithm that can produce method-selection heuristics automatically
-and showed that the data-driven approach outperforms existing
-hand-crafted approaches. 
+context sensitivity. 
+% Jeong et al.~\cite{JeJeChOh17} developed a machine learning
+% algorithm that can produce method-selection heuristics automatically
+% and showed that the data-driven approach outperforms existing
+% hand-crafted approaches. 
 
 
 

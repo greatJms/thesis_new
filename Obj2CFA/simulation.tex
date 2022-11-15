@@ -1,4 +1,4 @@
-% !TEX root = ./paper.tex
+% !TEX root = ../thesis.tex
 
 
 \subsection{Simulation}\label{sec:simulation}
@@ -11,7 +11,7 @@ Given a program $P$ and its tunneling abstraction $\Tobj \subseteq \mbi_P$, wher
 $\Tobj = \objheuristic(P)$,
 the goal of simulation is to infer a tunneling abstraction
 $\Tcall \subseteq \mbi_P$ such that $\call(P, \Tcall)$ becomes more
-precise than $\obj (P, \Tobj)$.
+precise than ${\sf obj} (P, \Tobj)$.
 
 
 \input{Obj2CFA/simulation_example}
@@ -90,7 +90,7 @@ propagates back to the variables {\tt a} and {\tt b} in the
 Simulation is a two-step process. 
 It first runs the baseline object-sensitive analysis 
 %\begin{comment}
-(i.e. $\obj(P, \Tobj)$) 
+(i.e. ${\sf obj}(P, \Tobj)$) 
 %\end{comment}
 to obtain its
 call-graph $\CallGraph \subseteq \mbi \times \mbc \times \mbm
@@ -202,7 +202,7 @@ S = \{l \in \mbi_P \mid \exists (l,c1,m,c1'),(l,c2,m,c2')\in \CallGraph,  \kth(c
 %\[
 %S = \{l \in \Invo_P \mid \exists (l,c1,m,c1'),(l,c2,m,c2')\in \CallGraph,  c1 \not = c2\}.
 %\]
-and the function \kth~takes a context and returns its last context element, i.e., $\kth(a_1a_2\dots a_k) = a_k$.  
+and the function \kth~takes a context and returns its last context element, i.e., $\kth(a_1a_2\dots$ $ a_k) = a_k$.  
  $I_2$ denotes a
 sound and complete property of context-tunneled call-site sensitivity. 
 That is, if context tunneling is not applied to $l$, the callee methods'
@@ -360,5 +360,5 @@ impractical because the simulation procedure incurs the overhead of running the 
 
 %%% Local Variables:
 %%% mode: latex
-%%% TeX-master: "paper"
+%%% TeX-master: "../thesis"
 %%% End:

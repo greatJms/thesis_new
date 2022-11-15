@@ -100,6 +100,7 @@ The clients we used in our evaluation (i.e. may-fail-casts, poly-call-sites, and
 % \usepackage{multirow}
 \begin{table}[]
     \caption{Performance comparison of \callSL, \callSLG, and \BatonUnity~\cite{Tan2021}.}\label{tbl:unifyAll}
+    \centering\small
     \begin{tabular}{@{}crrrcrrr@{}}
     \toprule
     Program                  & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\#fail-cast} & \multicolumn{1}{c}{Time} & Program                   & \multicolumn{1}{c}{Analysis} & \multicolumn{1}{c}{\#fail-cast} & \multicolumn{1}{c}{Time} \\ \midrule
@@ -120,13 +121,13 @@ The clients we used in our evaluation (i.e. may-fail-casts, poly-call-sites, and
 
 
 \subsection{Applying \ourtool~to \callSL}
-As we showed that selective context sensitivity and context tunneling can be combined (Section~\ref{sec:SelectiveCtx}), we can apply \ourtool~to our state-of-the-art context tunneled call-site-sensitivity \callSL~in Section~\ref{sec:performance}. We implement \ourtool~on top of \callSL. We used 8 Dacapo benchmarks $\{$luindex, lusearch, antlr, xalan, eclipse, fop, chart, bloat $\}$ for comparing the performance. The selective heuristic (\ourtool) is trained with two small programs luindex and lusearch.
+As we showed that selective context sensitivity and context tunneling can be combined (Section~\ref{sec:SelectiveCtx}), we can apply \ourtool~to our state-of-the-art context tunneled call-site-sensitivity \callSL~in Section~\ref{sec:performance}. We implemented \ourtool~on top of \callSL. We used 8 Dacapo benchmarks $\{$luindex, lusearch, antlr, xalan, eclipse, fop, chart, bloat $\}$ for comparing the performance. The selective context sensitivity heuristic (\ourtool) is trained with two small programs luindex and lusearch.
 
 
-Table~\ref{tbl:unifyAll} shows the performance of \callSL~and \callSL~with \ourtool~denoted \callSLG. We additionally use \BatonUnity~for comparing the performance of our data-driven pointer analysis (\callSL~and \callSLG) against manually crafted pointer analysis. \BatonUnity~is a state-of-the-art hand-crafted pointer analysis~\cite{Tan2021} which uses a combination of three hand-crafted heuristics~\cite{Li2018b,ZipperJournal20}. We use 8 Java programs in Dacapo benchmarks for comparison.
+Table~\ref{tbl:unifyAll} shows the performance of \callSL~and \callSL~with \ourtool~denoted \callSLG. We additionally use \BatonUnity~for comparing the performance of our data-driven pointer analysis (\callSL~and \callSLG) against manually crafted pointer analysis. \BatonUnity~is a state-of-the-art hand-crafted pointer analysis~\cite{Tan2021} which is a combination of three hand-crafted heuristics~\cite{Li2018b,ZipperJournal20}. 
 
 
-As Table~\ref{tbl:unifyAll} shows, \ourtool~improved the scalability of \callSL~about 28\% on average. In particular, \callSLG~is 50\% more scalable than \callSL~in eclipse. Compared to the state-of-the-art hand-crafted pointer analysis \BatonUnity, \callSLG~is overall more precise and scalable than \BatonUnity. Except for bloat and eclipse, \callSLG~is more precise and scalable than the other seven benchmarks.
+As Table~\ref{tbl:unifyAll} shows, \ourtool~improved the scalability of \callSL~about 28\% on average. Especially, \callSLG~is 50\% more scalable than \callSL~in eclipse. Compared to the state-of-the-art hand-crafted pointer analysis \BatonUnity, \callSLG~is overall more precise and scalable than \BatonUnity. Except for bloat and eclipse, \callSLG~is more precise and scalable than the other six benchmarks. Note that our data-driven call-site sensitivity \callSL~is more precise than \BatonUnity~for all the eight benchmarks.
 
 
 

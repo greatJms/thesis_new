@@ -55,22 +55,5 @@ different tunneling abstractions, i.e., $\Tcall = \{7\}$ vs.
 $\Tobj = \{7, 21, 26\}$. 
 }
 
-%\textcolor{red}
-{
-In the supplementary material, 
-we show that our technique can handle more real-world cases, namely {\em precision-critical} patterns~\cite{Li2018a}. %that our technique can handle
-%where the examples belong to {\em precision-critical} patterns in~\cite{Li2018a}.
-\cite{Li2018a} identified fairly representative and
-exhaustive patterns that require object sensitivity in real-world Java
-programs;
-applying 2-object sensitivity only to the methods with those patterns
-is sufficient to achieve 98.8\% of the full precision~\cite{Li2018a}. 
-Conventional call-site-sensitive analysis is
-ineffective to handle such patterns as they require the
-analysis to maintain deep calling contexts. With context tunneling,
-however, our technique enables call-site
-sensitivity to simulate object sensitivity in all cases. We provide
-detailed description of the patterns and how our technique works in
-Section 1 of the supplementary material. 
-}
+
 

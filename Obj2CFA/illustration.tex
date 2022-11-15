@@ -1,4 +1,4 @@
-% !TEX root = ./paper.tex
+% !TEX root = ../thesis.tex
 %\vspace{-1pt}
 \section{Our Claim}\label{sec:insight}
 %\noindent
@@ -44,6 +44,8 @@ with a single context element, namely the allocation-site {\tt D},
 merging the three method calls (Figure~\ref{back:obj:callgraph2}).
 
 
+\input{Obj2CFA/overview-example2}
+
 
 \myparagraph{Benefit of Object Sensitivity}
 Figure~\ref{back:a:Fig} %describes a major weakness of call-site sensitivity. 
@@ -80,7 +82,7 @@ queries.
 
 %\textcolor{red}{Note that the shortcoming in handling nested method calls is the only weakness of call-site sensitivity; if there is no nested method call in a program, 1-call-site sensitivity becomes the most precise context abstraction. Suppose a program consists of methods that do not have any method call in their body except the main method. When analyzing the program, 1-call-site sensitivity will have the same precision with $\infty$-call-site sensitivity which is concrete context (the most precise context abstraction).}
 
-\input{Obj2CFA/overview-example2}
+
 
 
 \myparagraph{Known Superiority} 
@@ -176,7 +178,7 @@ call-sites.  % In this sense, object sensitivity is
 %\myparagraph{Incompleteness}
 
 We clarify that, like the previously known superiority, our claim in this chapter is empirical. 
-On the theoretical side, we do not know yet whether or not call-site sensitivity can always simulate object sensitivity in the general setting with context tunneling, which we leave as an open question for future work. We discuss this issue in more detail in Appendix~\ref{sec:appendix}.
+On the theoretical side, we do not know yet whether or not call-site sensitivity can always simulate object sensitivity in the general setting with context tunneling, which we leave as an open question for future work. We discuss this in more detail in Appendix~\ref{sec:appendix}.
 %not theoretical.  
 %We can construct a counter-example such that
 %context-tunneled call-site sensitivity is unable to simulate object
@@ -199,5 +201,5 @@ produces precise results for both cases in Figure~\ref{back:b:Fig} and~\ref{back
 
 %%% Local Variables:
 %%% mode: latex
-%%% TeX-master: "paper"
+%%% TeX-master: "thesis"
 %%% End:

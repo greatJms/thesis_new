@@ -108,16 +108,13 @@ of pairs of intervals denotes sequences of nodes as follows:
 Finally, a feature  $(\seq{\myhat{p}_0,\myhat{p}_1,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\myhat{s}_1,\dots,\myhat{s}_r}) \in \Feature$
  denotes a set of nodes in $\gamma_G(\myhat{n})$ whose predecessors and successors are described as
 $\seq{\myhat{p}_0,\myhat{p}_1,\dots,\myhat{p}_q}$ and $\seq{\myhat{s}_0,\myhat{s}_1,\dots,\myhat{s}_r}$, respectively:
-\[
-\begin{array}{l}
- \gamma_G(\seq{\myhat{p}_0,\myhat{p}_1,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\myhat{s}_1,\dots,\myhat{s}_r}) =  \{ n \in \gamma_G(\myhat{n}) \mid
-\exists p_0,p_1,\dots,p_q, s_0,s_1,\dots,s_r \in N.\; \\
-\qquad
-\seq{p_0,p_1,\dots,p_q} \in \gamma_G(\seq{\myhat{p}_1,\myhat{p}_2,\dots,\myhat{p}_q}), p_q \edges n \edges s_0,
-\seq{s_0,s_1,\dots,s_r} \in \gamma_G(\seq{\myhat{s}_1,\myhat{s}_2,\dots,\myhat{s}_r}).
-\}
-\end{array}
-\]
+\begin{multline*}
+	\gamma_G(\seq{\myhat{p}_0,\myhat{p}_1,\dots,\myhat{p}_q}, \myhat{n}, \seq{\myhat{s}_0,\myhat{s}_1,\dots,\myhat{s}_r}) = \\   \{ n \in \gamma_G(\myhat{n}) \mid \exists p_0,p_1,\dots,p_q, s_0,s_1,\dots,s_r \in N.\; \seq{p_0,p_1,\dots,p_q} \in \gamma_G(\seq{\myhat{p}_1,\myhat{p}_2,\dots,\myhat{p}_q}),\\
+	\qquad
+	 p_q \edges n \edges s_0,
+	\seq{s_0,s_1,\dots,s_r} \in \gamma_G(\seq{\myhat{s}_1,\myhat{s}_2,\dots,\myhat{s}_r}).	
+\end{multline*}
+
 
 %\[
 %(\epsilon, ([0,3],[1,\infty]), \seq{([1,2],[1,1])})
