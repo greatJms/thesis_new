@@ -211,7 +211,6 @@ Although our algorithm is expensive, we believe it is acceptable because learnin
 
 
 %\input{table_zipper}
-\input{Obj2CFA/table_vsZipper}
 
 \subsection{Comparison with Selective Object Sensitivity}\label{sec:SelectiveCtx}
 
@@ -273,13 +272,27 @@ For all programs, \ours~shows a better precision than \Zipper. Especially for bl
 %
 
 %\myparagraph{Combination with Zipper}
-Because context tunneling and selective context sensitivity are orthogonal techniques, we can combine 
+
+\input{Obj2CFA/table_vsZipper}
+
+
+Context tunneling and selective context sensitivity~\cite{Oh2014,JeJeChOh17} are orthogonal techniques; we can combine 
 our analysis (\ours) and \Zipper, resulting in a selective 1-call-site-sensitive analysis with context tunneling (\oursZipper). 
+Intuitively, context tunneling improves the precision of the call-site sensitivity by preserving important context element while selective context sensitivity improves the scalability by selectively applying context sensitivity for the method calls.
 This is possible because the idea of \Zipper~is general and applicable to various context-sensitivity flavors including call-site sensitivity~\cite{ZipperJournal20}. 
 Table~\ref{tbl:eval:vsZipper} shows the performance of \oursZipper. Thanks to \Zipper, \oursZipper~becomes faster than~\ours~at the small cost of the precision.
 In h2, for example, \oursZipper~took 2,318 seconds while \ours~took 3,766 seconds.
 One exception is batik, where \oursZipper~is slower than \ours. This is because 
 \oursZipper~in this case loses precision significantly (reporting 180 more alarms than \ours), producing spurious points-to sets that make the analysis slow. 
+
+
+
+
+
+%\myparagraph{Discussion}
+
+%\clearpage
+
 
 %
 %
@@ -338,5 +351,5 @@ We discuss this in Appendix~\ref{sec:setting}
 %\clearpage
 %%% Local Variables:
 %%% mode: latex
-%%% TeX-master: "paper"
+%%% TeX-master: "../thesis.tex"
 %%% End:

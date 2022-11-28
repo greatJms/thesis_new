@@ -32,20 +32,20 @@ This thesis makes the following three key contributions:
 
 
 \begin{itemize}
-\item {\bf Data-driven context tunneling~\cite{JeJeOh18}:}
+\item {\bf Data-Driven Context Tunneling~\cite{JeJeOh18}:}
 We present data-driven context tunneling, a new approach to make $k$-limited context-sensitive pointer analysis precise and scalable.
 Unlike conventional $k$-limited context sensitivity that always updates contexts that all the method calls keep the most recent $k$ context elements, context tunneling enables the methods to keep the most important $k$ context elements by selectively updating the contexts.
 The main challenge in context tunneling is to determine whether the context elements are imporant during the analysis. We address this challenge with our data-driven approach. The evaluation results show that the learned tunneling heuristics successfully keep important context elements that make the pointer analysis precise and scalable.
 
 
-\item {\bf Learning a precise call-site sensitivity from a given object sensitivity~\cite{JeOh22}:}
-We present \ourtechnique~that automatically transforms a given object sensitivity with tunneling into a more precise call-site sensitivity with tunneling. 
-\ourtechnique~takes analysis results of a context tunneled object sensitivity and computes unimportant context elements for call-site sensitivity with tunneling. 
+\item {\bf Transforming an Object Sensitivity Into a More Precise Call-Site Sensitivity~\cite{JeOh22}:}
+We present \ourtechnique~that automatically transforms a given object sensitivity with context tunneling into a more precise call-site sensitivity with tunneling. 
+\ourtechnique~ takes analysis results of a context tunneled object sensitivity and computes unimportant context elements for call-site sensitivity with tunneling. 
 Then, \ourtechnique~learns a tunneling heuristics from the computed unimportant call-sites. The learned tunneling heuristic chooses important context elements for the call-site sensitivity. Our evaluation results show that \ourtechnique~successfully transformed the state-of-the-art context tunneled object sensitivity into a more precise call-site sensitivity. 
 
 
 
-\item {\bf Learning graph-based analysis techniques without hand-crafted features~\cite{Graphick20}:}
+\item {\bf Learning Graph-Based Analysis Heuristics Without Hand-Crafting Application Specific Features~\cite{Graphick20}:}
 We present \ourtool~for learning graph-based analysis heuristics without application-specific features.
 The success of data-driven pointer analysis heavily depends on the quality of features used in the training procedure~\cite{JeJeChOh17,ChOhHeYa17}; good features are essential for learning high-quality analysis heuristics.
 Developing qualified features, however, is also challenging and requires a laborious task.
@@ -57,13 +57,13 @@ Instead of using given features, \ourtool~automatically generates qualified feat
 \end{itemize}
 
 
-\myparagraph{Out line}
+\myparagraph{Outline}
 The remainder of this thesis is organized as follows.
 Chapter~{\ref{sec:Preliminaries}} provides preliminaries illustrating the conventional pointer analysis, used throughout this thesis.
 Chapter~{\ref{sec:Tunneling}} presents our new analysis technique context tunneling. 
 Chapter~{\ref{sec:Obj2CFA}} presents \ourtechnique~that transforms an object sensitivity into a more precise call-site sensitivity.
 Chapter~{\ref{sec:Graphick}} presents \ourtool~that generate qualified features for data-driven pointer analysis.
-Chapter~{\ref{sec:Related}} discusses related works and
+Chapter~{\ref{sec:Related}} and Chapter~{\ref{chapter:futureWork}} discusses related works and future work. 
 Chapter~{\ref{sec:Conclusion}} concludes.
 
 

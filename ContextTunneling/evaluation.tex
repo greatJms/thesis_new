@@ -835,79 +835,78 @@ slightly faster than the analysis with full learning.
 
 
 
-%\subsection{Learned Heuristics}
-%The learned features in
-%Appendix~\ref{app:formulas} hint at when
-%and where context tunneling is useful in practice.
-%For example, our learning algorithm automatically discovered the
-%characteristics of methods
-%that benefit from deeper ($k \ge 2$) object-sensitivity, which was
-%originally conjectured by \cite{Milanova2005}.
-%\cite{Milanova2005} stated that deeper object-sensitivity may be
-%useful for methods that belong to sub-objects.
-%Consider the code snippet % we arranged from the original paper's description
-%that defines a composite class using a sub-object:
-%\lstset{
-%  language=Java,
-%  aboveskip=3mm,
-%  belowskip=3mm,
-%  showstringspaces=false,
-%  columns=flexible,
-%  basicstyle={\small\ttfamily},
-%  numbers=left,
-%  numbersep=5pt,
-%  numberstyle=\small\color{gray},
-%  keywordstyle=\color{blue},
-%  commentstyle=\color{dkgreen},
-%  stringstyle=\color{mauve},
-%  breaklines=true,
-%  breakatwhitespace=true,
-%  tabsize=3,
-%  xleftmargin=5.0ex
-%}
-%\begin{lstlisting}
-%class A {} class B {}
-%class SubObject {
-%  Object id(Object v) { return v; }
-%}
-%class CompositeClass {
-%  public SubObject att;
-%  public CompositeClass(){
-%    att = new SubObject();//SO
-%  }
-%}
-%class Main{
-%  public static void main(String[] args){
-%    CompositeClass cc1 = new CompositeClass();//CC1
-%    CompositeClass cc2 = new CompositeClass();//CC2
-%    A a = (A)cc1.att.id(new A());//Query 1
-%    B b = (B)cc2.att.id(new B());//Query 2
-%  }
-%}
-%\end{lstlisting}
-%To prove the safety of two down-casting queries at lines 15 and 16,
-%two method calls to {\tt id} should be analyzed separately.
-%However, object-sensitivity with $k=1$ fails to prove the queries
-%because the analysis merges the two contexts into the same context $[\texttt{SO}]$. On the other hand, deeper object-sensitivity (e.g., $k = 2$) can accommodate
-%the composite class's allocation sites along with the one of
-%sub-objects ($[\texttt{CC1}, \texttt{SO}]$ and $[\texttt{CC2},
-%\texttt{SO}]$), concluding that each invocation of \texttt{id} returns one of \texttt{A} or \texttt{B}, not both. Here, we can apply context tunneling instead of using deeper context; the
-%sub-objects' method should inherit the context from the parent method, i.e.,
-%the constructor of \texttt{CompositeClass}, instead of updating the
-%context. In other words, contexts of the constructor \texttt{CompositeClass} are {important} and they should be propagated without modification.
-%By doing so, object-sensitivity with $k=1$ and context tunneling can prove the queries.
-%Our learning algorithm captured this situation automatically.
-%It produced the $f_1$ formula for object-sensitivity
-%with the following conjunction:
-%\begin{quotation}
-%  $\cdots \lor (A8 \land B5 \land \neg B3 \land A1 \land \neg A6 \land \neg A3 \land \neg B9 \land B4 \land \neg A9 \land \neg B11 \land \neg A2 \land \neg B7 \land \neg B1 \land \neg B8 \land \underline{B12} \land \underline{B10} \land \neg B13 \land \underline{B6} \land A5 \land \underline{A10} \land A7 \land \neg A4)$
-%\end{quotation}
-%Note the four underlined atomic features: $A10$ for constructor
-%methods, $B12$ and $B10$ for methods with heap allocations, and $B6$
-%for methods containing field store. Combining these features denotes a
-%set of constructor methods that allocate heaps inside and store
-%something into their member attributes, which describes methods such
-%as one given above.  
+\subsection{Learned Heuristics}\label{sec:tunneling:learnedHeuristics}
+The learned heuristics hint at when
+and where context tunneling is useful in practice.
+For example, our learning algorithm automatically discovered the
+characteristics of methods
+that benefit from deeper ($k \ge 2$) object-sensitivity, which was
+originally conjectured by \cite{Milanova2005}.
+\cite{Milanova2005} stated that deeper object-sensitivity may be
+useful for methods that belong to sub-objects.
+Consider the code snippet % we arranged from the original paper's description
+that defines a composite class using a sub-object:
+\lstset{
+ language=Java,
+ aboveskip=3mm,
+ belowskip=3mm,
+ showstringspaces=false,
+ columns=flexible,
+ basicstyle={\small\ttfamily},
+ numbers=left,
+ numbersep=5pt,
+ numberstyle=\small\color{gray},
+ keywordstyle=\color{blue},
+ commentstyle=\color{dkgreen},
+ stringstyle=\color{mauve},
+ breaklines=true,
+ breakatwhitespace=true,
+ tabsize=3,
+ xleftmargin=5.0ex
+}
+\begin{lstlisting}
+class A {} class B {}
+class SubObject {
+ Object id(Object v) { return v; }
+}
+class CompositeClass {
+ public SubObject att;
+ public CompositeClass(){
+   att = new SubObject();//SO
+ }
+}
+class Main{
+ public static void main(String[] args){
+   CompositeClass cc1 = new CompositeClass();//CC1
+   CompositeClass cc2 = new CompositeClass();//CC2
+   A a = (A)cc1.att.id(new A());//Query 1
+   B b = (B)cc2.att.id(new B());//Query 2
+ }
+}
+\end{lstlisting}
+To prove the safety of two down-casting queries at lines 15 and 16,
+two method calls to {\tt id} should be analyzed separately.
+However, object-sensitivity with $k=1$ fails to prove the queries
+because the analysis merges the two contexts into the same context $[\texttt{SO}]$. On the other hand, deeper object-sensitivity (e.g., $k = 2$) can accommodate
+the composite class's allocation sites along with the one of
+sub-objects ($[\texttt{CC1}, \texttt{SO}]$ and $[\texttt{CC2},
+\texttt{SO}]$), concluding that each invocation of \texttt{id} returns one of \texttt{A} or \texttt{B}, not both. Here, we can apply context tunneling instead of using deeper context; the
+sub-objects' method should inherit the context from the parent method, i.e.,
+the constructor of \texttt{CompositeClass}, instead of updating the
+context. In other words, contexts of the constructor \texttt{CompositeClass} are {important} and they should be propagated without modification.
+By doing so, object-sensitivity with $k=1$ and context tunneling can prove the queries.
+Our learning algorithm captured this situation automatically.
+It produced the $f_1$ formula for object-sensitivity
+with the following conjunction:
+\begin{quotation}
+ $\cdots \lor (A8 \land B5 \land \neg B3 \land A1 \land \neg A6 \land \neg A3 \land \neg B9 \land B4 \land \neg A9 \land \neg B11 \land \neg A2 \land \neg B7 \land \neg B1 \land \neg B8 \land \underline{B12} \land \underline{B10} \land \neg B13 \land \underline{B6} \land A5 \land \underline{A10} \land A7 \land \neg A4)$
+\end{quotation}
+Note the four underlined atomic features: $A10$ for constructor
+methods, $B12$ and $B10$ for methods with heap allocations, and $B6$
+for methods containing field store. Combining these features denotes a
+set of constructor methods that allocate heaps inside and store
+something into their member attributes, which describes methods such
+as one given above.  
 
 
 
