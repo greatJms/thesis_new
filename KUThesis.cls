@@ -159,7 +159,7 @@
   \refstepcounter{dummy}
   \makededication
   \makeabstract                            % 초록 페이지 생성
-  \makeabstractKR                            % 국문 초록 페이지 생성
+  %\makeabstractKR                            % 국문 초록 페이지 생성
 
   \pagenumbering{roman}
   \setcounter{page}{1}
