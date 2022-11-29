@@ -159,6 +159,7 @@
   \refstepcounter{dummy}
   \makededication
   \makeabstract                            % 초록 페이지 생성
+  \makeabstractKR                            % 국문 초록 페이지 생성
 
   \pagenumbering{roman}
   \setcounter{page}{1}
@@ -594,6 +595,24 @@
   \setlength\parindent{5mm}
   \renewcommand{\baselinestretch}{\@abstractLineRatio}\selectfont
   \fontsize{11pt}{12pt}\selectfont{\indent\input{abstract}}
+  \setlength\parindent{0mm}
+  \vspace*{\fill}
+  \addevenpage
+}
+
+\newcommand{\makeabstractKR}{%
+  \newpage
+  \thispagestyle{empty}
+  \addcontentsline{toc}{chapter}{Abstract}
+  \pagenumbering{gobble}
+  \vspace*{\fill}
+  \begin{center}
+    \fontsize{16pt}{16pt}\selectfont{\bf 국문 초록}
+  \end{center}
+
+  \setlength\parindent{5mm}
+  \renewcommand{\baselinestretch}{\@abstractLineRatio}\selectfont
+  \fontsize{11pt}{12pt}\selectfont{\indent\input{abstract_kr}}
   \setlength\parindent{0mm}
   \vspace*{\fill}
   \addevenpage
