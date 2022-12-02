@@ -1,12 +1,6 @@
 % !TEX root = ./thesis.tex
 %\todoTBD{19 Nov. \st{abstract}}
-This thesis presents data-driven pointer analysis, a novel approach for automatically generating analysis heuristics that make pointer analysis precise and scalable. 
-Pointer analysis is a fundamental program analysis technique that has wide application in diverse software engineering tools. The success of the engineering tools is eventually dependent on the quality of the underlying pointer analysis.
-However, developing a qualified pointer analysis is challenging.
-A cost-effective pointer analysis requires good analysis heuristics such as context-sensitivity and heap abstraction heuristics.
-However, developing qualified analysis heuristics is a non-trivial and laborious task even for the experts. Furthermore, the manually designed heuristics often end up with suboptimal results in practice.
-To address this problem, we present data-driven pointer analysis that automatically generates good analysis heuristics.
-Our experimental results show that our data-driven pointer analysis successfully produced qualified heuristics that make the pointer analysis precise and scalable.
+본 학위 논문은 포인터 분석을 빠르고 정확하게 해주는 분석 휴리스틱들을 자동으로 만들어내는 데이터 기반 포인터 분석을 제시한다. 포인터 분석은 프로그램 분석 기술중 가장 근본적인 분석 기술이며 현재 소프트웨어 엔지니어링 분야에서 널리 사용되고 있다. 빠르고 정확한 포인터 분석을 위해서는 분석기가 사용 할 분석 휴리스틱들이 필요하다. 하지만, 분석 휴리스틱을 만드는 것은 매우 어려운 일이다. 빠르고 정확한 분석을 위해서는 함수 호출 요약 및 객체 요약 휴리스틱 등 다양한 휴리스틱들이 필요한데, 고품질 분석 휴리스틱을 만드는 것은 전문가에게도 힘들고 어려운 작업니다. 또한, 수동으로 만들어진 휴리스틱들은 현실에서는 잘 동작하지 않는 경우도 흔하다. 이 문제를 해결하기 위해 본 학위 논문은 자동으로 고품질 분석 휴리스틱들을 만들어주는 데이터 기반 포인터 분석을 제안한다. 본 연구의 실험에서는 우리의 데이터 기반 포인터 분석 방법이 성공적으로 포인터 분석기를 빠르고 정확하게 만들어 주는 고품질 휴리스틱들을 만들어냄을 보였다.
 
 
 %, including heap abstraction, selective context-sensitivity, and context tunneling heuristics

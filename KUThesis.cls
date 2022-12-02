@@ -159,7 +159,7 @@
   \refstepcounter{dummy}
   \makededication
   \makeabstract                            % 초록 페이지 생성
-  %\makeabstractKR                            % 국문 초록 페이지 생성
+  \makeabstractKR                            % 국문 초록 페이지 생성
 
   \pagenumbering{roman}
   \setcounter{page}{1}
@@ -539,33 +539,33 @@
         \\[20mm]
         \underline{
           \fontsize{16pt}{16pt}\selectfont{\bf 委員長}
-          \fontsize{14pt}{14pt}\selectfont{\@refereeChief}
-          %\fontsize{14pt}{14pt}\selectfont{\@refereeChief\bf (印)}
+          %\fontsize{14pt}{14pt}\selectfont{\@refereeChief}
+          \fontsize{14pt}{14pt}\selectfont{\@refereeChief\bf (印)}
         }
         \\[10mm]
         \underline{
           \fontsize{16pt}{16pt}\selectfont{\bf 委　員}
-          %\fontsize{14pt}{14pt}\selectfont{\@refereeSecond\bf (印)}
-          \fontsize{14pt}{14pt}\selectfont{\@refereeSecond}
+          \fontsize{14pt}{14pt}\selectfont{\@refereeSecond\bf (印)}
+          %\fontsize{14pt}{14pt}\selectfont{\@refereeSecond}
         }
         \\[10mm]
         \underline{
           \fontsize{16pt}{16pt}\selectfont{\bf 委　員}
-         \fontsize{14pt}{14pt}\selectfont{\@refereeThird\bf}
-          %\fontsize{14pt}{14pt}\selectfont{\@refereeThird\bf (印)}
+          %\fontsize{14pt}{14pt}\selectfont{\@refereeThird\bf}
+          \fontsize{14pt}{14pt}\selectfont{\@refereeThird\bf (印)}
         }
         \if@isDoctor
           \\[10mm]
           \underline{
             \fontsize{16pt}{16pt}\selectfont{\bf 委　員}
-            \fontsize{14pt}{14pt}\selectfont{\@refereeFourth}
-            %\fontsize{14pt}{14pt}\selectfont{\@refereeFourth\bf (印)}
+            %\fontsize{14pt}{14pt}\selectfont{\@refereeFourth}
+            \fontsize{14pt}{14pt}\selectfont{\@refereeFourth\bf (印)}
           }
           \\[10mm]
           \underline{
             \fontsize{16pt}{16pt}\selectfont{\bf 委　員}
-            \fontsize{14pt}{14pt}\selectfont{\@refereeFifth}
-            %\fontsize{14pt}{14pt}\selectfont{\@refereeFifth\bf (印)}
+            %\fontsize{14pt}{14pt}\selectfont{\@refereeFifth}
+            \fontsize{14pt}{14pt}\selectfont{\@refereeFifth\bf (印)}
           }
         \else\fi
       \end{center}
